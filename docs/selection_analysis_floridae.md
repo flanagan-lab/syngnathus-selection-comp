@@ -16,6 +16,11 @@ Selection pressures in *Syngnathus floridae*
   href="#calculating-mating-and-reproductive-success-for-individuals-who-mated"
   id="toc-calculating-mating-and-reproductive-success-for-individuals-who-mated">Calculating
   mating and reproductive success for individuals who mated</a>
+- <a href="#summary-statistics-for-successfully-mated-individuals"
+  id="toc-summary-statistics-for-successfully-mated-individuals">Summary
+  statistics for successfully mated individuals</a>
+  - <a href="#males" id="toc-males">Males</a>
+  - <a href="#females" id="toc-females">Females</a>
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -504,3 +509,186 @@ fem_succFL[, c("MatingSuccess", "NumDeveloped",
 #Add a column for females to denote mated or unmated
 fem_succFL$mated <- ifelse(fem_succFL$MatingSuccess > 0, 1, 0)
 ```
+
+# Summary statistics for successfully mated individuals
+
+## Males
+
+Across all 7 trials and 56 total males, there were 24 males that mated
+at least one time and 6 of those males had two mates.
+
+Looking across all males, including the ones that did not mate, this is
+what we find as the mean, sd, and se for the number of embryos
+transferred and how many of those developed versus didn’t:
+
+|                     |       mean |          SD |         SE | max | min |
+|:--------------------|-----------:|------------:|-----------:|----:|----:|
+| Number of Embryos   |      108.5 | 155.1902059 | 20.7381636 | 500 |   0 |
+| Developed Embryos   | 94.1964286 | 139.7347383 | 18.6728398 | 463 |   0 |
+| Undeveloped Embryos | 14.3035714 |  27.7907242 |  3.7136917 | 131 |   0 |
+
+These values will be influenced by the number of 0s coming from males
+who did not mate. So let’s look at the same thing, but this time for
+only males who had at least one successful mating:
+
+|                     |        mean |          SD |         SE | max | min |
+|:--------------------|------------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 253.1666667 | 139.1941611 | 28.4128892 | 500 |   9 |
+| Developed Embryos   | 219.7916667 | 133.7427704 | 27.3001287 | 463 |   7 |
+| Undeveloped Embryos |      33.375 |  34.3901054 |  7.0198509 | 131 |   0 |
+
+We can see from the bottom table that even when we only include males
+who mated there is still a wide range in the brood size. I want to see
+what relationship there is between brood pouch size (in terms of both
+total area and length) and brood size (total number of embryos).
+
+![Scatterplot of the relationship between brood pouch size metrics and
+the number of embryos a male
+had.](selection_analysis_floridae_files/figure-gfm/em-v-bp-1.png)
+
+There may be some correlation happening here, but it doesn’t look
+particularly strong. Let’s run some correlations tests to see what they
+say.
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFL$bp_area) and mated_malFL$totalEggs
+    ## t = 0.90485, df = 22, p-value = 0.3753
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.2316769  0.5507364
+    ## sample estimates:
+    ##       cor 
+    ## 0.1894228
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFL$bp_length) and mated_malFL$totalEggs
+    ## t = 0.51929, df = 22, p-value = 0.6087
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.3069838  0.4916139
+    ## sample estimates:
+    ##       cor 
+    ## 0.1100398
+
+There is not a significant correlation between the number of eggs and
+size of the brood pouch when we look at brood pouch area OR brood pouch
+length.
+
+Multiple of the wild study papers looked at correlations between body
+size in terms of standard length and the number of embryos and found
+significant positive correlations.
+
+![Scatterplot of the relationship between standard length (mm) and the
+number of embryos a male
+had.](selection_analysis_floridae_files/figure-gfm/em-v-sl-1.png)
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFL$length) and mated_malFL$totalEggs
+    ## t = -0.35647, df = 22, p-value = 0.7249
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.4649642  0.3379463
+    ## sample estimates:
+    ##         cor 
+    ## -0.07578142
+
+There appears to be no significant correlation between standard length
+and the number of eggs in males, unlike what has been found in the
+species previously. This is unsurprising as we didn’t find any hint of a
+relationship in the brood pouch size metrics and there was a
+considerable number of males that did not have a full brood pouch.
+
+## Females
+
+Across all 7 trials and 56 total females, there were 21 females that
+mated at least one time, 5 females that mated twice, and 2 that mated 3
+times.
+
+Looking across all females, including the ones that did not mate, this
+is what we find as the mean, sd, and se for the total number of embryos
+transferred from each female (across all of her mates if applicable) and
+how many of those developed versus didn’t:
+
+|                     |        mean |          SD |         SE | max | min |
+|:--------------------|------------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 108.4821429 | 195.2328206 |  26.089083 | 916 |   0 |
+| Developed Embryos   |  94.1785714 | 177.0691808 | 23.6618646 | 785 |   0 |
+| Undeveloped Embryos |  14.3035714 |  29.7033329 |  3.9692748 | 131 |   0 |
+
+These values will be influenced by the number of 0s coming from females
+who did not mate. So let’s look at the same thing, but this time for
+only females who had at least one successful mating:
+
+|                     |        mean |          SD |         SE | max | min |
+|:--------------------|------------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 289.2857143 | 223.3819919 |  48.745947 | 916 |  35 |
+| Developed Embryos   | 251.1428571 | 211.7324457 | 46.2038076 | 785 |   7 |
+| Undeveloped Embryos |  38.1428571 |   38.360508 |  8.3709491 | 131 |   0 |
+
+We can see from the bottom table that even when we only include females
+who mated there is still a wide range in the number of eggs transferred.
+I want to see what relationship there may be between female body size
+(in terms of standard length, depth, and SVL) and the number of eggs she
+transferred. I also want to see on average how many eggs were
+transferred per mating. I’m going to calculate this by taking the total
+number of eggs and dividing it by the number of mates.
+
+    ## [1] 202.3254
+
+    ## [1] 14.68782
+
+![Scatterplot of the relationship between female size metrics and the
+number of eggs
+transferred.](selection_analysis_floridae_files/figure-gfm/em-v-fem-size-1.png)
+
+There may be some correlation happening here, but it doesn’t look
+particularly strong. Let’s run some correlations tests to see what they
+say.
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFL$length and as.numeric(mated_femFL$totalEggs)
+    ## t = -0.92304, df = 19, p-value = 0.3676
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.5864091  0.2465727
+    ## sample estimates:
+    ##        cor 
+    ## -0.2071652
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFL$depth_adj and as.numeric(mated_femFL$totalEggs)
+    ## t = 2.0729, df = 19, p-value = 0.05202
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.002716801  0.726473616
+    ## sample estimates:
+    ##       cor 
+    ## 0.4294737
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFL$svl and as.numeric(mated_femFL$totalEggs)
+    ## t = -0.5112, df = 19, p-value = 0.6151
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.5219227  0.3318958
+    ## sample estimates:
+    ##        cor 
+    ## -0.1164796
+
+There is not a significant correlation between the number of eggs and
+size of the female in terms of standard length, depth, or snout-vent
+length. Interestingly, however, there is a negative correlation for
+length and SVL and a positive correlation for depth (but they are all
+overall weak).

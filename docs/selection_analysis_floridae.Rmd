@@ -230,3 +230,146 @@ fem_succFL[, c("MatingSuccess", "NumDeveloped",
 fem_succFL$mated <- ifelse(fem_succFL$MatingSuccess > 0, 1, 0)
 
 ```
+
+# Summary statistics for successfully mated individuals
+## Males
+Across all `r length(unique(mal_succFL$trial_num))` trials and `r nrow(mal_succFL)` total males, there were `r nrow(mal_succFL[mal_succFL$preg_status == 1,])` males that mated at least one time and `r nrow(mal_succFL[mal_succFL$MatingSuccess > 1,])` of those males had two mates. 
+
+Looking across all males, including the ones that did not mate, this is what we find as the mean, sd, and se for the number of embryos transferred and how many of those developed versus didn't:
+
+|                  | mean| SD| SE| max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(mal_succFL$totalEggs)`|`r sd(mal_succFL$totalEggs)`|  `r sd(mal_succFL$totalEggs)/sqrt(nrow(mal_succFL))`|`r max(mal_succFL$totalEggs)` | `r min(mal_succFL$totalEggs)`|
+|Developed Embryos | `r mean(mal_succFL$NumDeveloped)`|`r sd(mal_succFL$NumDeveloped)`|  `r sd(mal_succFL$NumDeveloped)/sqrt(nrow(mal_succFL))`|`r max(mal_succFL$NumDeveloped)` | `r min(mal_succFL$NumDeveloped)`|
+|Undeveloped Embryos| `r mean(mal_succFL$NumUndeveloped)`|`r sd(mal_succFL$NumUndeveloped)`|  `r sd(mal_succFL$NumUndeveloped)/sqrt(nrow(mal_succFL))`|`r max(mal_succFL$NumUndeveloped)` | `r min(mal_succFL$NumUndeveloped)`|
+
+These values will be influenced by the number of 0s coming from males who did not mate. So let's look at the same thing, but this time for only males who had at least one successful mating:
+
+|                  | mean| SD| SE|  max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(mal_succFL$totalEggs[mal_succFL$preg_status == 1])`|`r sd(mal_succFL$totalEggs[mal_succFL$preg_status == 1])`|  `r sd(mal_succFL$totalEggs[mal_succFL$preg_status == 1])/sqrt(nrow(mal_succFL[mal_succFL$preg_status == 1,]))`| `r max(mal_succFL$totalEggs[mal_succFL$preg_status == 1])` | `r min(mal_succFL$totalEggs[mal_succFL$preg_status == 1])` |
+|Developed Embryos | `r mean(mal_succFL$NumDeveloped[mal_succFL$preg_status == 1])`|`r sd(mal_succFL$NumDeveloped[mal_succFL$preg_status == 1])`|  `r sd(mal_succFL$NumDeveloped[mal_succFL$preg_status == 1])/sqrt(nrow(mal_succFL[mal_succFL$preg_status == 1,]))`|`r max(mal_succFL$NumDeveloped[mal_succFL$preg_status == 1])` | `r min(mal_succFL$NumDeveloped[mal_succFL$preg_status == 1])` |
+|Undeveloped Embryos| `r mean(mal_succFL$NumUndeveloped[mal_succFL$preg_status == 1])`|`r sd(mal_succFL$NumUndeveloped[mal_succFL$preg_status == 1])`|  `r sd(mal_succFL$NumUndeveloped[mal_succFL$preg_status == 1])/sqrt(nrow(mal_succFL[mal_succFL$preg_status == 1,]))`| `r max(mal_succFL$NumUndeveloped[mal_succFL$preg_status == 1])` | `r min(mal_succFL$NumUndeveloped[mal_succFL$preg_status == 1])` |
+
+We can see from the bottom table that even when we only include males who mated there is still a wide range in the brood size. I want to see what relationship there is between brood pouch size (in terms of both total area and length) and brood size (total number of embryos).
+
+```{r em-v-bp, echo=FALSE, fig.cap="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had.", fig.width=15, fig.height=10 }
+#create a subset of only the males who mated
+mated_malFL <- mal_succFL[mal_succFL$preg_status == 1, ]
+
+#Plot brood size against the different metrics for pouch size
+par(mfrow=c(1,2))
+plot(mated_malFL$bp_area,
+     mated_malFL$totalEggs,
+     xlab = expression(paste("Brood Pouch Area (mm"^2*")")),
+     ylab = "Brood Size (# embryos)",
+     col = "darkorange",
+     pch = 19)
+abline(lm(mated_malFL$totalEggs ~ as.numeric(mated_malFL$bp_area)), lwd = 3, lty = 2)
+plot(mated_malFL$bp_length,
+     mated_malFL$totalEggs,
+     xlab = "Brood Pouch Length (mm)",
+     ylab = "Brood Size (# embryos)",
+     col = "cyan4",
+     pch = 19)
+abline(lm(mated_malFL$totalEggs ~ as.numeric(mated_malFL$bp_length)), lwd = 3, lty = 2)
+```
+
+There may be some correlation happening here, but it doesn't look particularly strong. Let's run some correlations tests to see what they say.
+
+```{r eggs-bp-cor, echo=FALSE}
+cor.test(as.numeric(mated_malFL$bp_area), mated_malFL$totalEggs)
+cor.test(as.numeric(mated_malFL$bp_length), mated_malFL$totalEggs)
+```
+
+There is not a significant correlation between the number of eggs and size of the brood pouch when we look at brood pouch area OR brood pouch length. 
+
+Multiple of the wild study papers looked at correlations between body size in terms of standard length and the number of embryos and found significant positive correlations. 
+
+```{r em-v-sl, echo=FALSE, fig.cap="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had.", fig.width=15, fig.height=10}
+plot(mated_malFL$length,
+     mated_malFL$totalEggs,
+     xlab = "Standard Length (mm)",
+     ylab = "Brood Size (# embryos)",
+     col = "#CD5C5C75",
+     pch = 19,
+     cex = 1.5
+)
+abline(lm(mated_malFL$totalEggs ~ as.numeric(mated_malFL$length)), lwd = 3, lty = 2)
+```
+
+```{r eggs-sl-cor, echo=FALSE}
+cor.test(as.numeric(mated_malFL$length), mated_malFL$totalEggs)
+```
+
+There appears to be no significant correlation between standard length and the number of eggs in males, unlike what has been found in the species previously. This is unsurprising as we didn't find any hint of a relationship in the brood pouch size metrics and there was a considerable number of males that did not have a full brood pouch.
+
+## Females
+Across all `r length(unique(fem_succFL$trial_num))` trials and `r nrow(fem_succFL)` total females, there were `r nrow(fem_succFL[fem_succFL$mated == 1,])` females that mated at least one time, `r nrow(fem_succFL[fem_succFL$MatingSuccess == 2,])` females that mated twice, and `r nrow(fem_succFL[fem_succFL$MatingSuccess == 3,])` that mated 3 times. 
+
+Looking across all females, including the ones that did not mate, this is what we find as the mean, sd, and se for the total number of embryos transferred from each female (across all of her mates if applicable) and how many of those developed versus didn't:
+
+|                  | mean| SD| SE| max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(fem_succFL$totalEggs)`|`r sd(fem_succFL$totalEggs)`|  `r sd(fem_succFL$totalEggs)/sqrt(nrow(fem_succFL))`|`r max(fem_succFL$totalEggs)` | `r min(fem_succFL$totalEggs)`|
+|Developed Embryos | `r mean(fem_succFL$NumDeveloped)`|`r sd(fem_succFL$NumDeveloped)`|  `r sd(fem_succFL$NumDeveloped)/sqrt(nrow(fem_succFL))`|`r max(fem_succFL$NumDeveloped)` | `r min(fem_succFL$NumDeveloped)`|
+|Undeveloped Embryos| `r mean(fem_succFL$NumUndeveloped)`|`r sd(fem_succFL$NumUndeveloped)`|  `r sd(fem_succFL$NumUndeveloped)/sqrt(nrow(fem_succFL))`|`r max(fem_succFL$NumUndeveloped)` | `r min(fem_succFL$NumUndeveloped)`|
+
+These values will be influenced by the number of 0s coming from females who did not mate. So let's look at the same thing, but this time for only females who had at least one successful mating:
+
+|                  | mean| SD| SE|  max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(fem_succFL$totalEggs[fem_succFL$mated == 1])`|`r sd(fem_succFL$totalEggs[fem_succFL$mated == 1])`|  `r sd(fem_succFL$totalEggs[fem_succFL$mated == 1])/sqrt(nrow(fem_succFL[fem_succFL$mated == 1,]))`| `r max(fem_succFL$totalEggs[fem_succFL$mated == 1])` | `r min(fem_succFL$totalEggs[fem_succFL$mated == 1])` |
+|Developed Embryos | `r mean(fem_succFL$NumDeveloped[fem_succFL$mated == 1])`|`r sd(fem_succFL$NumDeveloped[fem_succFL$mated == 1])`|  `r sd(fem_succFL$NumDeveloped[fem_succFL$mated == 1])/sqrt(nrow(fem_succFL[fem_succFL$mated == 1,]))`|`r max(fem_succFL$NumDeveloped[fem_succFL$mated == 1])` | `r min(fem_succFL$NumDeveloped[fem_succFL$mated == 1])` |
+|Undeveloped Embryos| `r mean(fem_succFL$NumUndeveloped[fem_succFL$mated == 1])`|`r sd(fem_succFL$NumUndeveloped[fem_succFL$mated == 1])`|  `r sd(fem_succFL$NumUndeveloped[fem_succFL$mated == 1])/sqrt(nrow(fem_succFL[fem_succFL$mated == 1,]))`| `r max(fem_succFL$NumUndeveloped[fem_succFL$mated == 1])` | `r min(fem_succFL$NumUndeveloped[fem_succFL$mated == 1])` |
+
+We can see from the bottom table that even when we only include females who mated there is still a wide range in the number of eggs transferred. I want to see what relationship there may be between female body size (in terms of standard length, depth, and SVL) and the number of eggs she transferred. I also want to see on average how many eggs were transferred per mating. I'm going to calculate this by taking the total number of eggs and dividing it by the number of mates. 
+
+```{r egg-per-mate-fem, echo=FALSE}
+eggs_per_mate <- fem_succFL$totalEggs/fem_succFL$MatingSuccess
+mean(eggs_per_mate, na.rm = TRUE)
+sd(eggs_per_mate, na.rm = TRUE)/sqrt(length(eggs_per_mate))
+```
+
+
+```{r em-v-fem-size, echo=FALSE, fig.cap="Scatterplot of the relationship between female size metrics and the number of eggs transferred.", fig.width=15, fig.height=8}
+#create a subset of only the females who mated
+mated_femFL <- fem_succFL[fem_succFL$mated == 1, ]
+
+#Plot total number of eggs transferred against the different metrics for females size
+par(mfrow=c(1,3))
+plot(mated_femFL$length,
+     mated_femFL$totalEggs,
+     xlab = "Length (mm)",
+     ylab = "Number of eggs transferred",
+     col = "darkorange",
+     pch = 19)
+abline(lm(mated_femFL$totalEggs ~ mated_femFL$length), lwd = 3, lty = 2)
+plot(mated_femFL$depth_adj,
+     mated_femFL$totalEggs,
+     xlab = "Depth (mm)",
+     ylab = "Number of eggs transferred",
+     col = "cyan4",
+     pch = 19)
+abline(lm(mated_femFL$totalEggs ~ mated_femFL$depth_adj), lwd = 3, lty = 2)
+plot(mated_femFL$svl,
+     mated_femFL$totalEggs,
+     xlab = "Snout-vent Length (mm)",
+     ylab = "Number of eggs transferred",
+     col = "purple",
+     pch = 19)
+abline(lm(mated_femFL$totalEggs ~ mated_femFL$svl), lwd = 3, lty = 2)
+
+```
+
+There may be some correlation happening here, but it doesn't look particularly strong. Let's run some correlations tests to see what they say.
+
+```{r eggs-fem-size-cor, echo=FALSE}
+
+cor.test(mated_femFL$length, as.numeric(mated_femFL$totalEggs))
+cor.test(mated_femFL$depth_adj, as.numeric(mated_femFL$totalEggs))
+cor.test(mated_femFL$svl, as.numeric(mated_femFL$totalEggs))
+
+```
+
+There is not a significant correlation between the number of eggs and size of the female in terms of standard length, depth, or snout-vent length. Interestingly, however, there is a negative correlation for length and SVL and a positive correlation for depth (but they are all overall weak).
