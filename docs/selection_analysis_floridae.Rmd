@@ -22,6 +22,7 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
+library(lme4)
 ```
 
 ``` {r read-data, message = FALSE, warning = FALSE}
@@ -91,7 +92,7 @@ Looking at the distributions below I do not expect to see differences in standar
 
 Based on this, I will run a Wilcoxon test for standard length, a Welch two sample t-test for snout-vent length, and a two sample t-test for torso depth (adjusted).
 
-```{r histogram_sizes, message=FALSE, warning = FALSE, echo = FALSE, fig.cap="Histograms of male and female pipefish body sizes.", fig.width=15}
+```{r histogram_sizes, message=FALSE, warning = FALSE, echo = FALSE, fig.cap="_Histograms of male and female pipefish body sizes._", fig.width=15}
 #Combining the datasets
 fem_mesoFL$Sex <- "F"
 mal_mesoFL$Sex <- "M"
@@ -198,12 +199,12 @@ mal_allFL <- merge(mal_mesoFL, mal_fitness, by = "maleID", all.x = TRUE, all.y =
 
 There are a few trials that I want to remove from the analysis:
 
-  1. All trials where there were no successful matings (7, 9, 10, 11).
-  
-  2. Trial 1, a male gave birth and the babies were immediately eaten by the adults so the trial was ended early and therefore I was unable to get any parentage information for that trial.
-  
+1. All trials where there were no successful matings (7, 9, 10, 11).
+
+2. Trial 1, a male gave birth and the babies were immediately eaten by the adults so the trial was ended early and therefore I was unable to get any parentage information for that trial.
+
 I also want to replace the NAs that were automatically added to the columns from the fitness dataset (MatingSuccess, NumDeveloped, NumUndeveloped, totalEggs) with 0s and add a column to the female dataset that tells me whether or not the female mated (with 1 or 0).
-  
+
 ```{r subset-successful-trials}
 #Subset the merged datasets to remove trials without successful matings and Trial 1
 fem_succFL <- subset(fem_allFL, !(trial_num %in% c(7, 9, 10, 11, 1)))
@@ -253,7 +254,7 @@ These values will be influenced by the number of 0s coming from males who did no
 
 We can see from the bottom table that even when we only include males who mated there is still a wide range in the brood size. I want to see what relationship there is between brood pouch size (in terms of both total area and length) and brood size (total number of embryos).
 
-```{r em-v-bp, echo=FALSE, fig.cap="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had.", fig.width=15, fig.height=10 }
+```{r em-v-bp, echo=FALSE, fig.cap="_Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had._", fig.width=15, fig.height=10 }
 #create a subset of only the males who mated
 mated_malFL <- mal_succFL[mal_succFL$preg_status == 1, ]
 
@@ -286,7 +287,7 @@ There is not a significant correlation between the number of eggs and size of th
 
 Multiple of the wild study papers looked at correlations between body size in terms of standard length and the number of embryos and found significant positive correlations. 
 
-```{r em-v-sl, echo=FALSE, fig.cap="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had.", fig.width=15, fig.height=10}
+```{r em-v-sl, echo=FALSE, fig.cap="_Scatterplot of the relationship between standard length (mm) and the number of embryos a male had._", fig.width=15, fig.height=10}
 plot(mated_malFL$length,
      mated_malFL$totalEggs,
      xlab = "Standard Length (mm)",
@@ -332,7 +333,7 @@ sd(eggs_per_mate, na.rm = TRUE)/sqrt(length(eggs_per_mate))
 ```
 
 
-```{r em-v-fem-size, echo=FALSE, fig.cap="Scatterplot of the relationship between female size metrics and the number of eggs transferred.", fig.width=15, fig.height=8}
+```{r em-v-fem-size, echo=FALSE, fig.cap="_Scatterplot of the relationship between female size metrics and the number of eggs transferred._", fig.width=15, fig.height=8}
 #create a subset of only the females who mated
 mated_femFL <- fem_succFL[fem_succFL$mated == 1, ]
 
@@ -373,3 +374,170 @@ cor.test(mated_femFL$svl, as.numeric(mated_femFL$totalEggs))
 ```
 
 There is not a significant correlation between the number of eggs and size of the female in terms of standard length, depth, or snout-vent length. Interestingly, however, there is a negative correlation for length and SVL and a positive correlation for depth (but they are all overall weak).
+
+# Differences between mated individuals and unmated individuals
+I want to now see if there are any significant differences in the sizes of individuals who mated vs individuals that didn't mate in males and females. I am going to be focusing on the same morphometrics outlined above.
+
+## Males
+### Visual Comparison
+Before conducting any analyses, let's see if we can visually detect any differences between males who mated and unmated individuals.
+
+```{r mat-status-morph-mal, echo=FALSE, fig.cap="_Six different morphometrics compared between males who sucessfully mated versus those that didn't. Orange represents unmated and blue represents mated males._", fig.height=10, fig.width=15, warning=FALSE}
+
+par(mfrow=c(2,3))
+mal_succFL$preg_status <- as.factor(mal_succFL$preg_status)
+boxplot(mal_succFL$length ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = "Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFL$depth_adj ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = "Depth (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFL$svl ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = "Snout-vent Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(as.numeric(mal_succFL$bp_area) ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = expression(paste("Brood Pouch Area (mm"^2*")")),
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFL$bp_length ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = "Brood Pouch Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFL$weight ~ mal_succFL$preg_status,
+        xlab = "Mated",
+        ylab = "Weight (g)",
+        col= c("darkorange", "cyan4"))
+```
+
+I don't notice many differences, however, it appears that unmated males are slightly larger in terms of standard length and snout-vent length, a somewhat surprising find.
+
+### Testing the difference
+Let's now put some statistical power behind the difference in various morphometrics between mated and unmated individuals. I am first going to test the assumptions and then run the appropriate version of a t-test. See the previous section "Calculating the degree of sexual dimorphism" for more details.
+
+```{r mat-stat-stat-mal, echo=FALSE, warning=FALSE}
+##Test the assumptions
+##Looking for equal variances
+var.test(mal_succFL$length ~ mal_succFL$preg_status) #equal
+var.test(mal_succFL$depth_adj ~ mal_succFL$preg_status) #equal
+var.test(mal_succFL$svl ~ mal_succFL$preg_status) #equal
+var.test(as.numeric(mal_succFL$bp_area) ~ mal_succFL$preg_status) #equal
+var.test(mal_succFL$bp_length ~ mal_succFL$preg_status) #equal
+var.test(mal_succFL$weight ~ mal_succFL$preg_status) #equal
+
+##Looking for a normal distribution
+normalTest(mal_succFL$length, method = "da") #normal
+normalTest(mal_succFL$depth_adj, method = "da") #normal
+normalTest(mal_succFL$svl, method = "da") #normal
+normalTest(as.numeric(mal_succFL$bp_area), method = "da") #normal
+normalTest(mal_succFL$bp_length, method = "da") #normal
+normalTest(mal_succFL$weight, method = "da") #normal
+
+##Running the appropriate test
+t.test(mal_succFL$length ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+t.test(mal_succFL$depth_adj ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+t.test(mal_succFL$svl ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+t.test(as.numeric(mal_succFL$bp_area) ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+t.test(mal_succFL$bp_length ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+t.test(mal_succFL$weight ~ mal_succFL$preg_status,
+       var.equal = TRUE)
+```
+
+We can now see that males who mated we significantly smaller in terms of both standard length AND snout-vent length. Previous studies on wild populations found that larger males had higher mating and reproductive success . . . exciting!
+
+Let's explore this a bit more and overlay the distribution of all males (mated and unmated) with the males who did mate and see how it varies.
+
+```{r mated-unmated-hist, echo=FALSE, fig.cap= "_Overlay of the size range of males who mated on top of the size range of all males for length and snout-vent length._", fig.width= 15, fig.height= 8}
+par(mfrow = c(1,2))
+hist(mal_allFL$length, 
+     xlab = "Length (mm)", 
+     ylab = "Number of male pipefish",
+     col = "#beaed4", breaks = 15, main = "")
+
+hist(mal_allFL$length[mal_allFL$preg_status != 0], 
+     add = TRUE,
+     col = "#8968CD", breaks = 15)
+
+hist(mal_allFL$svl, 
+     xlab = "Snout-vent length (mm)", 
+     ylab = "Number of male pipefish",
+     col = "#beaed4", breaks = 15, main = "")
+
+hist(mal_allFL$svl[mal_allFL$preg_status !=  0], 
+     add = TRUE,
+     col = "#8968CD", breaks = 12)
+
+legend("topright",
+       legend = c("Mated Males", "All Males"),
+       col = c("#8968CD", "#beaed4"),
+       pch = 15)
+```
+
+Even though mated males were significantly smaller, some of the larger males were able to achieve successful matings. 
+
+### Relationships with latency to mate
+There was some variety in the length of time that males were house in the same-sex tanks before being placed in the experimental breeding populations. I am now curious to see if there is any relationship between the latency to trials and various components of fitness.
+
+```{r lat-to-mate-matesucc}
+#Mating success
+##Create the model
+mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
+                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date))
+
+summary(mate_succlm)
+
+##Create model with fewer parameters
+lm_no_location <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
+                         (1 | mal_succFL$col_date))
+anova(mate_succlm, lm_no_location)  # Compare models with and without col_location
+
+```
+
+I ran a linear mixed effects model comparing Mating Success to the Latency to trial including both the collection date and collection location as random effect. Overall, the random effects for collection location appear to be non-significant but there is some variability in mating success due to the collection date. From the fixed effects we can see that latency to trial has a negative but non-significant effect on mating success. 
+
+```{r lat-to-mate-matesucc-plot, fig.cap="_Scatterplot of the relationship between the number of mates achieved by a male and how long the male was in the lab prir to entering a trial. Color of the points correspond to the month that the pipefish was collected in._", echo=FALSE}
+
+plot(jitter(mal_succFL$lat_to_trial),
+     jitter(mal_succFL$MatingSuccess),
+     xlab = "Latency to Trial (Days)",
+     ylab = "Mating Success",
+     pch = 19,
+     col = as.factor(mal_succFL$col_date))
+abline(lm(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial), lwd = 3, lty =2)
+
+legend("topright",
+       legend = unique(mal_succFL$col_date),
+       col = unique(as.factor(mal_succFL$col_date)),
+       pch = 19)
+
+```
+
+Now let's see if there is any relationship when we look at reproductive success (in terms of total eggs received) and the latency to the trial. Because we already accounted for the males who didn't mate in terms of mating success, I am going to remove them from this model. Therefore we will be looking at the impact on reproductive success on the individuals that were successfully able to obtain a mate.
+
+```{r lat-to-mate-reposucc}
+#Mating success
+##Create the model
+tot_eggslm <- lmer(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + 
+                      (1 | mated_malFL$col_location) + 
+                     (1 | mated_malFL$col_date))
+
+summary(tot_eggslm)
+
+##Create model with fewer parameters
+lm_no_date <- lmer(mated_malFL$MatingSuccess ~ mated_malFL$lat_to_trial + 
+                         (1 | mated_malFL$col_location))
+anova(tot_eggslm, lm_no_date)  # Compare models with and without col_location
+
+```
+
+In this new model now we can see that there is only non-zero variance 
+ 
+
+

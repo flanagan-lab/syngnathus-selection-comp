@@ -3,24 +3,25 @@ Selection pressures in *Syngnathus floridae*
 
 
 
-- <a href="#calculating-the-degree-of-sexual-dimorphism"
-  id="toc-calculating-the-degree-of-sexual-dimorphism">Calculating the
-  degree of sexual dimorphism</a>
-  - <a href="#checking-the-assumptions-for-a-pairwise-comparison"
-    id="toc-checking-the-assumptions-for-a-pairwise-comparison">Checking the
-    assumptions for a pairwise comparison</a>
-  - <a href="#investigate-distributions-and-run-the-tests"
-    id="toc-investigate-distributions-and-run-the-tests">Investigate
-    distributions and run the tests</a>
-- <a
-  href="#calculating-mating-and-reproductive-success-for-individuals-who-mated"
-  id="toc-calculating-mating-and-reproductive-success-for-individuals-who-mated">Calculating
-  mating and reproductive success for individuals who mated</a>
-- <a href="#summary-statistics-for-successfully-mated-individuals"
-  id="toc-summary-statistics-for-successfully-mated-individuals">Summary
-  statistics for successfully mated individuals</a>
-  - <a href="#males" id="toc-males">Males</a>
-  - <a href="#females" id="toc-females">Females</a>
+- [Calculating the degree of sexual
+  dimorphism](#calculating-the-degree-of-sexual-dimorphism)
+  - [Checking the assumptions for a pairwise
+    comparison](#checking-the-assumptions-for-a-pairwise-comparison)
+  - [Investigate distributions and run the
+    tests](#investigate-distributions-and-run-the-tests)
+- [Calculating mating and reproductive success for individuals who
+  mated](#calculating-mating-and-reproductive-success-for-individuals-who-mated)
+- [Summary statistics for successfully mated
+  individuals](#summary-statistics-for-successfully-mated-individuals)
+  - [Males](#males)
+  - [Females](#females)
+- [Differences between mated individuals and unmated
+  individuals](#differences-between-mated-individuals-and-unmated-individuals)
+  - [Males](#males-1)
+    - [Visual Comparison](#visual-comparison)
+    - [Testing the difference](#testing-the-difference)
+    - [Relationships with latency to
+      mate](#relationships-with-latency-to-mate)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -28,6 +29,7 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
+library(lme4)
 ```
 
 ``` r
@@ -259,8 +261,13 @@ Based on this, I will run a Wilcoxon test for standard length, a Welch
 two sample t-test for snout-vent length, and a two sample t-test for
 torso depth (adjusted).
 
-![Histograms of male and female pipefish body
-sizes.](selection_analysis_floridae_files/figure-gfm/histogram_sizes-1.png)
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/histogram_sizes-1.png"
+alt="Histograms of male and female pipefish body sizes." />
+<figcaption aria-hidden="true">Histograms of male and female pipefish
+body sizes.</figcaption>
+</figure>
 
 ``` r
 #Running the appropriate test
@@ -542,9 +549,13 @@ who mated there is still a wide range in the brood size. I want to see
 what relationship there is between brood pouch size (in terms of both
 total area and length) and brood size (total number of embryos).
 
-![Scatterplot of the relationship between brood pouch size metrics and
-the number of embryos a male
-had.](selection_analysis_floridae_files/figure-gfm/em-v-bp-1.png)
+<figure>
+<img src="selection_analysis_floridae_files/figure-gfm/em-v-bp-1.png"
+alt="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had." />
+<figcaption aria-hidden="true">Scatterplot of the relationship between
+brood pouch size metrics and the number of embryos a male
+had.</figcaption>
+</figure>
 
 There may be some correlation happening here, but it doesn’t look
 particularly strong. Let’s run some correlations tests to see what they
@@ -582,9 +593,12 @@ Multiple of the wild study papers looked at correlations between body
 size in terms of standard length and the number of embryos and found
 significant positive correlations.
 
-![Scatterplot of the relationship between standard length (mm) and the
-number of embryos a male
-had.](selection_analysis_floridae_files/figure-gfm/em-v-sl-1.png)
+<figure>
+<img src="selection_analysis_floridae_files/figure-gfm/em-v-sl-1.png"
+alt="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had." />
+<figcaption aria-hidden="true">Scatterplot of the relationship between
+standard length (mm) and the number of embryos a male had.</figcaption>
+</figure>
 
     ## 
     ##  Pearson's product-moment correlation
@@ -643,9 +657,13 @@ number of eggs and dividing it by the number of mates.
 
     ## [1] 14.68782
 
-![Scatterplot of the relationship between female size metrics and the
-number of eggs
-transferred.](selection_analysis_floridae_files/figure-gfm/em-v-fem-size-1.png)
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/em-v-fem-size-1.png"
+alt="Scatterplot of the relationship between female size metrics and the number of eggs transferred." />
+<figcaption aria-hidden="true">Scatterplot of the relationship between
+female size metrics and the number of eggs transferred.</figcaption>
+</figure>
 
 There may be some correlation happening here, but it doesn’t look
 particularly strong. Let’s run some correlations tests to see what they
@@ -692,3 +710,355 @@ size of the female in terms of standard length, depth, or snout-vent
 length. Interestingly, however, there is a negative correlation for
 length and SVL and a positive correlation for depth (but they are all
 overall weak).
+
+# Differences between mated individuals and unmated individuals
+
+I want to now see if there are any significant differences in the sizes
+of individuals who mated vs individuals that didn’t mate in males and
+females. I am going to be focusing on the same morphometrics outlined
+above.
+
+## Males
+
+### Visual Comparison
+
+Before conducting any analyses, let’s see if we can visually detect any
+differences between males who mated and unmated individuals.
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/mat-status-morph-mal-1.png"
+alt="Six different morphometrics compared between males who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated males." />
+<figcaption aria-hidden="true"><em>Six different morphometrics compared
+between males who sucessfully mated versus those that didn’t. Orange
+represents unmated and blue represents mated males.</em></figcaption>
+</figure>
+
+I don’t notice many differences, however, it appears that unmated males
+are slightly larger in terms of standard length and snout-vent length, a
+somewhat surprising find.
+
+### Testing the difference
+
+Let’s now put some statistical power behind the difference in various
+morphometrics between mated and unmated individuals. I am first going to
+test the assumptions and then run the appropriate version of a t-test.
+See the previous section “Calculating the degree of sexual dimorphism”
+for more details.
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFL$length by mal_succFL$preg_status
+    ## F = 1.227, num df = 31, denom df = 23, p-value = 0.6183
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.549967 2.616083
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.226976
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFL$depth_adj by mal_succFL$preg_status
+    ## F = 1.1946, num df = 31, denom df = 23, p-value = 0.6665
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.5354334 2.5469498
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.194551
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFL$svl by mal_succFL$preg_status
+    ## F = 1.5716, num df = 31, denom df = 23, p-value = 0.2651
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.704435 3.350857
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.571594
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  as.numeric(mal_succFL$bp_area) by mal_succFL$preg_status
+    ## F = 2.1704, num df = 28, denom df = 23, p-value = 0.06161
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.9619177 4.7455975
+    ## sample estimates:
+    ## ratio of variances 
+    ##           2.170381
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFL$bp_length by mal_succFL$preg_status
+    ## F = 1.1712, num df = 28, denom df = 23, p-value = 0.7047
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.5190955 2.5609447
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.171238
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFL$weight by mal_succFL$preg_status
+    ## F = 1.6153, num df = 31, denom df = 23, p-value = 0.2373
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.7240159 3.4439992
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.615279
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 1.3942
+    ##     Z3  | Skewness: -1.0089
+    ##     Z4  | Kurtosis: 0.6135
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.498 
+    ##     Skewness Test: 0.313 
+    ##     Kurtosis Test: 0.5396
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 2.7815
+    ##     Z3  | Skewness: -0.6756
+    ##     Z4  | Kurtosis: 1.5248
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.2489 
+    ##     Skewness Test: 0.4993 
+    ##     Kurtosis Test: 0.1273
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 2.8353
+    ##     Z3  | Skewness: -0.1915
+    ##     Z4  | Kurtosis: -1.6729
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.2423 
+    ##     Skewness Test: 0.8482 
+    ##     Kurtosis Test: 0.09434
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 5.3414
+    ##     Z3  | Skewness: 1.9695
+    ##     Z4  | Kurtosis: 1.2093
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.0692 
+    ##     Skewness Test: 0.04889 
+    ##     Kurtosis Test: 0.2266
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 0.1537
+    ##     Z3  | Skewness: -0.1976
+    ##     Z4  | Kurtosis: -0.3386
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.926 
+    ##     Skewness Test: 0.8433 
+    ##     Kurtosis Test: 0.7349
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 4.4842
+    ##     Z3  | Skewness: 0.9969
+    ##     Z4  | Kurtosis: -1.8682
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.1062 
+    ##     Skewness Test: 0.3188 
+    ##     Kurtosis Test: 0.06173
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFL$length by mal_succFL$preg_status
+    ## t = 2.189, df = 54, p-value = 0.03294
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##   0.8753587 19.9376622
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        180.7827        170.3762
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFL$depth_adj by mal_succFL$preg_status
+    ## t = -1.1162, df = 54, p-value = 0.2693
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.003774190  0.001074713
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##      0.03252334      0.03387308
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFL$svl by mal_succFL$preg_status
+    ## t = 2.2934, df = 54, p-value = 0.02574
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.5626831 8.3831502
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        76.32887        71.85596
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  as.numeric(mal_succFL$bp_area) by mal_succFL$preg_status
+    ## t = 0.76167, df = 51, p-value = 0.4498
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -24.10295  53.57274
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        264.5283        249.7934
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFL$bp_length by mal_succFL$preg_status
+    ## t = 0.53608, df = 51, p-value = 0.5942
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -2.527712  4.369421
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        48.12590        47.20504
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFL$weight by mal_succFL$preg_status
+    ## t = 1.2283, df = 54, p-value = 0.2247
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.2601657  1.0830824
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        3.503125        3.091667
+
+We can now see that males who mated we significantly smaller in terms of
+both standard length AND snout-vent length. Previous studies on wild
+populations found that larger males had higher mating and reproductive
+success . . . exciting!
+
+Let’s explore this a bit more and overlay the distribution of all males
+(mated and unmated) with the males who did mate and see how it varies.
+
+![](selection_analysis_floridae_files/figure-gfm/mated-unmated-hist-1.png)<!-- -->
+
+Even though mated males were significantly smaller, some of the larger
+males were able to achieve successful matings.
+
+### Relationships with latency to mate
+
+There was some variety in the length of time that males were house in
+the same-sex tanks before being placed in the experimental breeding
+populations. I am now curious to see if there is any relationship
+between the latency to trials and various components of fitness.
+
+``` r
+#Mating success
+##Create the model
+mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
+                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date))
+```
+
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
+summary(mate_succlm)
+```
+
+    ## Linear mixed model fit by REML ['lmerMod']
+    ## Formula: 
+    ## mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_location) +  
+    ##     (1 | mal_succFL$col_date)
+    ## 
+    ## REML criterion at convergence: 122.7
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.0664 -0.9121 -0.3876  0.5572  2.2580 
+    ## 
+    ## Random effects:
+    ##  Groups                  Name        Variance Std.Dev.
+    ##  mal_succFL$col_date     (Intercept) 0.02109  0.1452  
+    ##  mal_succFL$col_location (Intercept) 0.00000  0.0000  
+    ##  Residual                            0.44891  0.6700  
+    ## Number of obs: 56, groups:  mal_succFL$col_date, 3; mal_succFL$col_location, 2
+    ## 
+    ## Fixed effects:
+    ##                         Estimate Std. Error t value
+    ## (Intercept)              0.80188    0.24599   3.260
+    ## mal_succFL$lat_to_trial -0.02067    0.01274  -1.622
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## ml_sccFL$__ -0.827
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
+##Create model with fewer parameters
+lm_no_location <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
+                         (1 | mal_succFL$col_date))
+anova(mate_succlm, lm_no_location)  # Compare models with and without col_location
+```
+
+    ## refitting model(s) with ML (instead of REML)
+
+    ## Data: NULL
+    ## Models:
+    ## lm_no_location: mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_date)
+    ## mate_succlm: mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date)
+    ##                npar    AIC    BIC logLik deviance Chisq Df Pr(>Chisq)
+    ## lm_no_location    4 121.02 129.12 -56.51   113.02                    
+    ## mate_succlm       5 123.02 133.15 -56.51   113.02     0  1          1
+
+I ran a linear mixed effects model comparing Mating Success to the
+Latency to trial including both the collection date and collection
+location as random effect. Overall, the random effects for collection
+location appear to be non-significant but there is some variability in
+mating success due to the collection date. From the fixed effects we can
+see that latency to trial has a negative but non-significant effect on
+mating success.
+
+![](selection_analysis_floridae_files/figure-gfm/lat-to-mate-matesucc-plot-1.png)<!-- -->
