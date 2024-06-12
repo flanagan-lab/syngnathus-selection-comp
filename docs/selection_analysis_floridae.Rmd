@@ -25,6 +25,9 @@ library(fBasics)
 library(pwr)
 library(lme4)
 library(DT)
+library(dplyr)
+library(tidyr)
+library(knitr)
 
 ```
 
@@ -488,7 +491,7 @@ Even though mated males were significantly smaller, some of the larger males wer
 ### Relationships with latency to mate
 There was some variety in the length of time that males were house in the same-sex tanks before being placed in the experimental breeding populations. I am now curious to see if there is any relationship between the latency to trials and various components of fitness.
 
-```{r lat-to-mate-matesucc, eval=FALSE}
+```{r lat-to-mate-matesucc, message=FALSE}
 #Mating success
 ##Create the model
 mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
@@ -524,7 +527,7 @@ legend("topright",
 
 Now let's see if there is any relationship when we look at reproductive success (in terms of total eggs received) and the latency to the trial. Because we already accounted for the males who didn't mate in terms of mating success, I am going to remove them from this model. Therefore we will be looking at the impact on reproductive success on the individuals that were successfully able to obtain a mate.
 
-```{r lat-to-mate-reposucc, eval = FALSE}
+```{r lat-to-mate-reposucc, message=FALSE}
 #Mating success
 ##Create the model
 tot_eggslm <- lmer(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + 
@@ -540,9 +543,9 @@ anova(tot_eggslm, lm_no_date)  # Compare models with and without col_location
 
 ```
 
-In this new model now we can see that there is only non-zero variance 
+In this new model now we can see that there is only non-zero variance for the random effect of Collection location and there does appear to be a significant negative impact of latency to trial on the total number of eggs received by a male. This may mean that while males who were in the lab for longer did not experience impacts on their ability to achieve mates, they did receive fewer eggs.
  
-```{r lat-to-mate-toteggs-plot, fig.cap="_Scatterplot of the relationship between the total eggs recieved by a male and how long the male was in the lab prir to entering a trial. Color of the points correspond to the location that the pipefish was collected from._", echo=FALSE}
+```{r lat-to-mate-toteggs-plot, fig.cap="_Scatterplot of the relationship between the total eggs recieved by a male and how long the male was in the lab prior to entering a trial. Color of the points correspond to the location that the pipefish was collected from._", echo=FALSE}
 
 plot(jitter(mated_malFL$lat_to_trial),
      jitter(mated_malFL$totalEggs),
@@ -856,12 +859,19 @@ ggplot(opp_average,
 
 We can see that for male and female _S. floridae_ there is a significant opportunity for selection and opportunity for sexual selection, however, we don't see significant differences between the sexes for either one. In both cases, there is a greater opportunity for selection compared to an opportunity for sexual selection.
 
-## Partitioning the Total Opportunity for Selection (I)
-```{r opp-selection-females, eval = FALSE}
+## Partitioning the Total Opportunity for Selection ($I$)
+One of the downsides associated with the opportunity for selection and the opportunity for sexual selection is that it largely focuses on **pre-copulatory** sexual selection. While this is a major force for many organisms, as it is related to one's ability to successfully achieve a mate, it is not the only type of selection they experience. Obtaining a mate is only half the battle, you must also obtain successful fertilization for your genes to be passed to the next generation, meaning **post-copulatory** sexual selection is just as important to consider. To investigate this, we can parse or decompose the overall opportunity for selection into various episodes to represent various pre- and post-mating processes. 
+
+Once again, I am going to calculate selection for the trials individually in males and females and then average across all trials to get the final values and the 95% CIs. For pre-mating processes I am focusing on mating success and then for post-mating processes I am looking at the total number of eggs transferred/received and the proportion of those eggs which developed (showing fertilization success).
+
+I also want to calculate the percentage of the overall opportunity for selection that is represented by each episode of selection.
+
+```{r opp-select-episodes-females}
+
 #Create a dataframe to store all of the intermediate values of fitness in
-fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succ) + 9,
+fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFL) + 9,
                                       nrow = 0))
-colnames(fem_succ_fitness) <- c(colnames(fem_succ),
+colnames(fem_succ_fitness) <- c(colnames(fem_succFL),
                                 "w1", "w1_squared",
                                 "W2", "W2_bar", "w2",
                                 "W3", "W3_bar", "w3", "i3")
@@ -871,14 +881,15 @@ opp_selection_episodes_fem <- data.frame(matrix(ncol = 12,
                                             nrow = 0))
 colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
                                           "I_3", "I_3per", "I_12", "I_12per",
-                                          "I", "Iper", "I_s")
+                                          "I", "Iper")
 
-for (trial in unique(fem_succ$trial_num)) {
+for (trial in unique(fem_succFL$trial_num)) {
   
   #Subset the overall dataframe to work with an individual trial
-  tmp <- fem_succ[fem_succ$trial_num == trial, ]
+  tmp <- fem_succFL[fem_succFL$trial_num == trial, ]
   
   #Calculate the absolute pre-copulatory fitness (Eq. 14 Arnold & Wade 1984)
+  #This is the same as the calculation of I_s
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
   tmp$w1_squared <- (tmp$w1)^2
   
@@ -905,10 +916,8 @@ for (trial in unique(fem_succ$trial_num)) {
 
   I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
   
-  #Total selection
+  #Total opportunity for selection
   I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
-  
-  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
   
   #Calculating percentages for each selection event
   I_1per <- (I_1/I)*100
@@ -920,7 +929,7 @@ for (trial in unique(fem_succ$trial_num)) {
   #Combining all of the selection values (Is) and saving the output
   trial_num <- trial
   selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper, I_s)
+                     I_12, I_12per, I, Iper)
   
   opp_selection_episodes_fem <- rbind(opp_selection_episodes_fem, selection)
   
@@ -932,11 +941,11 @@ for (trial in unique(fem_succ$trial_num)) {
 #write.csv(fem_succ_fitness, "data/floridae_int_I_fem.csv", row.names = FALSE)
 ```
 
-```{r opp-selection-males, eval = FALSE}
+```{r opp-select-episodes-males}
 #Create a dataframe to store all of the intermediate values of fitness in
-mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succ) + 9,
+mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFL) + 9,
                                       nrow = 0))
-colnames(mal_succ_fitness) <- c(colnames(mal_succ),
+colnames(mal_succ_fitness) <- c(colnames(mal_succFL),
                                 "w1", "w1_squared",
                                 "W2", "W2_bar", "w2",
                                 "W3", "W3_bar", "w3", "i3")
@@ -948,10 +957,10 @@ colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_1per", "I_2", "
                                           "I_3", "I_3per", "I_12", "I_12per",
                                           "I", "Iper", "I_s")
 
-for (trial in unique(mal_succ$trial_num)) {
+for (trial in unique(mal_succFL$trial_num)) {
   
   #Subset the overall dataframe to work with an individual trial
-  tmp <- mal_succ[mal_succ$trial_num == trial, ]
+  tmp <- mal_succFL[mal_succFL$trial_num == trial, ]
   
   #Calculate the absolute pre-copultory fitness (Eq. 14 Arnold & Wade 1984)
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
@@ -980,10 +989,8 @@ for (trial in unique(mal_succ$trial_num)) {
 
   I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
   
-  #Total selection
+  #Total opportunity for selection
   I <- var(tmp$NumDeveloped_Calc)/(mean(tmp$NumDeveloped_Calc)^2)
-
-  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
 
   #Calculating percentages for each selection event
   I_1per <- (I_1/I)*100
@@ -995,7 +1002,7 @@ for (trial in unique(mal_succ$trial_num)) {
   #Combining all of the selection values (Is) and saving the output
   trial_num <- trial
   selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper, I_s)
+                     I_12, I_12per, I, Iper)
   
   opp_selection_episodes_mal <- rbind(opp_selection_episodes_mal, selection)
   
@@ -1007,7 +1014,7 @@ for (trial in unique(mal_succ$trial_num)) {
 #write.csv(mal_succ_fitness, "data/floridae_int_I_mal.csv", row.names = FALSE)
 ```
 
-```{r sum-selection-coef, eval=FALSE, include=FALSE}
+```{r select-episodes-CI}
 #Merge the selection coefficients from males and females into one dataset to 
 #make life easier
 opp_selection_episodes_fem$Sex <- "F"
@@ -1018,55 +1025,362 @@ opp_selection_episodes_all <- rbind(opp_selection_episodes_fem, opp_selection_ep
 #Exporting the data
 #write.csv(opp_selection_episodes_all, "data/floridae_opp_selection.csv", row.names = FALSE)
 
-#Playing around with generating an automatic Table
-library(gtsummary)
-opp_selection_table <- tbl_summary(opp_selection_episodes_all,
-            include = c("I_1", "I_2",  "I_3", "I_12", "I"),
-            statistic = list(all_continuous() ~ "{mean} ({sd})"),
-            type = list(everything() ~ "continuous"),
-            #label = list(I_1 ~ expression(I[1])),
-            by = Sex) 
+#List the columns of interest
+columns <- c("I_1", "I_2", "I_12", "I_3","I")
 
-tbl_summary(opp_selection_episodes_all,
-            include = c("I_1per", "I_2per",  "I_3per", "I_12per", "Iper"),
-            statistic = list(all_continuous() ~ "{mean}"),
-            type = list(everything() ~ "continuous"),
-            #label = list(I_1 ~ expression(I[1])),
-            by = Sex) 
+#Create a dataframe to store the final values in
+opp_episodes_average <- data.frame(matrix(ncol = 4,
+                                    nrow = 0))
+colnames(opp_episodes_average) <- c("Average", "Interval", 
+                                    "Episode_sel", "Sex")
 
-#Calculating the mean and Confidence intervals for each episode of selection
-#For males and females
-t_test <- qt(p = 0.975, df = (nrow(opp_selection_episodes_mal) - 1))
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(opp_selection_episodes_fem) - 1))
 
-seI1 <- tapply(opp_selection_episodes_all$I_1, opp_selection_episodes_all$Sex, function(x){
-  sqrt(var(x))/sqrt(length(x))
-})
-meanI1 <- tapply(opp_selection_episodes_all$I_1, opp_selection_episodes_all$Sex, mean)
-meanI1 - seI1*t_test
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                  == col_name], 
+                       opp_selection_episodes_all$Sex, 
+                       mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                == col_name], 
+                     opp_selection_episodes_all$Sex, 
+                 function(x){
+                   sqrt(var(x))/sqrt(length(x))
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Episode_sel <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    opp_episodes_average <- rbind(opp_episodes_average, episode)
+    
+  }
 
-seI2 <- tapply(opp_selection_episodes_all$I_2, opp_selection_episodes_all$Sex, function(x){
-  sqrt(var(x))/sqrt(length(x))
-})
-meanI2 <- tapply(opp_selection_episodes_all$I_2, opp_selection_episodes_all$Sex, mean)
-meanI2 + seI2*t_test
-
-seI3 <- tapply(opp_selection_episodes_all$I_3, opp_selection_episodes_all$Sex, function(x){
-  sqrt(var(x))/sqrt(length(x))
-})
-meanI3 <- tapply(opp_selection_episodes_all$I_3, opp_selection_episodes_all$Sex, mean)
-meanI3 + seI3*t_test
-
-seI12 <- tapply(opp_selection_episodes_all$I_12, opp_selection_episodes_all$Sex, function(x){
-  sqrt(var(x))/sqrt(length(x))
-})
-meanI12 <- tapply(opp_selection_episodes_all$I_12, opp_selection_episodes_all$Sex, mean)
-meanI12 - seI12*t_test
-
-seI <- tapply(opp_selection_episodes_all$I, opp_selection_episodes_all$Sex, function(x){
-  sqrt(var(x))/sqrt(length(x))
-})
-meanI <- tapply(opp_selection_episodes_all$I, opp_selection_episodes_all$Sex, mean)
-meanI - seI*t_test
 
 ```
 
+Let's now explore some results:
+
+```{r opp-select-episodes-table, echo = FALSE, warning=FALSE}
+
+#Create a new column
+opp_episodes_average <- opp_episodes_average %>%
+  mutate(Combined = paste0(round(Average , 2), 
+                           " (", round(Average - Interval, 2), ", ",
+                           round(Average + Interval, 2), ")"))
+
+#Transform data into wide format
+sum_table <- opp_episodes_average %>% 
+  select(Episode_sel, Sex, Combined) %>% 
+  pivot_wider(names_from = Sex, values_from = Combined) 
+
+#Display the table
+kable(sum_table, caption = "Average Episode of Selection (95% CI) for Males and Females")
+
+```
+
+
+```{r opp-select-episodes-figure, echo=FALSE, fig.cap="_Average opportunity for selection for the different episodes for male (purple) and female (green) S. floridae. Errorbars represent the 95% confidence intervals around the mean_", fig.width=8, fig.height=6, warning=FALSE}
+
+#Set parameters
+
+ggplot(opp_episodes_average,
+       aes(x = Episode_sel,
+           y = Average,
+           color = Sex,
+           group = Sex)) +
+  geom_errorbar(aes(ymin = Average - Interval,
+                    ymax = Average + Interval),
+                color = "black",
+                width = 0.2,
+                position = pd,
+                linewidth = 1) +
+  geom_point(position = pd,
+             size = 4) +
+  xlab("Episode of Selection") +
+  ylab("Average Fitness Value") +
+  scale_color_manual(values = sex_cols) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  theme(legend.position = "bottom",
+        legend.key=element_blank(),
+        axis.title.x = element_text(size = 16,
+                                    vjust = -0.5),
+        axis.text.x = element_text(size = 16, family = "serif"),
+        axis.title.y = element_text(size = 16,
+                                    vjust = 2.5),
+        axis.text.y = element_text(size = 16),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
+  geom_hline(yintercept = 0, linetype = "dashed", size = 1)
+
+```
+
+From the table and the plot we can see that once again there are no significant differences in the selection between males and females. Additionally, the two post-mating episodes of selection ($I_2$ and $I_3$) are non-significant for both males and females (i.e., the 95% CI cross zero).
+
+Let's now look more into the percentage of the overall opportunity for selection made up for by each individual episode of selection:
+
+```{r calc-opp-percents}
+
+sexes <- c("M", "F")
+
+#Create a dataframe to store the final values in
+opp_percents <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(opp_percents) <- c("Percent", "Episode_sel", "Sex")
+
+#Calculate the percentage for each episode in the two sexes
+for (sex in sexes) {
+    
+  #subset dataset based on sex
+  tmp_sex <- opp_episodes_average[opp_episodes_average$Sex == sex, ]
+  
+  #Pull out the overall opp. for selection value
+  I_average <- tmp_sex$Average[tmp_sex$Episode_sel == "I"]
+  
+  #Calculate what percentage of the I is represented by each episode
+  percents <- as.data.frame(t(t(apply(tmp_sex, 1, function(x){
+      
+      (as.numeric(x[1])/I_average)*100
+      
+    }))))
+    
+    colnames(percents) <- "Percent"
+    percents$Episode_sel <- tmp_sex$Episode_sel
+    percents$Sex <- sex
+    
+    rownames(percents) <- NULL
+    
+    opp_percents <- rbind(opp_percents, percents)
+    
+  }
+
+```
+
+```{r generate-figa-opp-selection, echo=FALSE, warning=FALSE, fig.cap="_The proportion of the total opportunity for selection that is represented by each episode of selection for males and females._"}
+
+selection_colors <- c("I_1" = "#9FBCAA", "I_2" = "#F0B67F", "I_3" = "#CD96CD", "I_12" = "#6CA6CD")
+
+ggplot(opp_percents[!(opp_percents$Episode_sel %in% c("I", "I_12")),], 
+       aes(x = Sex, 
+           y = Percent, 
+           fill = Episode_sel)) +
+  geom_bar(position = "stack", stat = "identity") +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  scale_fill_manual(values = selection_colors) +
+   theme(legend.position = "right",
+        legend.key=element_blank(),
+        axis.title.x = element_text(size = 16,
+                                    vjust = -0.5),
+        axis.text.x = element_text(size = 12),
+        axis.title.y = element_text(size = 16,
+                                    vjust = 2.5),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12, family = "serif"))
+
+```
+
+Matching the previous plots, most of the opportunity for selection in _Syngnathus floridae_ males and females can be attributed to variance in mating success ($I_1$) rather than variance in eggs transferred/received ($I_2$) or variance in the proportion of eggs developed ($I_3$).
+
+# Mate success versus Reproductive success (Bateman Gradient, $\beta_{SS}$)
+I now want to look at any relationship that may exist between mating success and reproductive success for males and females. The Bateman gradient ($\beta_{SS}$) will be calculated, which is the slope of the weighted least-squares regression of relative reproductive success (number of offspring divided by the mean) on mating success. 
+
+A shallow slope in the Bateman gradient implies a low fitness gain with each additional mating event, and correspondingly weak or no selection acting on traits related to mating success, with a steeper Bateman gradient showing the reverse.
+
+To calculate $\beta_{SS}$ we use _relative_ measures of fitness:
+($\frac{indvidual's fitness}{mean(fitness)}$)
+
+I am going to generate the measurements of relative fitness once again for the trials individually rather than across all of the trials.
+
+```{r calc-relative-fitness}
+
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(fem_bateman) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+#Loop through each trial to calculate relative fitness
+for (trial in unique(fem_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFL[fem_succFL$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs/mean(tmp$totalEggs)
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess/mean(tmp$MatingSuccess)
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp)), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  fem_bateman <- rbind(fem_bateman, fitness)
+}
+
+
+#Repeat process for the Male mating data
+mal_bateman <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(mal_bateman) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+for (trial in unique(mal_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFL[mal_succFL$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs/mean(tmp$totalEggs)
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess/mean(tmp$MatingSuccess)
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp)), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  mal_bateman <- rbind(mal_bateman, fitness)
+}
+
+```
+
+Once we have the measures of relative fitness we can use them to run the weighted least-squares regression for males and females separately.
+
+```{r calc-bateman-gradient}
+
+#Generating Bateman's gradient
+#Define the model
+fem_model <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess)
+mal_model <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess)
+
+#define weights to use
+wt_fem <- 1 / lm(abs(fem_model$residuals) ~ fem_model$fitted.values)$fitted.values^2
+wt_mal <- 1 / lm(abs(mal_model$residuals) ~ mal_model$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess,
+                    weights=wt_fem)
+wls_model_mal <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess,
+                    weights=wt_mal)
+
+#Investigate the results
+summary(wls_model_fem) #significant
+summary(wls_model_mal) #significant
+
+```
+
+For both males and females there is a significant slope, meaning both sexes see increases in fitness with each additional mating. I am interested to run the model with the two datasets combined to see if there is an interaction of sex.
+
+```{r calc-bateman-all}
+
+#Combine the two datasets
+fem_bateman$Sex <- "F"
+mal_bateman$Sex <- "M"
+
+all_bateman <- rbind(fem_bateman, mal_bateman)
+
+#Running a weighted least squares regression between MS and Sex
+MS_sex_model <- lm(all_bateman$rel_repo_fitness ~
+                     all_bateman$MatingSuccess*all_bateman$Sex)
+
+wt_all <- 1 / lm(abs(MS_sex_model$residuals) ~
+                   MS_sex_model$fitted.values)$fitted.values^2
+
+wls_MS_sex_model <- lm(all_bateman$rel_repo_fitness ~ 
+                         all_bateman$MatingSuccess*all_bateman$Sex, weights = wt_all)
+
+summary(wls_MS_sex_model)
+
+```
+
+
+```{r plot-bateman, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for male (purple) and female (green) _Syngnathus floridae_. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman's gradient is shown as the weighted least-squares regression line (dashed) for males and females._", fig.height=5}
+
+#Plotting the relationship between the mating and reproductive success
+plot(fem_bateman$MatingSuccess,
+     fem_bateman$rel_repo_fitness,
+     xlab = "Number of Mates (mating success)",
+     ylab = "Relative Fitness (reproductive success)",
+     pch = 19,
+     col = "#7fc97f75")
+points(mal_bateman$MatingSuccess,
+       mal_bateman$rel_repo_fitness,
+       xlab = "Number of Mates (mating success)",
+       ylab = "Relative Fitness (reproductive success)",
+       pch = 19,
+       col = "#beaed475")
+abline(wls_model_fem, col = "#7fc97f", lwd = 3, lty = 2)
+abline(wls_model_mal, col = "#beaed4", lwd = 3, lty = 2)
+
+legend("topleft",
+       legend = c("Male", "Female"),
+       pch = 16,
+       cex = 1.25,
+       col = c("#beaed4", "#7fc97f"))
+
+#write.csv(fem_bateman, file = "data/FL_fem_bateman.csv", row.names = FALSE)
+#write.csv(mal_bateman, file = "data/FL_mal_bateman.csv", row.names = FALSE)
+```
+
+
+## Omitting females with high mating
+To make sure the two females that mated 3 times are not significantly affect the Bateman gradient I am re-plotting and re-running the model with those points omitted.
+
+```{r bateman-no3, echo=FALSE}
+#Plotting the relationship between the mating and reproductive success without the two females who mated 3 times
+par(mfrow=c(1,1))
+plot(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3],
+     fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 3],
+     xlab = "Number of Mates (mating success)",
+     ylab = "Relative Fitness (reproductive success)",
+     pch = 19,
+     col = "#7fc97f75")
+points(mal_bateman$MatingSuccess,
+       mal_bateman$rel_repo_fitness,
+       xlab = "Number of Mates (mating success)",
+       ylab = "Relative Fitness (reproductive success)",
+       pch = 19,
+       col = "#beaed475")
+
+#Redefine the female model
+fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 3] ~
+                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3])
+wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
+                    fem_model2$fitted.values)$fitted.values^2
+wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 3] ~
+                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3],
+                     weights=wt_fem2)
+
+abline(wls_model_fem2, col = "#7fc97f", lwd = 3, lty = 2)
+abline(wls_model_mal, col = "#beaed4", lwd = 3, lty = 2)
+
+summary(wls_model_fem2)
+```
+
+It doesn't look like omitting those few individuals has any effect on the results of the Bateman gradient.
