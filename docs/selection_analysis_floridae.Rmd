@@ -539,5 +539,360 @@ anova(tot_eggslm, lm_no_date)  # Compare models with and without col_location
 
 In this new model now we can see that there is only non-zero variance 
  
+```{r lat-to-mate-toteggs-plot, fig.cap="_Scatterplot of the relationship between the total eggs recieved by a male and how long the male was in the lab prir to entering a trial. Color of the points correspond to the location that the pipefish was collected from._", echo=FALSE}
 
+plot(jitter(mated_malFL$lat_to_trial),
+     jitter(mated_malFL$totalEggs),
+     xlab = "Latency to Trial (Days)",
+     ylab = "Total Eggs Recieved",
+     pch = 19,
+     col = as.factor(mated_malFL$col_location))
+abline(lm(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial), lwd = 3, lty =2)
+
+legend("topright",
+       legend = unique(mated_malFL$col_location),
+       col = unique(as.factor(mated_malFL$col_location)),
+       pch = 19)
+
+```
+
+### Differences between singly mated and multiply mated males
+I also want to see if we can detect any differences between the males that mated only once compared to the males that mated more than once. My hunch is that I will not have a large enough sample size for the multiply mated individuals to be able to detect any differences, but we shall see. I am going to look at standard length, depth, svl, and reproductive fitness. Once again, before I run the tests I want to check the assumptions.
+
+```{r mat-stat-stat-mal, echo=FALSE, warning=FALSE}
+##Test the assumptions
+##Looking for equal variances
+var.test(mated_malFL$length[mated_malFL$MatingSuccess == 1],
+         mated_malFL$length[mated_malFL$MatingSuccess > 1]) #equal
+var.test(mated_malFL$depth_adj[mated_malFL$MatingSuccess == 1],
+         mated_malFL$depth_adj[mated_malFL$MatingSuccess > 1]) #equal
+var.test(mated_malFL$svl[mated_malFL$MatingSuccess == 1],
+         mated_malFL$svl[mated_malFL$MatingSuccess > 1]) #equal
+var.test(mated_malFL$totalEggs[mated_malFL$MatingSuccess == 1],
+         mated_malFL$totalEggs[mated_malFL$MatingSuccess > 1]) #equal
+
+##Looking for a normal distribution
+normalTest(mated_malFL$length, method = "da") #normal
+normalTest(mated_malFL$depth_adj, method = "da") #normal
+normalTest(mated_malFL$svl, method = "da") #normal
+normalTest(mated_malFL$totalEggs, method = "da") #normal
+
+##Running the appropriate test
+t.test(mated_malFL$length[mated_malFL$MatingSuccess == 1],
+         mated_malFL$length[mated_malFL$MatingSuccess > 1],
+       var.equal = TRUE)
+t.test(mated_malFL$depth_adj[mated_malFL$MatingSuccess == 1],
+         mated_malFL$depth_adj[mated_malFL$MatingSuccess > 1],
+       var.equal = TRUE)
+t.test(mated_malFL$svl[mated_malFL$MatingSuccess == 1],
+         mated_malFL$svl[mated_malFL$MatingSuccess > 1],
+       var.equal = TRUE)
+t.test(mated_malFL$totalEggs[mated_malFL$MatingSuccess == 1],
+         mated_malFL$totalEggs[mated_malFL$MatingSuccess > 1],
+       var.equal = TRUE)
+
+```
+
+Just as I suspected, we cannot find any significant differences between the mated and multiply mated males.
+
+## Females
+Similarly, now let's see if we can identify any significant differences in the morphometrics of females who were able to obtain mates versus those who were unsuccessful.
+
+### Visual Comparison
+Before conducting any analyses, let's see if we can visually detect any differences between males who mated and unmated individuals.
+
+```{r mat-status-morph-fem, echo=FALSE, fig.cap="_Four different morphometrics compared between females who sucessfully mated versus those that didn't. Orange represents unmated and blue represents mated females._", fig.height=10, fig.width=10}
+par(mfrow=c(2,2))
+fem_succFL$mated <- as.factor(fem_succFL$mated)
+
+boxplot(fem_succFL$length ~ fem_succFL$mated,
+        xlab = "Mated",
+        ylab = "Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFL$depth_adj ~ fem_succFL$mated,
+        xlab = "Mated",
+        ylab = "Depth (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFL$svl ~ fem_succFL$mated,
+        xlab = "Mated",
+        ylab = "Snout-vent Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFL$weight ~ fem_succFL$mated,
+        xlab = "Mated",
+        ylab = "Weight (g)",
+        col= c("darkorange", "cyan4"))
+
+```
+
+I don't notice many differences, however, it appears that mated females are deeper than unmated females.
+
+### Testing the difference
+Let's now put some statistical power behind the difference in various morphometrics between mated and unmated individuals. I am first going to test the assumptions and then run the appropriate version of a t-test. See the previous section "Calculating the degree of sexual dimorphism" for more details.
+
+```{r mat-stat-stat-fem, echo=FALSE, warning=FALSE}
+#Test the assumptions
+##Equal variances
+var.test(fem_succFL$length ~ fem_succFL$mated) #equal
+var.test(fem_succFL$depth_adj ~ fem_succFL$mated) #equal
+var.test(fem_succFL$svl ~ fem_succFL$mated) #equal
+var.test(fem_succFL$weight ~ fem_succFL$mated) #equal
+
+##Normal Distributions
+normalTest(fem_succFL$length, method = "da") #normal
+normalTest(fem_succFL$depth_adj, method = "da") #normal
+normalTest(fem_succFL$svl, method = "da") #normal
+normalTest(fem_succFL$weight, method = "da") #normal
+
+#Running the appropriate test
+t.test(fem_succFL$length ~ fem_succFL$mated, 
+       var.equal = TRUE)
+t.test(fem_succFL$depth_adj ~ fem_succFL$mated, 
+       var.equal = TRUE)
+t.test(fem_succFL$svl ~ fem_succFL$mated, 
+       var.equal = TRUE)
+t.test(fem_succFL$weight ~ fem_succFL$mated,
+       var.equal = TRUE)
+```
+
+We can now see that female who mated we significantly larger only in terms of the torso depth, but otherwise there were no significant differences in body sizes
+
+Let's explore this a bit more and overlay the distribution of torso depth in all females (mated and unmated) with the torso depth of females who did mate and see how it varies.
+
+```{r mated-unmated-hist-depth, echo=FALSE, fig.cap= "_Overlay of the torso depth of females who mated on top of the size range of all females._", fig.width= 15, fig.height= 10}
+
+hist(fem_allFL$depth_adj, 
+     xlab = "Torso Depth (mm)", 
+     ylab = "Number of female pipefish",
+     col = "#7fc97f", breaks = 20, main = "")
+
+hist(fem_allFL$depth_adj[fem_allFL$MatingSuccess != 0], 
+     add = TRUE,
+     col = "#548B54", breaks = 15)
+
+legend("topright",
+       legend = c("Mated Females", "All Females"),
+       col = c("#548B54", "#7fc97f"),
+       pch = 15)
+```
+
+
+# Looking into the Opportunity for Selection in Males and Females
+One of the benefits of using genetic parentage analysis is that we can now calculate the opportunity for selection and the opportunity for sexual selection in male and female pipefish. 
+
+## Generating the total opportunity for selection (I) and the opportunity for sexual selection (I_s)
+
+
+## Partitioning the Total Opportunity for Selection (I)
+```{r opp-selection-females}
+#Create a dataframe to store all of the intermediate values of fitness in
+fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succ) + 9,
+                                      nrow = 0))
+colnames(fem_succ_fitness) <- c(colnames(fem_succ),
+                                "w1", "w1_squared",
+                                "W2", "W2_bar", "w2",
+                                "W3", "W3_bar", "w3", "i3")
+
+#Create a dataframe to store the final calculations of I in
+opp_selection_episodes_fem <- data.frame(matrix(ncol = 12,
+                                            nrow = 0))
+colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
+                                          "I_3", "I_3per", "I_12", "I_12per",
+                                          "I", "Iper", "I_s")
+
+for (trial in unique(fem_succ$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succ[fem_succ$trial_num == trial, ]
+  
+  #Calculate the absolute pre-copulatory fitness (Eq. 14 Arnold & Wade 1984)
+  tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+  tmp$w1_squared <- (tmp$w1)^2
+  
+  I_1 <- var(tmp$w1) #Variance in relative mating success
+  
+  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
+  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
+                   tmp$totalEggs/tmp$MatingSuccess,
+                   0) #Number of eggs per mate
+  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
+  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
+  
+  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  
+  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W3 <- ifelse(tmp$totalEggs > 0,
+                   tmp$NumDeveloped/tmp$totalEggs,
+                   0) #Proportion of transferred eggs that developed
+  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
+  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
+  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  
+  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+
+  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  
+  #Total selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+  
+  #Calculating percentages for each selection event
+  I_1per <- (I_1/I)*100
+  I_2per <- (I_2/I)*100
+  I_3per <- (I_3/I)*100
+  I_12per <- (I_12/I)*100
+  Iper <- (I/I)*100
+  
+  #Combining all of the selection values (Is) and saving the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
+                     I_12, I_12per, I, Iper, I_s)
+  
+  opp_selection_episodes_fem <- rbind(opp_selection_episodes_fem, selection)
+  
+  #Save the intermediate values
+  fem_succ_fitness <- rbind(fem_succ_fitness, tmp)
+}
+
+#Exporting the data
+#write.csv(fem_succ_fitness, "data/floridae_int_I_fem.csv", row.names = FALSE)
+```
+
+```{r opp-selection-males}
+#Create a dataframe to store all of the intermediate values of fitness in
+mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succ) + 9,
+                                      nrow = 0))
+colnames(mal_succ_fitness) <- c(colnames(mal_succ),
+                                "w1", "w1_squared",
+                                "W2", "W2_bar", "w2",
+                                "W3", "W3_bar", "w3", "i3")
+
+#Create a dataframe to store the final calculations of I in
+opp_selection_episodes_mal <- data.frame(matrix(ncol = 12,
+                                            nrow = 0))
+colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
+                                          "I_3", "I_3per", "I_12", "I_12per",
+                                          "I", "Iper", "I_s")
+
+for (trial in unique(mal_succ$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succ[mal_succ$trial_num == trial, ]
+  
+  #Calculate the absolute pre-copultory fitness (Eq. 14 Arnold & Wade 1984)
+  tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+  tmp$w1_squared <- (tmp$w1)^2
+  
+  I_1 <- var(tmp$w1) #Variance in relative mating success
+  
+  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
+  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
+                   tmp$totalEggs/tmp$MatingSuccess,
+                   0) #Number of eggs per mate
+  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
+  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
+  
+  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  
+  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W3 <- ifelse(tmp$totalEggs > 0,
+                   tmp$NumDeveloped_Calc/tmp$totalEggs,
+                   0) #Proportion of transferred eggs that developed
+  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
+  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
+  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  
+  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+
+  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  
+  #Total selection
+  I <- var(tmp$NumDeveloped_Calc)/(mean(tmp$NumDeveloped_Calc)^2)
+
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+
+  #Calculating percentages for each selection event
+  I_1per <- (I_1/I)*100
+  I_2per <- (I_2/I)*100
+  I_3per <- (I_3/I)*100
+  I_12per <- (I_12/I)*100
+  Iper <- (I/I)*100
+  
+  #Combining all of the selection values (Is) and saving the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
+                     I_12, I_12per, I, Iper, I_s)
+  
+  opp_selection_episodes_mal <- rbind(opp_selection_episodes_mal, selection)
+  
+  #Save the intermediate values
+  mal_succ_fitness <- rbind(mal_succ_fitness, tmp)
+}
+
+#Exporting the data
+#write.csv(mal_succ_fitness, "data/floridae_int_I_mal.csv", row.names = FALSE)
+```
+
+```{r sum-selection-coef, eval=FALSE, include=FALSE}
+#Merge the selection coefficients from males and females into one dataset to 
+#make life easier
+opp_selection_episodes_fem$Sex <- "F"
+opp_selection_episodes_mal$Sex <- "M"
+
+opp_selection_episodes_all <- rbind(opp_selection_episodes_fem, opp_selection_episodes_mal)
+
+#Exporting the data
+#write.csv(opp_selection_episodes_all, "data/floridae_opp_selection.csv", row.names = FALSE)
+
+#Playing around with generating an automatic Table
+library(gtsummary)
+opp_selection_table <- tbl_summary(opp_selection_episodes_all,
+            include = c("I_1", "I_2",  "I_3", "I_12", "I"),
+            statistic = list(all_continuous() ~ "{mean} ({sd})"),
+            type = list(everything() ~ "continuous"),
+            #label = list(I_1 ~ expression(I[1])),
+            by = Sex) 
+
+tbl_summary(opp_selection_episodes_all,
+            include = c("I_1per", "I_2per",  "I_3per", "I_12per", "Iper"),
+            statistic = list(all_continuous() ~ "{mean}"),
+            type = list(everything() ~ "continuous"),
+            #label = list(I_1 ~ expression(I[1])),
+            by = Sex) 
+
+#Calculating the mean and Confidence intervals for each episode of selection
+#For males and females
+t_test <- qt(p = 0.975, df = (nrow(opp_selection_episodes_mal) - 1))
+
+seI1 <- tapply(opp_selection_episodes_all$I_1, opp_selection_episodes_all$Sex, function(x){
+  sqrt(var(x))/sqrt(length(x))
+})
+meanI1 <- tapply(opp_selection_episodes_all$I_1, opp_selection_episodes_all$Sex, mean)
+meanI1 - seI1*t_test
+
+seI2 <- tapply(opp_selection_episodes_all$I_2, opp_selection_episodes_all$Sex, function(x){
+  sqrt(var(x))/sqrt(length(x))
+})
+meanI2 <- tapply(opp_selection_episodes_all$I_2, opp_selection_episodes_all$Sex, mean)
+meanI2 + seI2*t_test
+
+seI3 <- tapply(opp_selection_episodes_all$I_3, opp_selection_episodes_all$Sex, function(x){
+  sqrt(var(x))/sqrt(length(x))
+})
+meanI3 <- tapply(opp_selection_episodes_all$I_3, opp_selection_episodes_all$Sex, mean)
+meanI3 + seI3*t_test
+
+seI12 <- tapply(opp_selection_episodes_all$I_12, opp_selection_episodes_all$Sex, function(x){
+  sqrt(var(x))/sqrt(length(x))
+})
+meanI12 <- tapply(opp_selection_episodes_all$I_12, opp_selection_episodes_all$Sex, mean)
+meanI12 - seI12*t_test
+
+seI <- tapply(opp_selection_episodes_all$I, opp_selection_episodes_all$Sex, function(x){
+  sqrt(var(x))/sqrt(length(x))
+})
+meanI <- tapply(opp_selection_episodes_all$I, opp_selection_episodes_all$Sex, mean)
+meanI - seI*t_test
+
+```
 
