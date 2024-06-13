@@ -38,6 +38,8 @@ Selection pressures in *Syngnathus floridae*
   $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
   - [Omitting females with high
     mating](#omitting-females-with-high-mating)
+- [Visualizing post-copulatory
+  selection](#visualizing-post-copulatory-selection)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -2199,6 +2201,16 @@ summary(wls_MS_sex_model)
     ## Multiple R-squared:  0.7536, Adjusted R-squared:  0.7468 
     ## F-statistic: 110.1 on 3 and 108 DF,  p-value: < 2.2e-16
 
+When we combine all of the data together we can see two additional
+things:
+
+1.  There is no significant interactions effect of Mating success and
+    sex
+2.  The slopes for males and females are not significantly different
+    from each other
+
+Let’s visually look at this pattern now:
+
 <figure>
 <img
 src="selection_analysis_floridae_files/figure-gfm/plot-bateman-1.png"
@@ -2211,6 +2223,10 @@ offspring produced). Bateman’s gradient is shown as the weighted
 least-squares regression line (dashed) for males and
 females.</em></figcaption>
 </figure>
+
+The plot confirms the results from the two models. We can see that there
+is a steep slope for both males and females, however, the two lines are
+not different.
 
 ## Omitting females with high mating
 
@@ -2246,3 +2262,71 @@ with those points omitted.
 
 It doesn’t look like omitting those few individuals has any effect on
 the results of the Bateman gradient.
+
+# Visualizing post-copulatory selection
+
+As a way to visualize selection acting AFTER the mating event
+(post-copulatory selection) I am plotting the proportion of eggs that
+survived against mating success. Hopefully this will tell us if
+acquiring more mates is having any affect on the ability for the eggs to
+develop.
+
+I am going to plot this relationship including the individuals who did
+not mate and not including the individuals who did not mate.
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/surv-v-matings-1.png"
+alt="Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green). This was done omitting the individuals that did not mate (left) and including those individuals (right)." />
+<figcaption aria-hidden="true">Plotting the relationship between the
+proportion of eggs that developed and the number of mates aquired for
+both males (purple) and females (green). This was done omitting the
+individuals that did not mate (left) and including those individuals
+(right).</figcaption>
+</figure>
+
+We can see that when the non-mated individuals are included there is a
+steep slope (due to the zeros). Because I am interested in the
+pose-mating processes, I am going to move forward without including the
+non-mated individuals (as they are accounted for in the Bateman
+gradient).
+
+``` r
+cor.test(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
+         fem_succFL$prop_surviving[fem_succFL$totalEggs != 0])
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0] and fem_succFL$prop_surviving[fem_succFL$totalEggs != 0]
+    ## t = -0.46952, df = 19, p-value = 0.644
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.5149740  0.3403253
+    ## sample estimates:
+    ##        cor 
+    ## -0.1070953
+
+``` r
+cor.test(mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
+         mal_succFL$prop_surviving[mal_succFL$totalEggs != 0])
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0] and mal_succFL$prop_surviving[mal_succFL$totalEggs != 0]
+    ## t = -1.2783, df = 22, p-value = 0.2145
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.6024357  0.1571242
+    ## sample estimates:
+    ##        cor 
+    ## -0.2629384
+
+For both males and females there is no significant correlation between
+the number of mates and the proportion of the offspring which survive.
+However, both of the non-significant correlations are negative, meaning
+potenitally if our sample size was higher we would be able to detect an
+effect.
