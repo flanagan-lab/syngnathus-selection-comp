@@ -35,7 +35,7 @@ Selection pressures in *Syngnathus floridae*
   - [Partitioning the Total Opportunity for Selection
     ($I$)](#partitioning-the-total-opportunity-for-selection-i)
 - [Mate success versus Reproductive success (Bateman Gradient,
-  ($\beta_{SS}$))](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
+  $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
   - [Omitting females with high
     mating](#omitting-females-with-high-mating)
 
@@ -46,7 +46,6 @@ library(cowplot)
 library(fBasics)
 library(pwr)
 library(lme4)
-library(DT)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -1674,10 +1673,12 @@ for (j in 1:length(columns)) {
 
 Let’s now explore some results:
 
-    ## PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
+| Episode_sel | F                 | M                |
+|:------------|:------------------|:-----------------|
+| I           | 3.28 (1.53, 5.03) | 3.2 (1.22, 5.18) |
+| I_s         | 2.47 (1.55, 3.4)  | 2.2 (1.02, 3.39) |
 
-<div class="datatables html-widget html-fill-item" id="htmlwidget-b8fae2af32c30efdf203" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-b8fae2af32c30efdf203">{"x":{"filter":"none","vertical":false,"data":[["F","M","F","M"],["I","I","I_s","I_s"],["3.28","3.2","2.47","2.2"],["5.03","5.18","3.4","3.39"],["1.53","1.22","1.55","1.02"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th>Sex<\/th>\n      <th>Selection<\/th>\n      <th>Average<\/th>\n      <th>Upper CI<\/th>\n      <th>Lower CI<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"name":"Sex","targets":0},{"name":"Selection","targets":1},{"name":"Average","targets":2},{"name":"Upper CI","targets":3},{"name":"Lower CI","targets":4}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+Average Opportunity of Selection (95% CI) for Males and Females
 
 <figure>
 <img
@@ -2005,7 +2006,7 @@ Matching the previous plots, most of the opportunity for selection in
 mating success ($I_1$) rather than variance in eggs transferred/received
 ($I_2$) or variance in the proportion of eggs developed ($I_3$).
 
-# Mate success versus Reproductive success (Bateman Gradient, ($\beta_{SS}$))
+# Mate success versus Reproductive success (Bateman Gradient, $\beta_{SS}$)
 
 I now want to look at any relationship that may exist between mating
 success and reproductive success for males and females. The Bateman

@@ -24,7 +24,6 @@ library(cowplot)
 library(fBasics)
 library(pwr)
 library(lme4)
-library(DT)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -807,11 +806,19 @@ Let's now explore some results:
 
 ```{r opp-selection-table, echo = FALSE, warning=FALSE}
 
-datatable(cbind("Sex" = opp_average$Sex, 
-                "Selection" = opp_average$Episode_sel, 
-                "Average" = round(opp_average$Average, 2),
-                "Upper CI" = round((opp_average$Average + opp_average$Interval), 2),
-                "Lower CI" = round((opp_average$Average - opp_average$Interval), 2))) 
+#Create a new column
+opp_average <- opp_average %>%
+  mutate(Combined = paste0(round(Average , 2), 
+                           " (", round(Average - Interval, 2), ", ",
+                           round(Average + Interval, 2), ")"))
+
+#Transform data into wide format
+sum_opp <- opp_average %>% 
+  select(Episode_sel, Sex, Combined) %>% 
+  pivot_wider(names_from = Sex, values_from = Combined) 
+
+#Display the table
+kable(sum_opp, caption = "Average Opportunity of Selection (95% CI) for Males and Females")
 
 ```
 
