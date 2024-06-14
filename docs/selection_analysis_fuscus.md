@@ -15,6 +15,14 @@ Selection pressures in *Syngnathus fuscus*
   individuals](#summary-statistics-for-successfully-mated-individuals)
   - [Males](#males)
   - [Females](#females)
+- [Differences between mated individuals and unmated
+  individuals](#differences-between-mated-individuals-and-unmated-individuals)
+  - [Males](#males-1)
+    - [Visual Comparison](#visual-comparison)
+    - [Testing the difference](#testing-the-difference)
+  - [Females](#females-1)
+    - [Visual Comparison](#visual-comparison-1)
+    - [Testing the difference](#testing-the-difference-1)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -694,3 +702,457 @@ correlations tests to see what they say.
 There is no sig. correlation between length or svl and the number of
 eggs transferred but we do see a significantly positive relationship
 between depth and number of eggs transferred!
+
+# Differences between mated individuals and unmated individuals
+
+I want to now see if there are any significant differences in the sizes
+of individuals who mated vs individuals that didn’t mate in males and
+females. I am going to be focusing on the same morphometrics outlined
+above.
+
+## Males
+
+### Visual Comparison
+
+Before conducting any analyses, let’s see if we can visually detect any
+differences between males who mated and unmated individuals.
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mat-status-morph-mal-1.png"
+alt="Six different morphometrics compared between males who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated males." />
+<figcaption aria-hidden="true"><em>Six different morphometrics compared
+between males who sucessfully mated versus those that didn’t. Orange
+represents unmated and blue represents mated males.</em></figcaption>
+</figure>
+
+I don’t notice many differences, however, it appears that unmated males
+are slightly larger in terms of standard length a somewhat surprising
+find but similar to *S. floridae*.
+
+### Testing the difference
+
+Let’s now put some statistical power behind the difference in various
+morphometrics between mated and unmated individuals. I am first going to
+test the assumptions and then run the appropriate version of a t-test.
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFU$length by mal_succFU$preg_status
+    ## F = 1.5512, num df = 51, denom df = 21, p-value = 0.272
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.7034511 3.0559527
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.551159
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFU$depth_adj by mal_succFU$preg_status
+    ## F = 0.88216, num df = 51, denom df = 21, p-value = 0.694
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.4000581 1.7379441
+    ## sample estimates:
+    ## ratio of variances 
+    ##          0.8821563
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFU$svl by mal_succFU$preg_status
+    ## F = 2.2874, num df = 51, denom df = 21, p-value = 0.04071
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  1.037315 4.506334
+    ## sample estimates:
+    ## ratio of variances 
+    ##           2.287352
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  as.numeric(mal_succFU$bp_area) by mal_succFU$preg_status
+    ## F = 1.3147, num df = 50, denom df = 21, p-value = 0.5005
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.5953957 2.5977425
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.314708
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFU$bp_length by mal_succFU$preg_status
+    ## F = 1.1517, num df = 50, denom df = 21, p-value = 0.7435
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.5215926 2.2757358
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.151741
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  mal_succFU$weight by mal_succFU$preg_status
+    ## F = 2.607, num df = 51, denom df = 21, p-value = 0.01875
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  1.182260 5.136008
+    ## sample estimates:
+    ## ratio of variances 
+    ##           2.606966
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 6.4738
+    ##     Z3  | Skewness: 0.38
+    ##     Z4  | Kurtosis: -2.5158
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.03928 
+    ##     Skewness Test: 0.7039 
+    ##     Kurtosis Test: 0.01188
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 5.7144
+    ##     Z3  | Skewness: 0.9229
+    ##     Z4  | Kurtosis: -2.2051
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.05743 
+    ##     Skewness Test: 0.356 
+    ##     Kurtosis Test: 0.02744
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 1.4898
+    ##     Z3  | Skewness: -0.0559
+    ##     Z4  | Kurtosis: 1.2193
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.4748 
+    ##     Skewness Test: 0.9554 
+    ##     Kurtosis Test: 0.2227
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 7.7251
+    ##     Z3  | Skewness: 2.3028
+    ##     Z4  | Kurtosis: 1.5563
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.02101 
+    ##     Skewness Test: 0.02129 
+    ##     Kurtosis Test: 0.1196
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 0.085
+    ##     Z3  | Skewness: 0.2379
+    ##     Z4  | Kurtosis: 0.1686
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.9584 
+    ##     Skewness Test: 0.812 
+    ##     Kurtosis Test: 0.8661
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 8.9227
+    ##     Z3  | Skewness: 2.4847
+    ##     Z4  | Kurtosis: 1.6579
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.01155 
+    ##     Skewness Test: 0.01296 
+    ##     Kurtosis Test: 0.09733
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  mal_succFU$length by mal_succFU$preg_status
+    ## W = 685, p-value = 0.1834
+    ## alternative hypothesis: true location shift is not equal to 0
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFU$depth_adj by mal_succFU$preg_status
+    ## t = -0.089483, df = 72, p-value = 0.9289
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.001184444  0.001082677
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##      0.02730395      0.02735483
+
+    ## 
+    ##  Welch Two Sample t-test
+    ## 
+    ## data:  mal_succFU$svl by mal_succFU$preg_status
+    ## t = 1.0161, df = 58.682, p-value = 0.3138
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -1.386368  4.246102
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        53.97723        52.54736
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  as.numeric(mal_succFU$bp_area) by mal_succFU$preg_status
+    ## W = 669, p-value = 0.1962
+    ## alternative hypothesis: true location shift is not equal to 0
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  mal_succFU$bp_length by mal_succFU$preg_status
+    ## t = 1.978, df = 71, p-value = 0.05181
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.01802097  4.48727801
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        33.86349        31.62886
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  mal_succFU$weight by mal_succFU$preg_status
+    ## W = 680, p-value = 0.2018
+    ## alternative hypothesis: true location shift is not equal to 0
+
+There were no significant differences in terms of the sizes of males who
+mated versus those who did not, except for maybe in terms of brood pouch
+length.
+
+Let’s explore this a bit more and overlay the distribution of all males
+(mated and unmated) with the males who did mate and see how it varies
+for the brood pouch.
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-1.png"
+alt="Overlay of the size range of males who mated on top of the size range of all males for length of brood pouch." />
+<figcaption aria-hidden="true"><em>Overlay of the size range of males
+who mated on top of the size range of all males for length of brood
+pouch.</em></figcaption>
+</figure>
+
+## Females
+
+Similarly, now let’s see if we can identify any significant differences
+in the morphometrics of females who were able to obtain mates versus
+those who were unsuccessful.
+
+### Visual Comparison
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mat-status-morph-fem-1.png"
+alt="Four different morphometrics compared between females who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated females." />
+<figcaption aria-hidden="true"><em>Four different morphometrics compared
+between females who sucessfully mated versus those that didn’t. Orange
+represents unmated and blue represents mated females.</em></figcaption>
+</figure>
+
+I don’t notice many differences, however, it appears that mated females
+are larger than unmated females.
+
+### Testing the difference
+
+Let’s now put some statistical power behind the difference in various
+morphometrics between mated and unmated individuals.
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  fem_succFU$length by fem_succFU$mated
+    ## F = 1.558, num df = 53, denom df = 18, p-value = 0.3014
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.6663111 3.1416657
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.558006
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  fem_succFU$depth_adj by fem_succFU$mated
+    ## F = 0.34834, num df = 53, denom df = 18, p-value = 0.00299
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.1489748 0.7024182
+    ## sample estimates:
+    ## ratio of variances 
+    ##          0.3483413
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  fem_succFU$svl by fem_succFU$mated
+    ## F = 1.4118, num df = 53, denom df = 18, p-value = 0.4254
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.6037712 2.8467894
+    ## sample estimates:
+    ## ratio of variances 
+    ##           1.411772
+
+    ## 
+    ##  F test to compare two variances
+    ## 
+    ## data:  fem_succFU$weight by fem_succFU$mated
+    ## F = 0.81218, num df = 53, denom df = 18, p-value = 0.5435
+    ## alternative hypothesis: true ratio of variances is not equal to 1
+    ## 95 percent confidence interval:
+    ##  0.3473424 1.6377241
+    ## sample estimates:
+    ## ratio of variances 
+    ##          0.8121756
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 4.6664
+    ##     Z3  | Skewness: 1.802
+    ##     Z4  | Kurtosis: 1.1913
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.09698 
+    ##     Skewness Test: 0.07155 
+    ##     Kurtosis Test: 0.2335
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 11.3168
+    ##     Z3  | Skewness: 3.1797
+    ##     Z4  | Kurtosis: 1.0982
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.003488 
+    ##     Skewness Test: 0.001474 
+    ##     Kurtosis Test: 0.2721
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 0.1544
+    ##     Z3  | Skewness: 0.2023
+    ##     Z4  | Kurtosis: -0.3369
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.9257 
+    ##     Skewness Test: 0.8397 
+    ##     Kurtosis Test: 0.7362
+
+    ## 
+    ## Title:
+    ##  D'Agostino Normality Test
+    ## 
+    ## Test Results:
+    ##   STATISTIC:
+    ##     Chi2 | Omnibus: 5.609
+    ##     Z3  | Skewness: 2.3682
+    ##     Z4  | Kurtosis: 0.0273
+    ##   P VALUE:
+    ##     Omnibus  Test: 0.06054 
+    ##     Skewness Test: 0.01788 
+    ##     Kurtosis Test: 0.9782
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  fem_succFU$length by fem_succFU$mated
+    ## t = -0.50525, df = 71, p-value = 0.615
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -10.706289   6.377429
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        154.2378        156.4023
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  fem_succFU$depth_adj by fem_succFU$mated
+    ## W = 376, p-value = 0.08615
+    ## alternative hypothesis: true location shift is not equal to 0
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  fem_succFU$svl by fem_succFU$mated
+    ## t = -0.81641, df = 71, p-value = 0.417
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -4.524398  1.895723
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        62.93693        64.25126
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  fem_succFU$weight by fem_succFU$mated
+    ## t = -1.5966, df = 71, p-value = 0.1148
+    ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.51773060  0.05730175
+    ## sample estimates:
+    ## mean in group 0 mean in group 1 
+    ##        1.759259        1.989474
+
+There are no significant differences, however, it does get close for
+torso depth and in every case the mated females were larger than the
+unmated.
+
+Let’s explore this a bit more and overlay the distribution of torso
+depth in all females (mated and unmated) with the torso depth of females
+who did mate and see how it varies.
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-depth-1.png"
+alt="Overlay of the torso depth of females who mated on top of the size range of all females." />
+<figcaption aria-hidden="true"><em>Overlay of the torso depth of females
+who mated on top of the size range of all females.</em></figcaption>
+</figure>
+
+We can see that the 5 deepest females all secured a mate, whereas the
+skinniest females did not.

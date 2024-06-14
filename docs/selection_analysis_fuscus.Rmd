@@ -373,3 +373,177 @@ cor.test(mated_femFU$svl, as.numeric(mated_femFU$totalEggs))
 ```
 
 There is no sig. correlation between length or svl and the number of eggs transferred but we do see a significantly positive relationship between depth and number of eggs transferred!
+
+# Differences between mated individuals and unmated individuals
+I want to now see if there are any significant differences in the sizes of individuals who mated vs individuals that didn't mate in males and females. I am going to be focusing on the same morphometrics outlined above.
+
+## Males
+### Visual Comparison
+Before conducting any analyses, let's see if we can visually detect any differences between males who mated and unmated individuals.
+
+```{r mat-status-morph-mal, echo=FALSE, fig.cap="_Six different morphometrics compared between males who sucessfully mated versus those that didn't. Orange represents unmated and blue represents mated males._", fig.height=10, fig.width=15, warning=FALSE}
+
+par(mfrow=c(2,3))
+mal_succFU$preg_status <- as.factor(mal_succFU$preg_status)
+boxplot(mal_succFU$length ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = "Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFU$depth_adj ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = "Depth (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFU$svl ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = "Snout-vent Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(as.numeric(mal_succFU$bp_area) ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = expression(paste("Brood Pouch Area (mm"^2*")")),
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFU$bp_length ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = "Brood Pouch Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(mal_succFU$weight ~ mal_succFU$preg_status,
+        xlab = "Mated",
+        ylab = "Weight (g)",
+        col= c("darkorange", "cyan4"))
+```
+
+I don't notice many differences, however, it appears that unmated males are slightly larger in terms of standard length a somewhat surprising find but similar to _S. floridae_.
+
+### Testing the difference
+Let's now put some statistical power behind the difference in various morphometrics between mated and unmated individuals. I am first going to test the assumptions and then run the appropriate version of a t-test. 
+
+```{r mat-stat-stat-mal, echo=FALSE, warning=FALSE}
+##Test the assumptions
+##Looking for equal variances
+var.test(mal_succFU$length ~ mal_succFU$preg_status) #equal
+var.test(mal_succFU$depth_adj ~ mal_succFU$preg_status) #equal
+var.test(mal_succFU$svl ~ mal_succFU$preg_status) #not equal
+var.test(as.numeric(mal_succFU$bp_area) ~ mal_succFU$preg_status) #equal
+var.test(mal_succFU$bp_length ~ mal_succFU$preg_status) #equal
+var.test(mal_succFU$weight ~ mal_succFU$preg_status) #not equal
+
+##Looking for a normal distribution
+normalTest(mal_succFU$length, method = "da") #not normal
+normalTest(mal_succFU$depth_adj, method = "da") #normal
+normalTest(mal_succFU$svl, method = "da") #normal
+normalTest(as.numeric(mal_succFU$bp_area), method = "da") #not normal
+normalTest(mal_succFU$bp_length, method = "da") #normal
+normalTest(mal_succFU$weight, method = "da") #not normal
+
+##Running the appropriate test
+wilcox.test(mal_succFU$length ~ mal_succFU$preg_status) #Not sig.
+t.test(mal_succFU$depth_adj ~ mal_succFU$preg_status,
+       var.equal = TRUE) #not sig.
+t.test(mal_succFU$svl ~ mal_succFU$preg_status,
+       var.equal = FALSE) #not sig.
+wilcox.test(as.numeric(mal_succFU$bp_area) ~ mal_succFU$preg_status) #not. sig.
+t.test(mal_succFU$bp_length ~ mal_succFU$preg_status,
+       var.equal = TRUE) #sig?
+wilcox.test(mal_succFU$weight ~ mal_succFU$preg_status) #not sig.
+```
+
+There were no significant differences in terms of the sizes of males who mated versus those who did not, except for maybe in terms of brood pouch length.
+
+Let's explore this a bit more and overlay the distribution of all males (mated and unmated) with the males who did mate and see how it varies for the brood pouch.
+
+```{r mated-unmated-hist, echo=FALSE, fig.cap= "_Overlay of the size range of males who mated on top of the size range of all males for length of brood pouch._", fig.width= 15, fig.height= 8}
+
+hist(mal_all$bp_length, 
+     xlab = "Brood Pouch Length (mm)", 
+     ylab = "Number of male pipefish",
+     col = "#beaed4", breaks = 15, main = "")
+
+hist(mal_all$bp_length[mal_all$preg_status != 0], 
+     add = TRUE,
+     col = "#8968CD", breaks = 10)
+
+
+legend("topright",
+       legend = c("Mated Males", "All Males"),
+       col = c("#8968CD", "#beaed4"),
+       pch = 15)
+```
+
+## Females
+Similarly, now let's see if we can identify any significant differences in the morphometrics of females who were able to obtain mates versus those who were unsuccessful.
+
+### Visual Comparison
+
+```{r mat-status-morph-fem, echo=FALSE, fig.cap="_Four different morphometrics compared between females who sucessfully mated versus those that didn't. Orange represents unmated and blue represents mated females._", fig.height=10, fig.width=10}
+par(mfrow=c(2,2))
+fem_succFU$mated <- as.factor(fem_succFU$mated)
+
+boxplot(fem_succFU$length ~ fem_succFU$mated,
+        xlab = "Mated",
+        ylab = "Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFU$depth_adj ~ fem_succFU$mated,
+        xlab = "Mated",
+        ylab = "Depth (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFU$svl ~ fem_succFU$mated,
+        xlab = "Mated",
+        ylab = "Snout-vent Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succFU$weight ~ fem_succFU$mated,
+        xlab = "Mated",
+        ylab = "Weight (g)",
+        col= c("darkorange", "cyan4"))
+
+```
+
+I don't notice many differences, however, it appears that mated females are larger than unmated females.
+
+### Testing the difference
+Let's now put some statistical power behind the difference in various morphometrics between mated and unmated individuals. 
+
+```{r mat-stat-stat-fem, echo=FALSE, warning=FALSE}
+#Test the assumptions
+##Equal variances
+var.test(fem_succFU$length ~ fem_succFU$mated) #equal
+var.test(fem_succFU$depth_adj ~ fem_succFU$mated) #not equal
+var.test(fem_succFU$svl ~ fem_succFU$mated) #equal
+var.test(fem_succFU$weight ~ fem_succFU$mated) #equal
+
+##Normal Distributions
+normalTest(fem_succFU$length, method = "da") #normal
+normalTest(fem_succFU$depth_adj, method = "da") #not normal
+normalTest(fem_succFU$svl, method = "da") #normal
+normalTest(fem_succFU$weight, method = "da") #normal
+
+#Running the appropriate test
+t.test(fem_succFU$length ~ fem_succFU$mated, 
+       var.equal = TRUE) #not sig.
+wilcox.test(fem_succFU$depth_adj ~ fem_succFU$mated) #not sig.
+t.test(fem_succFU$svl ~ fem_succFU$mated, 
+       var.equal = TRUE) #not sig.
+t.test(fem_succFU$weight ~ fem_succFU$mated,
+       var.equal = TRUE) #not sig.
+```
+
+There are no significant differences, however, it does get close for torso depth and in every case the mated females were larger than the unmated.
+
+Let's explore this a bit more and overlay the distribution of torso depth in all females (mated and unmated) with the torso depth of females who did mate and see how it varies.
+
+```{r mated-unmated-hist-depth, echo=FALSE, fig.cap= "_Overlay of the torso depth of females who mated on top of the size range of all females._", fig.width= 15, fig.height= 10}
+
+hist(fem_all$depth_adj, 
+     xlab = "Torso Depth (mm)", 
+     ylab = "Number of female pipefish",
+     col = "#7fc97f", breaks = 20, main = "")
+
+hist(fem_all$depth_adj[fem_all$MatingSuccess != 0], 
+     add = TRUE,
+     col = "#548B54", breaks = 15)
+
+legend("topright",
+       legend = c("Mated Females", "All Females"),
+       col = c("#548B54", "#7fc97f"),
+       pch = 15)
+```
+
+We can see that the 5 deepest females all secured a mate, whereas the skinniest females did not.
