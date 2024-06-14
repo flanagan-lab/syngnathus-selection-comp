@@ -1,0 +1,176 @@
+---
+title: "Selection pressures in _Syngnathus fuscus_"
+output: 
+  github_document:
+    toc: true
+header-includes: >
+  \usepackage{lipsum}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir='../',
+                     fig_path="../figs/")
+```
+
+``` {r library, message = FALSE, warning = FALSE}
+#This is a cohesive list of all the libraries used in this document
+library(ggplot2)
+library(cowplot)
+library(fBasics)
+library(pwr)
+library(lme4)
+library(dplyr)
+library(tidyr)
+library(knitr)
+
+```
+
+``` {r read-data, message = FALSE, warning = FALSE}
+
+#MomIDs and embryo counts for each section of the male's brood pouch
+em_dat <- read.csv("data/EmbryoParentage_fuscus.csv")
+
+#Metadata for males and females from the mesocosm experiments
+fem_mesoFU <- read.csv("data/all_fem_meso_fuscus.csv")
+mal_mesoFU <- read.csv("data/all_mal_meso_fuscus.csv")
+
+```
+
+This document will follow the same analysis as was outlined in `selection_analysis_floridae.Rmd`. For more thorough details refer back to that document.
+
+# Calculating the degree of sexual dimorphism
+I noticed that there was a certain degree of sexual dimorphism in terms of an ornamentation that was present only in the females, but I also want to explore any size sexual dimorphism that may be present in this species.
+
+I will be looking at total standard length (mm, measured from the tip of the snout to the tip of the caudal fin), snout-vent length (mm, measured from the tip of the snout to the urogenital opening), torso depth (mm), and snout length (mm). To look at these differences I will be performing t-tests between males and females. First, I need to see if assumptions are met, i.e. variances are equal and data is normally distributed.
+
+## Checking the assumptions for a pairwise comparison
+ The main two things that I will be looking into include:
+
+1. Equal variances between my groups (using `var.test()`).
+2. Normal distribution of the data (using `normalTest()`).
+
+To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the standard length of the pipefish prior to running any analyses.
+
+```{r assump-test}
+#Adjust the torso depth
+fem_mesoFU$depth_adj <- fem_mesoFU$depth/fem_mesoFU$length
+mal_mesoFU$depth_adj <- mal_mesoFU$depth/mal_mesoFU$length
+
+#Testing to see if the variances are equal
+var.test(fem_mesoFU$length, mal_mesoFU$length) #EQUAL
+var.test(fem_mesoFU$depth_adj, mal_mesoFU$depth_adj) #NOT EQUAL
+var.test(fem_mesoFU$svl, mal_mesoFU$svl) #EQUAL
+
+#Testing for normal distribution - Females
+normalTest(fem_mesoFU$length, method = "da") #NORMAL
+normalTest(fem_mesoFU$depth_adj, method = "da") #NOT NORMAL
+normalTest(fem_mesoFU$svl, method = "da") #NORMAL
+
+#Testing for normal distribution - Males
+normalTest(mal_mesoFU$length, method = "da") #NOT NORMAL
+normalTest(mal_mesoFU$depth_adj, method = "da") #NORMAL
+normalTest(mal_mesoFU$svl, method = "da") #NORMAL
+
+```
+
+## Investigate distributions and run the tests
+I will run a Wilcoxon test for standard length, a two sample t-test for snout-vent length, and a Wilcoxon test for torso depth (adjusted).
+
+```{r histogram_sizes, message=FALSE, warning = FALSE, echo = FALSE, fig.cap="_Histograms of male and female pipefish body sizes._", fig.width=15}
+#Combining the datasets
+fem_mesoFU$Sex <- "F"
+mal_mesoFU$Sex <- "M"
+all_sex_meso <- rbind(fem_mesoFU[, c("length", "depth_adj", "svl", "Sex")], mal_mesoFU[, c("length", "depth_adj", "svl", "Sex")])
+
+length <- ggplot(data = all_sex_meso, aes(x = length)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "Length (mm)",
+       y = "Number of Pipefish",
+       title = "Length of male and female pipefish")
+
+depth <- ggplot(data = all_sex_meso, aes(x = depth_adj)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "Depth (mm)",
+       y = "Number of Pipefish",
+       title = "Depth of male and female pipefish")
+
+svl <- ggplot(data = all_sex_meso, aes(x = svl)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "SVL (mm)",
+       y = "Number of Pipefish",
+       title = "Snout-vent length of male and female pipefish")
+
+plot_grid(length, depth, svl,
+          ncol = 3)
+
+```
+
+```{r t-test-sd}
+#Running the appropriate test
+wilcox.test(fem_mesoFU$length, mal_mesoFU$length)
+wilcox.test(fem_mesoFU$depth_adj, mal_mesoFU$depth_adj)
+t.test(fem_mesoFU$svl, mal_mesoFU$svl, var.equal = TRUE)
+```
+
+For the Northern pipefish, there are significant differences between males and females in terms of standard length, snout-vent length, and torso depth. 
+
+```{r power-test}
+
+#Checking the power - length
+d_mean_len <- abs(mean(fem_mesoFU$length, na.rm = TRUE) - 
+                    mean(mal_mesoFU$length, na.rm = TRUE))
+pool_sd_len <- sqrt((var(fem_mesoFU$length, na.rm = TRUE) + 
+                       var(mal_mesoFU$length, na.rm = TRUE))/ 2)
+d_len <- d_mean_len/pool_sd_len
+
+pwr.t.test(n = nrow(fem_mesoFU), 
+           d = d_len,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+#Checking the power - SVL
+d_mean_svl <- abs(mean(fem_mesoFU$svl, na.rm = TRUE) - 
+                    mean(mal_mesoFU$svl, na.rm = TRUE))
+pool_sd_svl <- sqrt((var(fem_mesoFU$svl, na.rm = TRUE) + 
+                       var(mal_mesoFU$svl, na.rm = TRUE))/ 2)
+d_svl <- d_mean_svl/pool_sd_svl
+
+pwr.t.test(n = nrow(fem_mesoFU), 
+           d = d_svl,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+#Checking the power - Depth
+d_mean_depth <- abs(mean(fem_mesoFU$depth_adj, na.rm = TRUE) - 
+                      mean(mal_mesoFU$depth_adj, na.rm = TRUE))
+pool_sd_depth <- sqrt((var(fem_mesoFU$depth_adj, na.rm = TRUE) + 
+                         var(mal_mesoFU$depth_adj, na.rm = TRUE))/ 2)
+d_depth <- d_mean_depth/pool_sd_depth
+pwr.t.test(n = nrow(fem_mesoFU), 
+           d = d_depth,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+```
+
+For all variables we have a power of over 0.9 or over 90% so we can be confident in our interpretation.
