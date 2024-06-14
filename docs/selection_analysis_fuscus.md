@@ -23,6 +23,11 @@ Selection pressures in *Syngnathus fuscus*
   - [Females](#females-1)
     - [Visual Comparison](#visual-comparison-1)
     - [Testing the difference](#testing-the-difference-1)
+- [Looking into the Opportunity for Selection in Males and
+  Females](#looking-into-the-opportunity-for-selection-in-males-and-females)
+  - [Generating the total opportunity for selection ($I$) and the
+    opportunity for sexual selection
+    ($I_S$)](#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -1156,3 +1161,158 @@ who mated on top of the size range of all females.</em></figcaption>
 
 We can see that the 5 deepest females all secured a mate, whereas the
 skinniest females did not.
+
+# Looking into the Opportunity for Selection in Males and Females
+
+One of the benefits of using genetic parentage analysis is that we can
+now calculate the opportunity for selection and the opportunity for
+sexual selection in male and female pipefish.
+
+## Generating the total opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$)
+
+Because each trial provides an independent “population” (i.e., pipefish
+from one trial **cannot mate** with pipefish from another trial), I am
+going to calculate these metrics for each trial individually and then I
+will average it. With these I can then also generate 95% confidence
+intervals which I will investigate for indications of significance in
+two ways:
+
+- If the confidence intervals **DO NOT** cross 0 -\> significant
+  selection.
+- If the confidence intervals between the sexes **DO NOT** cross -\>
+  significantly different selection between the two sexes.
+
+``` r
+##FEMALES
+#Create a dataframe to store the calculations of I and I_S in
+fem_opp_selection <- data.frame(matrix(ncol = 3,
+                                       nrow = 0))
+
+colnames(fem_opp_selection) <- c("trial_num", "I", "I_s")
+
+#Loop through the different trials and calculate I and I_S
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate opportunity selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+  
+  #Combining all of the selection values (Is) and save the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I, I_s)
+  
+  fem_opp_selection <- rbind(fem_opp_selection, selection)
+  
+}
+
+
+##MALES
+#Create a dataframe to store the calculations of I and I_S in
+mal_opp_selection <- data.frame(matrix(ncol = 3,
+                                       nrow = 0))
+
+colnames(mal_opp_selection) <- c("trial_num", "I", "I_s")
+
+#Loop through the different trials and calculate I and I_S
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate opportunity selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+  
+  #Combining all of the selection values (Is) and save the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I, I_s)
+  
+  mal_opp_selection <- rbind(mal_opp_selection, selection)
+  
+}
+
+#Merge the selection coefficients from males and females into one dataset to 
+#make life easier
+fem_opp_selection$Sex <- "F"
+mal_opp_selection$Sex <- "M"
+
+opp_selection_all <- rbind(fem_opp_selection, mal_opp_selection)
+```
+
+Now that I have calculated the opportunity for selection and sexual
+selection, I want to generate my averages and 95% CI for both.
+
+``` r
+#List the columns of interest
+columns <- c("I", "I_s")
+
+#Create a dataframe to store the final values in
+opp_average <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(opp_average) <- c("Average", "Interval", "Episode_sel", "Sex")
+
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(fem_opp_selection) - 1))
+
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(opp_selection_all[, colnames(opp_selection_all) == col_name], 
+                       opp_selection_all$Sex, 
+                       mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(opp_selection_all[, colnames(opp_selection_all) == col_name], 
+                     opp_selection_all$Sex, 
+                 function(x){
+                   sqrt(var(x))/sqrt(length(x))
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Episode_sel <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    opp_average <- rbind(opp_average, episode)
+    
+  }
+```
+
+Let’s now explore some results:
+
+| Episode_sel | F                 | M                 |
+|:------------|:------------------|:------------------|
+| I           | 4.51 (3.3, 5.73)  | 4.27 (3.04, 5.5)  |
+| I_s         | 4.22 (2.89, 5.54) | 3.92 (2.71, 5.13) |
+
+Average Opportunity of Selection (95% CI) for Males and Females
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/opp-selection-figure-1.png"
+alt="Average opportunity for selection and opportunity for sexual selection for male (purple) and female (green) S. fuscus. Errorbars represent the 95% confidence intervals around the mean" />
+<figcaption aria-hidden="true"><em>Average opportunity for selection and
+opportunity for sexual selection for male (purple) and female (green) S.
+fuscus. Errorbars represent the 95% confidence intervals around the
+mean</em></figcaption>
+</figure>
+
+We can see that for male and female *S. fuscus* there is a significant
+opportunity for selection and opportunity for sexual selection, however,
+we don’t see significant differences between the sexes for either one.
+There is also not a large difference between the opportunity for
+selection and the opportunity for sexual selection.

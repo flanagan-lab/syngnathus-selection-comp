@@ -547,3 +547,185 @@ legend("topright",
 ```
 
 We can see that the 5 deepest females all secured a mate, whereas the skinniest females did not.
+
+# Looking into the Opportunity for Selection in Males and Females
+One of the benefits of using genetic parentage analysis is that we can now calculate the opportunity for selection and the opportunity for sexual selection in male and female pipefish. 
+
+## Generating the total opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$)
+Because each trial provides an independent "population" (i.e., pipefish from one trial **cannot mate** with pipefish from another trial), I am going to calculate these metrics for each trial individually and then I will average it. With these I can then also generate 95% confidence intervals which I will investigate for indications of significance in two ways:
+
+  - If the confidence intervals **DO NOT** cross 0 -> significant selection.
+  - If the confidence intervals between the sexes **DO NOT** cross -> significantly different selection between the two sexes.
+
+```{r opp-selection}
+##FEMALES
+#Create a dataframe to store the calculations of I and I_S in
+fem_opp_selection <- data.frame(matrix(ncol = 3,
+                                       nrow = 0))
+
+colnames(fem_opp_selection) <- c("trial_num", "I", "I_s")
+
+#Loop through the different trials and calculate I and I_S
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate opportunity selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+  
+  #Combining all of the selection values (Is) and save the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I, I_s)
+  
+  fem_opp_selection <- rbind(fem_opp_selection, selection)
+  
+}
+
+
+##MALES
+#Create a dataframe to store the calculations of I and I_S in
+mal_opp_selection <- data.frame(matrix(ncol = 3,
+                                       nrow = 0))
+
+colnames(mal_opp_selection) <- c("trial_num", "I", "I_s")
+
+#Loop through the different trials and calculate I and I_S
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate opportunity selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  I_s <- var(tmp$MatingSuccess)/(mean(tmp$MatingSuccess)^2)
+  
+  #Combining all of the selection values (Is) and save the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I, I_s)
+  
+  mal_opp_selection <- rbind(mal_opp_selection, selection)
+  
+}
+
+#Merge the selection coefficients from males and females into one dataset to 
+#make life easier
+fem_opp_selection$Sex <- "F"
+mal_opp_selection$Sex <- "M"
+
+opp_selection_all <- rbind(fem_opp_selection, mal_opp_selection)
+```
+
+Now that I have calculated the opportunity for selection and sexual selection, I want to generate my averages and 95% CI for both.
+
+```{r opp-selection-CI}
+#List the columns of interest
+columns <- c("I", "I_s")
+
+#Create a dataframe to store the final values in
+opp_average <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(opp_average) <- c("Average", "Interval", "Episode_sel", "Sex")
+
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(fem_opp_selection) - 1))
+
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(opp_selection_all[, colnames(opp_selection_all) == col_name], 
+                       opp_selection_all$Sex, 
+                       mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(opp_selection_all[, colnames(opp_selection_all) == col_name], 
+                     opp_selection_all$Sex, 
+                 function(x){
+                   sqrt(var(x))/sqrt(length(x))
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Episode_sel <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    opp_average <- rbind(opp_average, episode)
+    
+  }
+
+```
+
+Let's now explore some results:
+
+```{r opp-selection-table, echo = FALSE, warning=FALSE}
+
+#Create a new column
+opp_average <- opp_average %>%
+  mutate(Combined = paste0(round(Average , 2), 
+                           " (", round(Average - Interval, 2), ", ",
+                           round(Average + Interval, 2), ")"))
+
+#Transform data into wide format
+sum_opp <- opp_average %>% 
+  select(Episode_sel, Sex, Combined) %>% 
+  pivot_wider(names_from = Sex, values_from = Combined) 
+
+#Display the table
+kable(sum_opp, caption = "Average Opportunity of Selection (95% CI) for Males and Females")
+
+```
+
+
+```{r opp-selection-figure, echo=FALSE, fig.cap="_Average opportunity for selection and opportunity for sexual selection for male (purple) and female (green) S. fuscus. Errorbars represent the 95% confidence intervals around the mean_", fig.width=8, fig.height=6, warning=FALSE}
+
+#Set parameters
+sex_cols <- c("F" = "#7fc97f", "M" = "#beaed4" )
+pd <- position_dodge(1)
+
+ggplot(opp_average,
+       aes(x = Episode_sel,
+           y = Average,
+           color = Sex,
+           group = Sex)) +
+  geom_errorbar(aes(ymin = Average - Interval,
+                    ymax = Average + Interval),
+                color = "black",
+                width = 0.2,
+                position = pd,
+                linewidth = 1) +
+  geom_point(position = pd,
+             size = 4) +
+  xlab("Episode of Selection") +
+  ylab("Average Fitness Value") +
+  scale_color_manual(values = sex_cols) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.background = element_blank(), 
+        axis.line = element_line(colour = "black")) +
+  theme(legend.position = "bottom",
+        legend.key=element_blank(),
+        axis.title.x = element_text(size = 16,
+                                    vjust = -0.5),
+        axis.text.x = element_text(size = 16, family = "serif"),
+        axis.title.y = element_text(size = 16,
+                                    vjust = 2.5),
+        axis.text.y = element_text(size = 16),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)) +
+  geom_hline(yintercept = 0, linetype = "dashed", linewidth = 1)
+
+```
+
+We can see that for male and female _S. fuscus_ there is a significant opportunity for selection and opportunity for sexual selection, however, we don't see significant differences between the sexes for either one. There is also not a large difference between the opportunity for selection and the opportunity for sexual selection.
