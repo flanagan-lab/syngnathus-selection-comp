@@ -9,6 +9,12 @@ Selection pressures in *Syngnathus fuscus*
     comparison](#checking-the-assumptions-for-a-pairwise-comparison)
   - [Investigate distributions and run the
     tests](#investigate-distributions-and-run-the-tests)
+- [Calculating mating and reproductive success for individuals who
+  mated](#calculating-mating-and-reproductive-success-for-individuals-who-mated)
+- [Summary statistics for successfully mated
+  individuals](#summary-statistics-for-successfully-mated-individuals)
+  - [Males](#males)
+  - [Females](#females)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -358,3 +364,333 @@ pwr.t.test(n = nrow(fem_mesoFU),
 
 For all variables we have a power of over 0.9 or over 90% so we can be
 confident in our interpretation.
+
+# Calculating mating and reproductive success for individuals who mated
+
+*Syngnathus fuscus* (Northern pipefish) were sampled from one cohesive
+seagrass beds in Chesapeake Bay in Cape Charles, Virgina. Sexually
+mature females (standard length $\ge$ 120mm) and pregnant males were
+collected and brought back to the University of Tampa for mesocosm
+experiments. In these mesocosms, 6 males and 6 females were housed
+together in a 140L tank for a period of 6-weeks and allowed to mate
+freely. Parentage analysis was done with all of the pregnant males from
+the trials to figure out how many times each male and female mated, and
+the number of eggs that were transferred. The results of that are here.
+
+First I had to calculate the mating and reproductive success for each
+male and female who mated based on the assigned mom for each genotyped
+embryo.
+
+``` r
+#Row-by-Row analysis of parentage data by male brood pouch section
+
+#Read in the data
+#em_dat <- read.csv("~/EmbryoParentage.csv")
+
+#For each row in the dataset(each section of the pouch) apply this function
+mom_counts <- do.call(rbind,apply(em_dat, 1, function(one_section){
+  
+  #Save all of the momIDs into an object
+  mom_ids<-c(one_section[grep("momID",names(one_section))])  
+  
+  #Calculate the number of eggs that belongs to each potential mom based on
+  #the proportions and total number of developed and undeveloped embryos
+  mom_props<-c(as.numeric(one_section[grep("prop",names(one_section))]))
+  mom_counts_dev<-mom_props*as.numeric(one_section["num_embryos_dev"])
+  mom_counts_und<-mom_props*as.numeric(one_section["num_embryos_non_dev"])
+  
+  #Create a dataframe that contains the maleID, pouch section number and the
+  #number of eggs that belongs to each momID
+  this_section<-data.frame(
+    maleID=one_section["maleID"],
+    section_num=one_section["section_num"],
+    mom_ids[which((mom_counts_dev + mom_counts_und) > 0)],
+    mom_counts_dev[which((mom_counts_dev + mom_counts_und)>0)],
+    mom_counts_und[which((mom_counts_dev + mom_counts_und)>0)]
+  )
+  
+  #Rename the columns
+  colnames(this_section)[3:5]<-c("momID","num_dev","num_und")
+  
+  return(this_section)
+  
+}))
+
+#Calculate female fitness
+fem_fitness<-do.call(rbind,by(mom_counts, mom_counts$momID,function(dat){
+  
+  mom_fitness<-data.frame(
+    momID=unique(dat$momID),
+    MatingSuccess=length(unique(dat$maleID)),
+    NumDeveloped=round(sum(dat$num_dev)),
+    NumUndeveloped=round(sum(dat$num_und))
+  )
+  return(mom_fitness)
+}))
+
+fem_fitness$totalEggs <- fem_fitness$NumDeveloped + fem_fitness$NumUndeveloped
+
+#Calculate Male Fitness 
+mal_fitness<-do.call(rbind,by(mom_counts, mom_counts$maleID,function(dat){
+ 
+  dad_fitness<-data.frame(
+    maleID=unique(dat$maleID),
+    MatingSuccess=length(unique(dat$momID)),
+    NumDeveloped_Calc=round(sum(dat$num_dev)),
+    NumUndeveloped_Calc=round(sum(dat$num_und))
+  )
+  return(dad_fitness)
+}))
+
+mal_fitness$totalEggs <- mal_fitness$NumDeveloped_Calc + mal_fitness$NumUndeveloped_Calc
+```
+
+After running the above R script we have generated two datasets,
+`mal_fitness` and `fem_fitness`. These datasets include information
+about the mating success (number of mates) and reproductive success
+(Number of embryos transferred). We can split reproductive success up
+further later if we want to from the total number of embryos transferred
+to the number of embryos developed and the number that were undeveloped.
+
+I want to include all of the other metadata that I have for these
+individuals (traits, collection location, latency to pregnancy, etc.) as
+well as tack on all of the information for the individuals who did not
+mate. To do that I am going to need to merge the fitness datasets with
+`fem_meso` and `mal_meso`.
+
+``` r
+#Make a column in *_meso that contains the full fishID (i.e. FU1M3) to match the 
+#formatting in the fitness datasets (make sure they have the same name for merging purposes)
+fem_mesoFU$momID <- paste0("FU", fem_mesoFU$trial_num, "F",
+                         fem_mesoFU$fishID)
+mal_mesoFU$maleID <- paste0("FU", mal_mesoFU$trial_num, "M",
+                          mal_mesoFU$fishID)
+
+#Merge the datasets based on the columns created above
+fem_all <- merge(fem_mesoFU, fem_fitness, by = "momID", 
+                 all.x = TRUE, all.y = TRUE)
+mal_all <- merge(mal_mesoFU, mal_fitness, by = "maleID", 
+                 all.x = TRUE, all.y = TRUE)
+```
+
+There are a few trials that I want to remove from the analysis including
+all trials where there were no successful matings (4, 7, 8, and 9).
+
+I also want to replace the NAs that were automatically added to the
+columns from the fitness dataset (MatingSuccess, NumDeveloped,
+NumUndeveloped, totalEggs) with 0s and add a column to the female
+dataset that tells me whether or not the female mated (with 1 or 0).
+
+``` r
+#Subset the merged datasets to remove trials without successful matings 
+fem_succFU <- subset(fem_all, !(trial_num %in% c(4, 7, 8, 9)))
+mal_succFU <- subset(mal_all, !(trial_num %in% c(4, 7, 8, 9)))
+
+#Replace NAs with 0s in the columns related to fitness
+mal_succFU[, c("MatingSuccess", "NumDeveloped_Calc", 
+               "NumUndeveloped_Calc", "totalEggs")] <- sapply(mal_succFU[,
+                                                                         c("MatingSuccess", "NumDeveloped_Calc", 
+               "NumUndeveloped_Calc", "totalEggs")],
+                           function(x)
+                             ifelse(is.na(x), 0, x))
+
+fem_succFU[, c("MatingSuccess", "NumDeveloped", 
+               "NumUndeveloped", "totalEggs")] <- sapply(fem_succFU[, c("MatingSuccess", 
+                                                                        "NumDeveloped", 
+                                                                        "NumUndeveloped", 
+                                                                        "totalEggs")],
+                           function(x)
+                             ifelse(is.na(x), 0, x))
+
+#Add a column for females to denote mated or unmated
+fem_succFU$mated <- ifelse(fem_succFU$MatingSuccess > 0, 1, 0)
+```
+
+# Summary statistics for successfully mated individuals
+
+## Males
+
+Across all 12 trials and 74 total males, there were 22 males that mated
+at least one time and 1 of those males had two mates.
+
+Looking across all males, including the ones that did not mate, this is
+what we find as the mean, sd, and se for the number of embryos
+transferred and how many of those developed versus didn’t:
+
+|                     |       mean |          SD |         SE | max | min |
+|:--------------------|-----------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 68.2432432 | 138.1056585 | 16.0544567 | 607 |   0 |
+| Developed Embryos   | 63.6216216 | 130.3914762 | 15.1577012 | 566 |   0 |
+| Undeveloped Embryos |  4.6216216 |  13.9889415 |  1.6261814 |  84 |   0 |
+
+These values will be influenced by the number of 0s coming from males
+who did not mate. So let’s look at the same thing, but this time for
+only males who had at least one successful mating:
+
+|                     |        mean |          SD |         SE | max | min |
+|:--------------------|------------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 229.5454545 | 165.8693483 | 35.3634639 | 607 |   0 |
+| Developed Embryos   |         214 | 159.3379159 | 33.9709578 | 566 |   0 |
+| Undeveloped Embryos |  15.5454545 |  22.4132768 |  4.7785267 |  84 |   0 |
+
+We can see from the bottom table that even when we only include males
+who mated there is still a wide range in the brood size. I want to see
+what relationship there is between brood pouch size (in terms of both
+total area and length) and brood size (total number of embryos).
+
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/em-v-bp-1.png"
+alt="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between brood pouch size metrics and the number of embryos a male
+had.</em></figcaption>
+</figure>
+
+There may be some correlation happening here, but it doesn’t look
+particularly strong. Let’s run some correlations tests to see what they
+say.
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFU$bp_area) and mated_malFU$totalEggs
+    ## t = 1.7941, df = 20, p-value = 0.08793
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.05845921  0.68621522
+    ## sample estimates:
+    ##       cor 
+    ## 0.3723259
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFU$bp_length) and mated_malFU$totalEggs
+    ## t = 1.5076, df = 20, p-value = 0.1473
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.1180647  0.6530941
+    ## sample estimates:
+    ##       cor 
+    ## 0.3194448
+
+There is not a significant correlation between the number of eggs and
+size of the brood pouch when we look at brood pouch area OR brood pouch
+length.
+
+Let’s see if this changes if we just look at the overall size of the
+male
+
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/em-v-sl-1.png"
+alt="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between standard length (mm) and the number of embryos a male
+had.</em></figcaption>
+</figure>
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  as.numeric(mated_malFU$length) and mated_malFU$totalEggs
+    ## t = 0.68816, df = 20, p-value = 0.4993
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.2879874  0.5391261
+    ## sample estimates:
+    ##       cor 
+    ## 0.1520871
+
+The correlation actually decreases when we look at the overall size of
+the fish.
+
+## Females
+
+Across all 12 trials and 73 total females, there were 19 females that
+mated at least one time, 2 females that mated twice, and 0 that mated 3
+times.
+
+Looking across all females, including the ones that did not mate, this
+is what we find as the mean, sd, and se for the total number of embryos
+transferred from each female (across all of her mates if applicable) and
+how many of those developed versus didn’t:
+
+|                     |       mean |          SD |         SE | max | min |
+|:--------------------|-----------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 69.1780822 | 145.8034581 |  17.065004 | 607 |   0 |
+| Developed Embryos   | 64.4931507 | 134.6631727 | 15.7611322 | 566 |   0 |
+| Undeveloped Embryos |  4.6849315 |  18.9442726 |  2.2172594 | 152 |   0 |
+
+These values will be influenced by the number of 0s coming from females
+who did not mate. So let’s look at the same thing, but this time for
+only females who had at least one successful mating:
+
+|                     |        mean |          SD |         SE | max | min |
+|:--------------------|------------:|------------:|-----------:|----:|----:|
+| Number of Embryos   | 265.7894737 | 172.8414749 | 39.6525538 | 607 |  53 |
+| Developed Embryos   | 247.7894737 |  156.826365 | 35.9784356 | 566 |  52 |
+| Undeveloped Embryos |          18 |  34.3883055 |  7.8892183 | 152 |   0 |
+
+We can see from the bottom table that even when we only include females
+who mated there is still a wide range in the number of eggs transferred.
+I want to see what relationship there may be between female body size
+(in terms of standard length, depth, and SVL) and the number of eggs she
+transferred. I also want to see on average how many eggs were
+transferred per mating. I’m going to calculate this by taking the total
+number of eggs and dividing it by the number of mates.
+
+    ## [1] 244.2632
+
+    ## [1] 18.6399
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/em-v-fem-size-1.png"
+alt="Scatterplot of the relationship between female size metrics and the number of eggs transferred." />
+<figcaption aria-hidden="true">Scatterplot of the relationship between
+female size metrics and the number of eggs transferred.</figcaption>
+</figure>
+
+There also appears to be a correlation between female body size and the
+number of eggs transferred, especially in terms of depth. Let’s run some
+correlations tests to see what they say.
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFU$length and as.numeric(mated_femFU$totalEggs)
+    ## t = 1.2419, df = 17, p-value = 0.2311
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.1908052  0.6565978
+    ## sample estimates:
+    ##       cor 
+    ## 0.2883983
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFU$depth_adj and as.numeric(mated_femFU$totalEggs)
+    ## t = 2.3679, df = 17, p-value = 0.03001
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.05660158 0.77655940
+    ## sample estimates:
+    ##       cor 
+    ## 0.4980076
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mated_femFU$svl and as.numeric(mated_femFU$totalEggs)
+    ## t = 1.0581, df = 17, p-value = 0.3048
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.2318064  0.6314863
+    ## sample estimates:
+    ##       cor 
+    ## 0.2485751
+
+There is no sig. correlation between length or svl and the number of
+eggs transferred but we do see a significantly positive relationship
+between depth and number of eggs transferred!
