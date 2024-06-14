@@ -38,6 +38,10 @@ Selection pressures in *Syngnathus floridae*
   $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
   - [Omitting females with high
     mating](#omitting-females-with-high-mating)
+- [Investing selection differentials on snout-vent-length ($s$ and
+  $s'$)](#investing-selection-differentials-on-snout-vent-length-s-and-s)
+  - [Looking into the Maximum Sexual Selection
+    Differential](#looking-into-the-maximum-sexual-selection-differential)
 - [Visualizing post-copulatory
   selection](#visualizing-post-copulatory-selection)
 
@@ -2263,6 +2267,302 @@ with those points omitted.
 It doesn’t look like omitting those few individuals has any effect on
 the results of the Bateman gradient.
 
+# Investing selection differentials on snout-vent-length ($s$ and $s'$)
+
+A selection differential is the covariance between a trait and relative
+fitness and is often thought of as the difference in a trait mean before
+and after selection. We can calculate the absolute selection
+differential as: $$
+s = cov(trait\ value,\ relative\ fitness)
+$$
+
+Oftentimes, it may be desirable to measure these selection differentials
+in terms of phenotypic standard deviations. In this case the
+standardized selection differential would be equal to: $$
+s' = cov( standardized\ trait,\ relative\ fitness)
+$$
+
+We often standardize the trait to have a mean of zero and a standard
+deviation of unity. This can be accomplished via: $$
+standarized\ trait = \frac{(trait\ value\ -\ mean(trait))}{sd(trait)}
+$$
+
+Just as I did for the decomposition of the opportunity for selection, I
+am going to decompose the total selection differentials into the
+different pre- and post-mating episodes.
+
+I am going to use snout-vent length as the trait that I am interested in
+as I found significant differences between males and females, whereas
+there were no significant differences in standard length. For the
+various relative fitness components I will be using:
+
+1.  Mating success (pre-mating selection)
+2.  Number of eggs transferred (post-mating)
+3.  Proportion of transferred eggs developed (post-mating)
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+fem_succ_select_diff <- data.frame(matrix(ncol = ncol(fem_succFL) + 6,
+                                          nrow = 0))
+colnames(fem_succ_select_diff) <- c(colnames(fem_succFL),
+                                    "fit1", "eggs_per_mate","fit2", 
+                                    "prop_dev", "fit3", "StdLength")
+
+#Create a dataframe to store the final calculations of I in
+select_diff_fem <- data.frame(matrix(ncol = 11,
+                                     nrow = 0))
+colnames(select_diff_fem) <- c("trial", "s1", "s2", "s3", "s12", "s123",
+                               "s1_prime", "s2_prime", "s3_prime", 
+                               "s12_prime", "s123_prime")
+
+for (trial in unique(fem_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFL[fem_succFL$trial_num == trial, ]
+  
+  #Calculate fitness relating to pre-cop. selection (#matings)
+  tmp$fit1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+
+  #Calculate fitness relating to post-mating selection (#eggs transferred)
+  tmp$eggs_per_mate <- tmp$totalEggs/tmp$MatingSuccess
+  ##If mating success = 0, eggs_per_mate = NA and it not included in the calculation
+  ##of the relative fitness moving forward
+  tmp$fit2 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$eggs_per_mate/mean(tmp$eggs_per_mate, na.rm = TRUE),
+                     0) #Relative eggs transferred
+
+  #Calculate fitness relating to post-mating selection (eggs that developed)
+  tmp$prop_dev <- (tmp$NumDeveloped/tmp$MatingSuccess)/tmp$eggs_per_mate
+  tmp$fit3 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$prop_dev/mean(tmp$prop_dev, na.rm = TRUE),
+                     0)
+  
+  #Standardizing the trait value to have a mean of 0 and sd of unity
+  tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
+  
+  #Calculating the absolute selection differentials (s)
+  s1 <- cov(tmp$length, tmp$fit1)
+  s12 <- cov(tmp$length, tmp$fit2)
+  s123 <- cov(tmp$length, tmp$fit3)
+  s2 <- s12 - s1
+  s3 <- s123 - s12
+  
+  #Calculating the standardized selection differentials (s')
+  s1_prime <- cov(tmp$StdLength, tmp$fit1)
+  s12_prime <- cov(tmp$StdLength, tmp$fit2)
+  s123_prime <- cov(tmp$StdLength, tmp$fit3)
+  s2_prime <- s12_prime - s1_prime
+  s3_prime <- s123_prime - s12_prime
+  
+  #Combining all of the selection differentials (s, s') and saving the output
+  selection <- cbind(trial, s1, s2, s3, s12, s123, 
+                     s1_prime, s2_prime, s3_prime, s12_prime, s123_prime)
+  
+  select_diff_fem <- rbind(select_diff_fem, selection)
+  
+  #Save the intermediate values
+  fem_succ_select_diff <- rbind(fem_succ_select_diff, tmp)
+}
+
+#Exporting the data
+#write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
+```
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+mal_succ_select_diff <- data.frame(matrix(ncol = ncol(mal_succFL) + 6,
+                                          nrow = 0))
+colnames(mal_succ_select_diff) <- c(colnames(mal_succFL),
+                                    "fit1", "eggs_per_mate","fit2", "prop_dev", 
+                                    "fit3", "StdLength")
+
+#Create a dataframe to store the final calculations of I in
+select_diff_mal <- data.frame(matrix(ncol = 11,
+                                     nrow = 0))
+colnames(select_diff_mal) <- c("trial", "s1", "s2", "s3", "s12", "s123",
+                               "s1_prime", "s2_prime", "s3_prime", 
+                               "s12_prime", "s123_prime")
+
+for (trial in unique(mal_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFL[mal_succFL$trial_num == trial, ]
+  
+  #Calculate fitness relating to pre-cop. selection (#matings)
+  tmp$fit1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+
+  #Calculate fitness relating to post-mating selection (#eggs transferred)
+  tmp$eggs_per_mate <- tmp$totalEggs/tmp$MatingSuccess
+  tmp$fit2 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$eggs_per_mate/mean(tmp$eggs_per_mate, na.rm = TRUE),
+                     0) #Relative eggs transferred
+
+  #Calculate fitness relating to post-mating selection (eggs that developed)
+  tmp$prop_dev <- (tmp$NumDeveloped_Calc/tmp$MatingSuccess)/tmp$eggs_per_mate
+  tmp$fit3 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$prop_dev/mean(tmp$prop_dev, na.rm = TRUE),
+                     0)
+  
+  #Standardizing the trait value to have a mean of 0 and sd of unity
+  tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
+  
+  #Calculating the absolute selection differentials (s)
+  s1 <- cov(tmp$length, tmp$fit1)
+  s12 <- cov(tmp$length, tmp$fit2)
+  s123 <- cov(tmp$length, tmp$fit3)
+  s2 <- s12 - s1
+  s3 <- s123 - s12
+  
+  #Calculating the standardized selection differentials (s')
+  s1_prime <- cov(tmp$StdLength, tmp$fit1)
+  s12_prime <- cov(tmp$StdLength, tmp$fit2)
+  s123_prime <- cov(tmp$StdLength, tmp$fit3)
+  s2_prime <- s12_prime - s1_prime
+  s3_prime <- s123_prime - s12_prime
+  
+  #Combining all of the selection differentials (s, s') and saving the output
+  selection <- cbind(trial, s1, s2, s3, s12, s123, 
+                     s1_prime, s2_prime, s3_prime, s12_prime, s123_prime)
+  
+  select_diff_mal <- rbind(select_diff_mal, selection)
+  
+  #Save the intermediate values
+  mal_succ_select_diff <- rbind(mal_succ_select_diff, tmp)
+}
+
+#Exporting the data
+write.csv(mal_succ_select_diff, "data/floridae_int_diff_mal.csv", row.names = FALSE)
+```
+
+``` r
+#Merge the male and female datasets together
+select_diff_fem$Sex <- "F"
+select_diff_mal$Sex <- "M"
+
+select_diff_all <- rbind(select_diff_fem, select_diff_mal)
+
+#List the columns of interest
+columns <- c("s1", "s2", "s3", "s123",
+             "s1_prime", "s2_prime", "s3_prime", "s123_prime")
+
+#Create a dataframe to store the final values in
+sd_average <- data.frame(matrix(ncol = 4,
+                                nrow = 0))
+colnames(sd_average) <- c("Average", "Interval", "Select_diff", "Sex")
+
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(select_diff_fem) - 1))
+
+#Calculating the averages and confidence intervals for each species and 
+#selection differential
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                       select_diff_all$Sex, mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                     select_diff_all$Sex, 
+                 function(x){
+                   
+                   sqrt(var(x))/sqrt(length(x))
+                   
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Select_diff <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    sd_average <- rbind(sd_average, episode)
+    
+}
+```
+
+Now that we have the average select diff for males and females alongside
+the 95% confidence intervals we can visualize some results:
+
+| Select_diff | F                    | M                    |
+|:------------|:---------------------|:---------------------|
+| s1          | 2.36 (-10.43, 15.15) | -6.59 (-13.09, -0.1) |
+| s2          | -3.26 (-14.83, 8.32) | 4.04 (0.52, 7.55)    |
+| s3          | 1.89 (-2.44, 6.21)   | -0.72 (-1.99, 0.55)  |
+| s123        | 0.99 (-4.18, 6.17)   | -3.28 (-6.24, -0.32) |
+| s1_prime    | 0.21 (-0.32, 0.73)   | -0.43 (-0.95, 0.1)   |
+| s2_prime    | -0.23 (-0.71, 0.25)  | 0.3 (-0.04, 0.65)    |
+| s3_prime    | 0.08 (-0.11, 0.28)   | -0.07 (-0.15, 0.02)  |
+| s123_prime  | 0.06 (-0.17, 0.3)    | -0.19 (-0.38, -0.01) |
+
+Average Selection Differentials (95% CI) for Males and Females
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/generate-fig-select-diff-1.png"
+alt="Absolute (left) and standardized (right) selection differentials for male (purple) and female (green) S. floridae. Error bars represent the 95% confidence intervals around the mean." />
+<figcaption aria-hidden="true"><em>Absolute (left) and standardized
+(right) selection differentials for male (purple) and female (green) S.
+floridae. Error bars represent the 95% confidence intervals around the
+mean.</em></figcaption>
+</figure>
+
+We can see from these results that males and females are experiencing
+largely different selection on snout-vent length. When the male
+selection differential is negative the female is positive and vice
+avers. Overall, it appears larger size in female svl is more beneficial
+in the pre-mating episode and in terms of the proportion of eggs
+developed, but not for the number of eggs transferred. However, none of
+that is significant (i.e., the 95% CI values all cross 0). In males
+there is a significant selection differential favoring smaller svl in
+pre-mating selection and in the overall selection differential.
+
+## Looking into the Maximum Sexual Selection Differential
+
+Because $s'$ is the covariance between a standardized trait, which has a
+s.d. of 1, and relative fitness, meaning $s'$ cannot be larger than the
+standard deviation in the relative fitness. If we are talking about
+mating success as our relative fitness metric, the standard deviation of
+relative mating success is the square root of $I_S$ so to calculate
+$s'_{max}$:
+
+$$
+s'_{max}\ =\ \beta_{SS}\sqrt{I_S}
+$$ One major benefit of this is that both the variation in mating
+success and the Bateman gradient are taken into effect. Additionally,
+$s'_{max}$ places an upper bound on the strength of sexual selection
+during a sexual selection episode.
+
+Let’s now generate $s'_{max}$ for male and female *S. floridae*.
+
+``` r
+#Pull out the Bateman gradient (slopes of the models)
+bateman_fem <- coefficients(wls_model_fem)[2]
+bateman_mal <- coefficients(wls_model_mal)[2]
+
+#Pull out the Average opp sexual selection for males and females
+opp_ss_fem <- opp_average$Average[opp_average$Sex == "F" & 
+                                    opp_average$Episode_sel == "I_s"]
+opp_ss_mal <- opp_average$Average[opp_average$Sex == "M" & 
+                                    opp_average$Episode_sel == "I_s"]
+
+#Calculate select diff max
+select_diff_max_fem <- bateman_fem * sqrt(opp_ss_fem)
+select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
+```
+
+For females, the $s'_{max}$ is 1.6097147, while $s'$ is 0.0639505, which
+is about 1/25 of the max selection that could be experiences. For males,
+$s'_{max}$ is 1.5287962 and $s'$ is -0.1924964.
+
 # Visualizing post-copulatory selection
 
 As a way to visualize selection acting AFTER the mating event
@@ -2278,11 +2578,11 @@ not mate and not including the individuals who did not mate.
 <img
 src="selection_analysis_floridae_files/figure-gfm/surv-v-matings-1.png"
 alt="Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green). This was done omitting the individuals that did not mate (left) and including those individuals (right)." />
-<figcaption aria-hidden="true">Plotting the relationship between the
+<figcaption aria-hidden="true"><em>Plotting the relationship between the
 proportion of eggs that developed and the number of mates aquired for
 both males (purple) and females (green). This was done omitting the
 individuals that did not mate (left) and including those individuals
-(right).</figcaption>
+(right).</em></figcaption>
 </figure>
 
 We can see that when the non-mated individuals are included there is a
