@@ -1550,3 +1550,33 @@ plot_grid(select_diff_average, select_diff2_average,
 
 We can see from these results that males and females are experiencing largely different selection on snout-vent length. When the male selection differential is negative the female is positive and vice avers. Overall, it appears larger size in female svl is more beneficial in the pre-mating episode and in terms of the proportion of eggs developed, but not for the number of eggs transferred. However, while we can see these patterns, there is no significant selection on snout-vent length (all the 95% CI cross 0) for males or females.
 
+## Looking into the Maximum Sexual Selection Differential
+We can calculate $s'_{max}$:
+
+$$
+s'_{max}\ =\ \beta_{SS}\sqrt{I_S}
+$$
+
+One major benefit of this is that both the variation in mating success and the Bateman gradient are taken into effect. Additionally, $s'_{max}$ places an upper bound on the strength of sexual selection during a sexual selection episode.
+
+Let's now generate $s'_{max}$ for male and female _S. fuscus_.
+
+```{r select-diff-max}
+#Pull out the Bateman gradient (slopes of the models)
+bateman_fem <- coefficients(wls_model_fem)[2]
+bateman_mal <- coefficients(wls_model_mal)[2]
+
+#Pull out the Average opp sexual selection for males and females
+opp_ss_fem <- opp_average$Average[opp_average$Sex == "F" & 
+                                    opp_average$Episode_sel == "I_s"]
+opp_ss_mal <- opp_average$Average[opp_average$Sex == "M" & 
+                                    opp_average$Episode_sel == "I_s"]
+
+#Calculate select diff max
+select_diff_max_fem <- bateman_fem * sqrt(opp_ss_fem)
+select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
+
+```
+
+For females, the $s'_{max}$ is `r (select_diff_max_fem)`, while $s'$ is `r sd_average$Average[sd_average$Sex == "F" & sd_average$Select_diff == "s123_prime"]`, which is about 1/25 of the max selection that could be experiences. For males, $s'_{max}$ is `r (select_diff_max_mal)` and $s'$ is `r sd_average$Average[sd_average$Sex == "M" & sd_average$Select_diff == "s123_prime"]`.
+
