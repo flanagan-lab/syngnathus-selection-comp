@@ -28,6 +28,8 @@ Selection pressures in *Syngnathus fuscus*
   - [Generating the total opportunity for selection ($I$) and the
     opportunity for sexual selection
     ($I_S$)](#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s)
+  - [Partitioning the Total Opportunity for Selection
+    ($I$)](#partitioning-the-total-opportunity-for-selection-i)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -1316,3 +1318,303 @@ opportunity for selection and opportunity for sexual selection, however,
 we don’t see significant differences between the sexes for either one.
 There is also not a large difference between the opportunity for
 selection and the opportunity for sexual selection.
+
+## Partitioning the Total Opportunity for Selection ($I$)
+
+Once again for partitioning the opportunity for selection, I am going to
+calculate selection for the trials individually in males and females and
+then average across all trials to get the final values and the 95% CIs.
+For pre-mating processes I am focusing on mating success and then for
+post-mating processes I am looking at the total number of eggs
+transferred/received and the proportion of those eggs which developed
+(showing fertilization success).
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFU) + 9,
+                                      nrow = 0))
+colnames(fem_succ_fitness) <- c(colnames(fem_succFU),
+                                "w1", "w1_squared",
+                                "W2", "W2_bar", "w2",
+                                "W3", "W3_bar", "w3", "i3")
+
+#Create a dataframe to store the final calculations of I in
+opp_selection_episodes_fem <- data.frame(matrix(ncol = 12,
+                                            nrow = 0))
+colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
+                                          "I_3", "I_3per", "I_12", "I_12per",
+                                          "I", "Iper")
+
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate the absolute pre-copulatory fitness (Eq. 14 Arnold & Wade 1984)
+  #This is the same as the calculation of I_s
+  tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+  tmp$w1_squared <- (tmp$w1)^2
+  
+  I_1 <- var(tmp$w1) #Variance in relative mating success
+  
+  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
+  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
+                   tmp$totalEggs/tmp$MatingSuccess,
+                   0) #Number of eggs per mate
+  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
+  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
+  
+  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  
+  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W3 <- ifelse(tmp$totalEggs > 0,
+                   tmp$NumDeveloped/tmp$totalEggs,
+                   0) #Proportion of transferred eggs that developed
+  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
+  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
+  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  
+  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+
+  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  
+  #Total opportunity for selection
+  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  
+  #Calculating percentages for each selection event
+  I_1per <- (I_1/I)*100
+  I_2per <- (I_2/I)*100
+  I_3per <- (I_3/I)*100
+  I_12per <- (I_12/I)*100
+  Iper <- (I/I)*100
+  
+  #Combining all of the selection values (Is) and saving the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
+                     I_12, I_12per, I, Iper)
+  
+  opp_selection_episodes_fem <- rbind(opp_selection_episodes_fem, selection)
+  
+  #Save the intermediate values
+  fem_succ_fitness <- rbind(fem_succ_fitness, tmp)
+}
+
+#Exporting the data
+#write.csv(fem_succ_fitness, "data/fuscus_int_I_fem.csv", row.names = FALSE)
+```
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFU) + 9,
+                                      nrow = 0))
+colnames(mal_succ_fitness) <- c(colnames(mal_succFU),
+                                "w1", "w1_squared",
+                                "W2", "W2_bar", "w2",
+                                "W3", "W3_bar", "w3", "i3")
+
+#Create a dataframe to store the final calculations of I in
+opp_selection_episodes_mal <- data.frame(matrix(ncol = 12,
+                                            nrow = 0))
+colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
+                                          "I_3", "I_3per", "I_12", "I_12per",
+                                          "I", "Iper", "I_s")
+
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate the absolute pre-copultory fitness (Eq. 14 Arnold & Wade 1984)
+  tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+  tmp$w1_squared <- (tmp$w1)^2
+  
+  I_1 <- var(tmp$w1) #Variance in relative mating success
+  
+  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
+  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
+                   tmp$totalEggs/tmp$MatingSuccess,
+                   0) #Number of eggs per mate
+  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
+  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
+  
+  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  
+  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W3 <- ifelse(tmp$totalEggs > 0,
+                   tmp$NumDeveloped_Calc/tmp$totalEggs,
+                   0) #Proportion of transferred eggs that developed
+  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
+  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
+  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  
+  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+
+  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  
+  #Total opportunity for selection
+  I <- var(tmp$NumDeveloped_Calc)/(mean(tmp$NumDeveloped_Calc)^2)
+
+  #Calculating percentages for each selection event
+  I_1per <- (I_1/I)*100
+  I_2per <- (I_2/I)*100
+  I_3per <- (I_3/I)*100
+  I_12per <- (I_12/I)*100
+  Iper <- (I/I)*100
+  
+  #Combining all of the selection values (Is) and saving the output
+  trial_num <- trial
+  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
+                     I_12, I_12per, I, Iper)
+  
+  opp_selection_episodes_mal <- rbind(opp_selection_episodes_mal, selection)
+  
+  #Save the intermediate values
+  mal_succ_fitness <- rbind(mal_succ_fitness, tmp)
+}
+
+#Exporting the data
+#write.csv(mal_succ_fitness, "data/fuscus_int_I_mal.csv", row.names = FALSE)
+```
+
+``` r
+#Merge the selection coefficients from males and females into one dataset to 
+#make life easier
+opp_selection_episodes_fem$Sex <- "F"
+opp_selection_episodes_mal$Sex <- "M"
+
+opp_selection_episodes_all <- rbind(opp_selection_episodes_fem, opp_selection_episodes_mal)
+
+#Exporting the data
+#write.csv(opp_selection_episodes_all, "data/fuscus_opp_selection.csv", row.names = FALSE)
+
+#List the columns of interest
+columns <- c("I_1", "I_2", "I_12", "I_3","I")
+
+#Create a dataframe to store the final values in
+opp_episodes_average <- data.frame(matrix(ncol = 4,
+                                    nrow = 0))
+colnames(opp_episodes_average) <- c("Average", "Interval", 
+                                    "Episode_sel", "Sex")
+
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(opp_selection_episodes_fem) - 1))
+
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                  == col_name], 
+                       opp_selection_episodes_all$Sex, 
+                       mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                == col_name], 
+                     opp_selection_episodes_all$Sex, 
+                 function(x){
+                   sqrt(var(x))/sqrt(length(x))
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Episode_sel <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    opp_episodes_average <- rbind(opp_episodes_average, episode)
+    
+  }
+```
+
+Let’s now explore some results:
+
+| Episode_sel | F                   | M                   |
+|:------------|:--------------------|:--------------------|
+| I_1         | 4.217 (2.89, 5.54)  | 3.919 (2.71, 5.13)  |
+| I_2         | 0.082 (-0.06, 0.22) | 0.118 (-0.02, 0.26) |
+| I_12        | 4.497 (3.27, 5.72)  | 4.223 (2.98, 5.47)  |
+| I_3         | 0.001 (0, 0)        | 0.003 (0, 0.01)     |
+| I           | 4.512 (3.3, 5.73)   | 4.269 (3.04, 5.5)   |
+
+Average Episode of Selection (95% CI) for Males and Females
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/opp-select-episodes-figure-1.png"
+alt="Average opportunity for selection for the different episodes for male (purple) and female (green) S. fuscus. Errorbars represent the 95% confidence intervals around the mean" />
+<figcaption aria-hidden="true"><em>Average opportunity for selection for
+the different episodes for male (purple) and female (green) S. fuscus.
+Errorbars represent the 95% confidence intervals around the
+mean</em></figcaption>
+</figure>
+
+From the table and the plot we can see that once again there are no
+significant differences in the selection between males and females.
+Additionally, the two post-mating episodes of selection ($I_2$ and
+$I_3$) are non-significant for both males and females (i.e., the 95% CI
+cross zero) and in particular, variance in the proportion of embryos
+developing ($I_3$) is basically non-existent.
+
+Let’s now look more into the percentage of the overall opportunity for
+selection made up for by each individual episode of selection:
+
+``` r
+sexes <- c("M", "F")
+
+#Create a dataframe to store the final values in
+opp_percents <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(opp_percents) <- c("Percent", "Episode_sel", "Sex")
+
+#Calculate the percentage for each episode in the two sexes
+for (sex in sexes) {
+    
+  #subset dataset based on sex
+  tmp_sex <- opp_episodes_average[opp_episodes_average$Sex == sex, ]
+  
+  #Pull out the overall opp. for selection value
+  I_average <- tmp_sex$Average[tmp_sex$Episode_sel == "I"]
+  
+  #Calculate what percentage of the I is represented by each episode
+  percents <- as.data.frame(t(t(apply(tmp_sex, 1, function(x){
+      
+      (as.numeric(x[1])/I_average)*100
+      
+    }))))
+    
+    colnames(percents) <- "Percent"
+    percents$Episode_sel <- tmp_sex$Episode_sel
+    percents$Sex <- sex
+    
+    rownames(percents) <- NULL
+    
+    opp_percents <- rbind(opp_percents, percents)
+    
+  }
+```
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/generate-figa-opp-selection-1.png"
+alt="The proportion of the total opportunity for selection that is represented by each episode of selection for males and females." />
+<figcaption aria-hidden="true"><em>The proportion of the total
+opportunity for selection that is represented by each episode of
+selection for males and females.</em></figcaption>
+</figure>
+
+Matching the previous plots, most of the opportunity for selection in
+*Syngnathus fuscus* males and females can be attributed to variance in
+mating success ($I_1$) rather than variance in eggs transferred/received
+($I_2$) or variance in the proportion of eggs developed ($I_3$). This
+also corresponds to the opportunity for selection ($I$) and the
+opportunity for sexual selection ($I_S$ or $I_1$), most of the variance
+in fitness for these individuals is found in whether or not they can
+obtain a mate.
