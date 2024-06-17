@@ -1580,3 +1580,53 @@ select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
 
 For females, the $s'_{max}$ is `r (select_diff_max_fem)`, while $s'$ is `r sd_average$Average[sd_average$Sex == "F" & sd_average$Select_diff == "s123_prime"]`, which is about 1/25 of the max selection that could be experiences. For males, $s'_{max}$ is `r (select_diff_max_mal)` and $s'$ is `r sd_average$Average[sd_average$Sex == "M" & sd_average$Select_diff == "s123_prime"]`.
 
+# Visualizing post-copulatory selection
+As a way to visualize selection acting AFTER the mating event (post-copulatory selection) I am plotting the proportion of eggs that survived against mating success. Hopefully this will tell us if acquiring more mates is having any affect on the ability for the eggs to develop.
+
+I am going to plot this relationship only looking into the individuals who mated.
+
+```{r surv-v-matings, echo=FALSE, fig.cap="_Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green)._", fig.width=12, fig.height=8}
+
+mal_succFU$prop_surviving <- ifelse(mal_succFU$totalEggs == 0, 0,
+                                  mal_succFU$NumDeveloped_Calc/mal_succFU$totalEggs)
+fem_succFU$prop_surviving <- ifelse(fem_succFU$totalEggs == 0, 0,
+                                  fem_succFU$NumDeveloped/fem_succFU$totalEggs)
+
+
+plot(fem_succFU$MatingSuccess[fem_succFU$MatingSuccess != 0],
+     fem_succFU$prop_surviving[fem_succFU$totalEggs != 0],
+     xlab = "Number of Mates (mating success)",
+     ylab = "Proportion of Surviving Offpring",
+     pch = 19,
+     col = "#7fc97f75",
+     ylim = c(0, 1))
+points(mal_succFU$MatingSuccess[mal_succFU$MatingSuccess != 0],
+       mal_succFU$prop_surviving[mal_succFU$totalEggs != 0],
+       xlab = "Number of Mates (mating success)",
+       ylab = "Proportion of Surviving Offpring",
+       pch = 19,
+       col = "#beaed475")
+abline(lm(fem_succFU$prop_surviving[fem_succFU$totalEggs != 0] ~
+            fem_succFU$MatingSuccess[fem_succFU$MatingSuccess != 0]),
+       col = "#7fc97f", lwd = 3, lty = 2)
+abline(lm(mal_succFU$prop_surviving[mal_succFU$totalEggs != 0] ~
+            mal_succFU$MatingSuccess[mal_succFU$MatingSuccess != 0]),
+       col = "#beaed4", lwd = 3, lty = 2)
+
+
+
+```
+
+There may be a correlation for both males and females, let's investigate further:
+
+```{r surv-mate-cor}
+
+cor.test(fem_succFU$MatingSuccess[fem_succFU$MatingSuccess != 0],
+         fem_succFU$prop_surviving[fem_succFU$totalEggs != 0])
+
+cor.test(mal_succFU$MatingSuccess[mal_succFU$MatingSuccess != 0],
+         mal_succFU$prop_surviving[mal_succFU$totalEggs != 0])
+
+```
+
+There is a significantly negative correlation between mating success and reproductive success for female _S. fuscus_ but not for males.
