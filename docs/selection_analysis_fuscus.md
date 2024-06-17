@@ -30,6 +30,10 @@ Selection pressures in *Syngnathus fuscus*
     ($I_S$)](#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s)
   - [Partitioning the Total Opportunity for Selection
     ($I$)](#partitioning-the-total-opportunity-for-selection-i)
+- [Mate success versus Reproductive success (Bateman Gradient,
+  $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
+  - [Omitting females with high
+    mating](#omitting-females-with-high-mating)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -1618,3 +1622,246 @@ also corresponds to the opportunity for selection ($I$) and the
 opportunity for sexual selection ($I_S$ or $I_1$), most of the variance
 in fitness for these individuals is found in whether or not they can
 obtain a mate.
+
+# Mate success versus Reproductive success (Bateman Gradient, $\beta_{SS}$)
+
+To calculate $\beta_{SS}$ we use *relative* measures of fitness:
+($\frac{indvidual's fitness}{mean(fitness)}$)
+
+I am going to generate the measurements of relative fitness once again
+for the trials individually rather than across all of the trials.
+
+``` r
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(fem_bateman) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+#Loop through each trial to calculate relative fitness
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs/mean(tmp$totalEggs)
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess/mean(tmp$MatingSuccess)
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp)), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  fem_bateman <- rbind(fem_bateman, fitness)
+}
+
+
+#Repeat process for the Male mating data
+mal_bateman <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(mal_bateman) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs/mean(tmp$totalEggs)
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess/mean(tmp$MatingSuccess)
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp)), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  mal_bateman <- rbind(mal_bateman, fitness)
+}
+```
+
+Once we have the measures of relative fitness we can use them to run the
+weighted least-squares regression for males and females separately.
+
+``` r
+#Generating Bateman's gradient
+#Define the model
+fem_model <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess)
+mal_model <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess)
+
+#define weights to use
+wt_fem <- 1 / lm(abs(fem_model$residuals) ~ fem_model$fitted.values)$fitted.values^2
+wt_mal <- 1 / lm(abs(mal_model$residuals) ~ mal_model$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess,
+                    weights=wt_fem)
+wls_model_mal <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess,
+                    weights=wt_mal)
+
+#Investigate the results
+summary(wls_model_fem) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess, 
+    ##     weights = wt_fem)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -9.3078  0.0109  0.0109  0.0109  9.3987 
+    ## 
+    ## Coefficients:
+    ##                             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)               -0.0007031  0.0157510  -0.045    0.965    
+    ## fem_bateman$MatingSuccess  0.9963444  0.0345032  28.877   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.796 on 71 degrees of freedom
+    ## Multiple R-squared:  0.9215, Adjusted R-squared:  0.9204 
+    ## F-statistic: 833.9 on 1 and 71 DF,  p-value: < 2.2e-16
+
+``` r
+summary(wls_model_mal) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess, 
+    ##     weights = wt_mal)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.0792 -0.0063 -0.0063 -0.0063  4.9347 
+    ## 
+    ## Coefficients:
+    ##                            Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)               0.0004157  0.0104497    0.04    0.968    
+    ## mal_bateman$MatingSuccess 1.0114408  0.0423781   23.87   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.156 on 72 degrees of freedom
+    ## Multiple R-squared:  0.8878, Adjusted R-squared:  0.8862 
+    ## F-statistic: 569.6 on 1 and 72 DF,  p-value: < 2.2e-16
+
+For both males and females there is a significant slope, meaning both
+sexes see increases in fitness with each additional mating. I am
+interested to run the model with the two datasets combined to see if
+there is an interaction of sex.
+
+``` r
+#Combine the two datasets
+fem_bateman$Sex <- "F"
+mal_bateman$Sex <- "M"
+
+all_bateman <- rbind(fem_bateman, mal_bateman)
+
+#Running a weighted least squares regression between MS and Sex
+MS_sex_model <- lm(all_bateman$rel_repo_fitness ~
+                     all_bateman$MatingSuccess*all_bateman$Sex)
+
+wt_all <- 1 / lm(abs(MS_sex_model$residuals) ~
+                   MS_sex_model$fitted.values)$fitted.values^2
+
+wls_MS_sex_model <- lm(all_bateman$rel_repo_fitness ~ 
+                         all_bateman$MatingSuccess*all_bateman$Sex, weights = wt_all)
+
+summary(wls_MS_sex_model)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = all_bateman$rel_repo_fitness ~ all_bateman$MatingSuccess * 
+    ##     all_bateman$Sex, weights = wt_all)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -6.8581 -0.0111 -0.0111  0.0055  6.6957 
+    ## 
+    ## Coefficients:
+    ##                                              Estimate Std. Error t value
+    ## (Intercept)                                -0.0003692  0.0127173  -0.029
+    ## all_bateman$MatingSuccess                   0.9947980  0.0396214  25.108
+    ## all_bateman$SexM                            0.0011314  0.0182187   0.062
+    ## all_bateman$MatingSuccess:all_bateman$SexM  0.0145986  0.0551343   0.265
+    ##                                            Pr(>|t|)    
+    ## (Intercept)                                   0.977    
+    ## all_bateman$MatingSuccess                    <2e-16 ***
+    ## all_bateman$SexM                              0.951    
+    ## all_bateman$MatingSuccess:all_bateman$SexM    0.792    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.402 on 143 degrees of freedom
+    ## Multiple R-squared:  0.9025, Adjusted R-squared:  0.9005 
+    ## F-statistic: 441.2 on 3 and 143 DF,  p-value: < 2.2e-16
+
+When we combine all of the data together we can see two additional
+things:
+
+1.  There is no significant interactions effect of Mating success and
+    sex
+2.  The slopes for males and females are not significantly different
+    from each other
+
+Let’s visually look at this pattern now:
+
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-1.png"
+alt="Relationship between reproductive success and mating success for male (purple) and female (green) Syngnathus fuscus. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed) for males and females." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for male (purple) and female (green)
+<em>Syngnathus fuscus</em>. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Bateman’s gradient is shown as the weighted
+least-squares regression line (dashed) for males and
+females.</em></figcaption>
+</figure>
+
+The plot confirms the results from the two models. We can see that there
+is a steep slope for both males and females, however, the two lines are
+not different.
+
+## Omitting females with high mating
+
+To make sure the few females that mated 2 times are not significantly
+affecting the Bateman gradient I am re-plotting and re-running the model
+with those points omitted.
+
+![](selection_analysis_fuscus_files/figure-gfm/bateman-no3-1.png)<!-- -->
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 
+    ##     6] ~ fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 
+    ##     6], weights = wt_fem2)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.2797  0.0003  0.0003  0.0003  3.3882 
+    ## 
+    ## Coefficients:
+    ##                                                            Estimate Std. Error
+    ## (Intercept)                                              -4.338e-06  1.337e-03
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 6]  9.870e-01  4.567e-02
+    ##                                                          t value Pr(>|t|)    
+    ## (Intercept)                                               -0.003    0.997    
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 6]  21.609   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.6841 on 65 degrees of freedom
+    ## Multiple R-squared:  0.8778, Adjusted R-squared:  0.8759 
+    ## F-statistic:   467 on 1 and 65 DF,  p-value: < 2.2e-16
+
+It doesn’t look like omitting those few individuals has any effect on
+the results of the Bateman gradient.
