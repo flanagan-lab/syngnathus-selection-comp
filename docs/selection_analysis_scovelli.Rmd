@@ -1,0 +1,412 @@
+---
+title: "Selection pressures in _Syngnathus scovelli_"
+output: 
+  github_document:
+    toc: true
+header-includes: >
+  \usepackage{lipsum}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir='../',
+                     fig_path="../figs/")
+```
+
+``` {r library, message = FALSE, warning = FALSE}
+#This is a cohesive list of all the libraries used in this document
+library(ggplot2)
+library(cowplot)
+library(fBasics)
+library(pwr)
+library(lme4)
+library(dplyr)
+library(tidyr)
+library(knitr)
+
+```
+
+``` {r read-data, message = FALSE, warning = FALSE}
+
+#Metadata for males and females from the mesocosm experiments
+fem_mesoSS <- read.csv("data/all_fem_meso_scovelli.csv")
+mal_mesoSS <- read.csv("data/all_mal_meso_scovelli.csv")
+
+```
+
+This document will follow the same analysis as was outlined in `selection_analysis_floridae.Rmd`. For more thorough details refer back to that document. 
+
+The datasets used in this document were pulled from a publically accessible manuscript that ran similar experimental breeding populations (Rose et al., 2013).
+
+# Cleaning the datasets
+For the male dataset I want to do a few things before using it: 
+  1. Remove the two males that died (C1M5 and C6M2).
+  2. Replace all of the "NAs" present in the males who didn't mate with 0's when appropriate.
+  3. Add a column of mating success to the dataset. This will be either a 0 or 1 as _S. scovelli_ males only mate once.
+
+In the female dataset I am going to remove C1F2 since she doesn't have any data related to her reproductive success.
+
+For both the male and the female datasets I also want to subset them out to only include the control fish and not fish that were exposed to estrogen.
+
+```{r clean-datasets}
+#Subset the datasets to remove the fish exposed to estrogen
+fem_succSS <- fem_mesoSS[grep("C", fem_mesoSS$trial_num),]
+mal_succSS <- mal_mesoSS[grep("C", fem_mesoSS$trial_num),]
+
+#Adding full fishIDs to make removing individuals easier
+fem_succSS$femID <- paste0(fem_succSS$trial_num, "F",
+                         fem_succSS$fishID)
+mal_succSS$maleID <- paste0(mal_succSS$trial_num, "M",
+                          mal_succSS$fishID)
+#Removing the one female
+fem_succSS <- subset(fem_succSS, !(femID %in% "C1F2"))
+
+#Removing the two males who died
+mal_succSS <- subset(mal_succSS, !(maleID %in% c("C1M5", "C6M2")))
+
+#Replace NAs with 0s in the columns related to fitness
+mal_succSS[, c("NumDeveloped", 
+               "NumUndeveloped",
+               "totalEggs")] <- sapply(mal_succSS[, c("NumDeveloped",
+                                                      "NumUndeveloped",
+                                                      "totalEggs")],
+                                       function(x)
+                                         ifelse(is.na(x), 0, x))
+
+#Add a column for males to denote mating success
+mal_succSS$MatingSuccess <- ifelse(mal_succSS$totalEggs > 0, 
+                                   1, 
+                                   0)
+
+```
+
+# Calculating the degree of sexual dimorphism
+The original datasets contained only information about standard length. To allow for a more complete comparison between all three species within the genus _Syngnathus_ I obtained the original photographs of those pipefish and re-measured them to obtain measurements of both torso depth and snout-vent length for males and females.
+
+Now, we can see if males and females differ in standard length, torso depth, and snout-vent length. First, I need to see if assumptions are met, i.e. variances are equal and data is normally distributed.
+
+## Checking the assumptions for a pairwise comparison
+ The main two things that I will be looking into include:
+
+1. Equal variances between groups (using `var.test()`).
+2. Normal distribution of the data (using `normalTest()`).
+
+To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the standard length of the pipefish prior to running any analyses. This length-adjusted depth will then be used in all consequent analyses.
+
+```{r sd-assumption-test}
+
+#Adjust the torso depth
+fem_succSS$depth_adj <- fem_succSS$depth/fem_succSS$length
+mal_succSS$depth_adj <- mal_succSS$depth/mal_succSS$length
+
+#Testing to see if the variances are equal
+var.test(fem_succSS$length, mal_succSS$length) #not equal
+var.test(fem_succSS$depth_adj, mal_succSS$depth_adj)
+var.test(fem_succSS$svl, mal_succSS$svl)
+
+#Testing for normal distribution
+normalTest(fem_succSS$length, method = "da") #not normal
+normalTest(mal_succSS$length, method = "da") #normal
+normalTest(fem_succSS$depth_adj, method = "da") #normal
+normalTest(mal_succSS$depth_adj, method = "da")
+normalTest(fem_succSS$svl, method = "da") #not normal
+normalTest(mal_succSS$svl, method = "da")
+
+```
+
+## Investigate distributions and run the tests
+I will run a Welch's two sample t-test test for standard length...
+
+```{r histogram_sizes, message=FALSE, warning = FALSE, echo = FALSE, fig.cap="_Histograms of male and female pipefish body sizes._", fig.width=15}
+
+#Combining the datasets
+fem_succSS$Sex <- "F"
+mal_succSS$Sex <- "M"
+all_sex_meso <- rbind(fem_succSS[, c("length", "depth_adj", "svl", "Sex")], mal_succSS[, c("length", "depth_adj", "svl", "Sex")])
+
+length <- ggplot(data = all_sex_meso, aes(x = length)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "Length (mm)",
+       y = "Number of Pipefish",
+       title = "Length of male and female pipefish")
+
+depth <- ggplot(data = all_sex_meso, aes(x = depth_adj)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "Depth (mm)",
+       y = "Number of Pipefish",
+       title = "Depth of male and female pipefish")
+
+svl <- ggplot(data = all_sex_meso, aes(x = svl)) +
+  geom_histogram(aes(fill = Sex),
+                 alpha = 0.5,
+                 position = 'identity') +
+  scale_fill_manual(values = c("#7fc97f75", "#beaed475")) +
+  theme_minimal() +
+  labs(x = "SVL (mm)",
+       y = "Number of Pipefish",
+       title = "Snout-vent length of male and female pipefish")
+
+plot_grid(length, depth, svl,
+          ncol = 3)
+
+```
+
+```{r sd-t-tests}
+t.test(fem_succSS$length, mal_succSS$length, 
+       var.equal = FALSE) #Sig. difference
+
+```
+
+For the Gulf pipefish, there are significant differences between males and females in terms of standard length, snout-vent length, and torso depth. 
+
+```{r power-test}
+
+#Checking the power - length
+d_mean_len <- abs(mean(fem_succSS$length, na.rm = TRUE) - 
+                    mean(mal_succSS$length, na.rm = TRUE))
+pool_sd_len <- sqrt((var(fem_succSS$length, na.rm = TRUE) + 
+                       var(mal_succSS$length, na.rm = TRUE))/ 2)
+d_len <- d_mean_len/pool_sd_len
+
+pwr.t.test(n = nrow(fem_succSS), 
+           d = d_len,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+#Checking the power - SVL
+d_mean_svl <- abs(mean(fem_succSS$svl, na.rm = TRUE) - 
+                    mean(mal_succSS$svl, na.rm = TRUE))
+pool_sd_svl <- sqrt((var(fem_succSS$svl, na.rm = TRUE) + 
+                       var(mal_succSS$svl, na.rm = TRUE))/ 2)
+d_svl <- d_mean_svl/pool_sd_svl
+
+pwr.t.test(n = nrow(fem_succSS), 
+           d = d_svl,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+#Checking the power - Depth
+d_mean_depth <- abs(mean(fem_succSS$depth_adj, na.rm = TRUE) - 
+                      mean(mal_succSS$depth_adj, na.rm = TRUE))
+pool_sd_depth <- sqrt((var(fem_succSS$depth_adj, na.rm = TRUE) + 
+                         var(mal_succSS$depth_adj, na.rm = TRUE))/ 2)
+d_depth <- d_mean_depth/pool_sd_depth
+pwr.t.test(n = nrow(fem_succSS), 
+           d = d_depth,
+           sig.level = 0.05,
+           type = 'two.sample',
+           alternative = 'two.sided')
+
+```
+
+For all variables we have a power of over 0.9 or over 90% so we can be confident in our interpretation.
+
+# Summary statistics for successfully mated individuals
+## Males
+Across all `r length(unique(mal_succSS$trial_num))` trials and `r nrow(mal_succSS)` total males, there were `r nrow(mal_succSS[mal_succSS$MatingSuccess == 1,])` males that mated at least one time and `r nrow(mal_succSS[mal_succSS$MatingSuccess > 1,])` of those males had two mates. 
+
+Looking across all males, including the ones that did not mate, this is what we find as the mean, sd, and se for the number of embryos transferred and how many of those developed versus didn't:
+
+|                  | mean| SD| SE| max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(mal_succSS$totalEggs)`|`r sd(mal_succSS$totalEggs)`|  `r sd(mal_succSS$totalEggs)/sqrt(nrow(mal_succSS))`|`r max(mal_succSS$totalEggs)` | `r min(mal_succSS$totalEggs)`|
+|Developed Embryos | `r mean(mal_succSS$NumDeveloped)`|`r sd(mal_succSS$NumDeveloped)`|  `r sd(mal_succSS$NumDeveloped)/sqrt(nrow(mal_succSS))`|`r max(mal_succSS$NumDeveloped)` | `r min(mal_succSS$NumDeveloped)`|
+|Undeveloped Embryos| `r mean(mal_succSS$NumUndeveloped)`|`r sd(mal_succSS$NumUndeveloped)`|  `r sd(mal_succSS$NumUndeveloped)/sqrt(nrow(mal_succSS))`|`r max(mal_succSS$NumUndeveloped)` | `r min(mal_succSS$NumUndeveloped)`|
+
+These values will be influenced by the number of 0s coming from males who did not mate. So let's look at the same thing, but this time for only males who had at least one successful mating:
+
+|                  | mean| SD| SE|  max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(mal_succSS$totalEggs[mal_succSS$MatingSuccess == 1])`|`r sd(mal_succSS$totalEggs[mal_succSS$MatingSuccess == 1])`|  `r sd(mal_succSS$totalEggs[mal_succSS$MatingSuccess == 1])/sqrt(nrow(mal_succSS[mal_succSS$MatingSuccess == 1,]))`| `r max(mal_succSS$totalEggs[mal_succSS$MatingSuccess == 1])` | `r min(mal_succSS$totalEggs[mal_succSS$MatingSuccess == 1])` |
+|Developed Embryos | `r mean(mal_succSS$NumDeveloped[mal_succSS$MatingSuccess == 1])`|`r sd(mal_succSS$NumDeveloped[mal_succSS$MatingSuccess == 1])`|  `r sd(mal_succSS$NumDeveloped[mal_succSS$MatingSuccess == 1])/sqrt(nrow(mal_succSS[mal_succSS$MatingSuccess == 1,]))`|`r max(mal_succSS$NumDeveloped[mal_succSS$MatingSuccess == 1])` | `r min(mal_succSS$NumDeveloped[mal_succSS$MatingSuccess == 1])` |
+|Undeveloped Embryos| `r mean(mal_succSS$NumUndeveloped[mal_succSS$MatingSuccess == 1])`|`r sd(mal_succSS$NumUndeveloped[mal_succSS$MatingSuccess == 1])`|  `r sd(mal_succSS$NumUndeveloped[mal_succSS$MatingSuccess == 1])/sqrt(nrow(mal_succSS[mal_succSS$MatingSuccess == 1,]))`| `r max(mal_succSS$NumUndeveloped[mal_succSS$MatingSuccess == 1])` | `r min(mal_succSS$NumUndeveloped[mal_succSS$MatingSuccess == 1])` |
+
+I know want to see if there are correlations between morphometrics such as standard length and brood size (i.e., are larger males securing larger broods).
+
+```{r em-v-sl, echo=FALSE, fig.cap="_Scatterplot of the relationship between standard length (mm) and the number of embryos a male had._", fig.width=15, fig.height=10}
+
+#create a subset of only the males who mated
+mal_succSS$totalEggs <- as.numeric(mal_succSS$totalEggs)
+mated_malSS <- mal_succSS[mal_succSS$MatingSuccess == 1, ]
+
+plot(mated_malSS$length,
+     mated_malSS$totalEggs,
+     xlab = "Standard Length (mm)",
+     ylab = "Brood Size (# embryos)",
+     col = "#CD5C5C75",
+     pch = 19,
+     cex = 1.5
+)
+abline(lm(mated_malSS$totalEggs ~ as.numeric(mated_malSS$length)), lwd = 3, lty = 2)
+```
+
+```{r eggs-sl-cor, echo=FALSE}
+cor.test(mated_malSS$length, mated_malSS$totalEggs)
+```
+
+There is a significant correlation! Larger males have bigger broods.
+
+## Females
+Across all `r length(unique(fem_succSS$trial_num))` trials and `r nrow(fem_succSS)` total females, there were `r nrow(fem_succSS[fem_succSS$MatingSuccess != 0,])` females that mated at least one time, `r nrow(fem_succSS[fem_succSS$MatingSuccess == 2,])` females that mated twice, and `r nrow(fem_succSS[fem_succSS$MatingSuccess == 3,])` that mated 3 times. 
+
+Looking across all females, including the ones that did not mate, this is what we find as the mean, sd, and se for the total number of embryos transferred from each female (across all of her mates if applicable) and how many of those developed versus didn't:
+
+|                  | mean| SD| SE| max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(fem_succSS$totalEggs)`|`r sd(fem_succSS$totalEggs)`|  `r sd(fem_succSS$totalEggs)/sqrt(nrow(fem_succSS))`|`r max(fem_succSS$totalEggs)` | `r min(fem_succSS$totalEggs)`|
+|Developed Embryos | `r mean(fem_succSS$NumDeveloped)`|`r sd(fem_succSS$NumDeveloped)`|  `r sd(fem_succSS$NumDeveloped)/sqrt(nrow(fem_succSS))`|`r max(fem_succSS$NumDeveloped)` | `r min(fem_succSS$NumDeveloped)`|
+|Undeveloped Embryos| `r mean(fem_succSS$NumUndeveloped)`|`r sd(fem_succSS$NumUndeveloped)`|  `r sd(fem_succSS$NumUndeveloped)/sqrt(nrow(fem_succSS))`|`r max(fem_succSS$NumUndeveloped)` | `r min(fem_succSS$NumUndeveloped)`|
+
+These values will be influenced by the number of 0s coming from females who did not mate. So let's look at the same thing, but this time for only females who had at least one successful mating:
+
+|                  | mean| SD| SE|  max | min |
+|:-----------------|----:|---:|----:|----:|----:|
+|Number of Embryos | `r mean(fem_succSS$totalEggs[fem_succSS$MatingSuccess != 0])`|`r sd(fem_succSS$totalEggs[fem_succSS$MatingSuccess != 0])`|  `r sd(fem_succSS$totalEggs[fem_succSS$MatingSuccess != 0])/sqrt(nrow(fem_succSS[fem_succSS$MatingSuccess != 0,]))`| `r max(fem_succSS$totalEggs[fem_succSS$MatingSuccess != 0])` | `r min(fem_succSS$totalEggs[fem_succSS$MatingSuccess != 0])` |
+|Developed Embryos | `r mean(fem_succSS$NumDeveloped[fem_succSS$MatingSuccess != 0])`|`r sd(fem_succSS$NumDeveloped[fem_succSS$MatingSuccess != 0])`|  `r sd(fem_succSS$NumDeveloped[fem_succSS$MatingSuccess != 0])/sqrt(nrow(fem_succSS[fem_succSS$MatingSuccess != 0,]))`|`r max(fem_succSS$NumDeveloped[fem_succSS$MatingSuccess != 0])` | `r min(fem_succSS$NumDeveloped[fem_succSS$MatingSuccess != 0])` |
+|Undeveloped Embryos| `r mean(fem_succSS$NumUndeveloped[fem_succSS$MatingSuccess != 0])`|`r sd(fem_succSS$NumUndeveloped[fem_succSS$MatingSuccess != 0])`|  `r sd(fem_succSS$NumUndeveloped[fem_succSS$MatingSuccess != 0])/sqrt(nrow(fem_succSS[fem_succSS$MatingSuccess != 0,]))`| `r max(fem_succSS$NumUndeveloped[fem_succSS$MatingSuccess != 0])` | `r min(fem_succSS$NumUndeveloped[fem_succSS$MatingSuccess != 0])` |
+
+I want to see what relationship there may be between female body size (in terms of standard length, depth, and SVL) and the number of eggs she transferred. I also want to see on average how many eggs were transferred per mating. I'm going to calculate this by taking the total number of eggs and dividing it by the number of mates. 
+
+```{r egg-per-mate-fem, echo=FALSE}
+eggs_per_mate <- fem_succSS$totalEggs/fem_succSS$MatingSuccess
+mean(eggs_per_mate, na.rm = TRUE)
+sd(eggs_per_mate, na.rm = TRUE)/sqrt(length(eggs_per_mate))
+```
+
+```{r em-v-fem-size, echo=FALSE, fig.cap="Scatterplot of the relationship between female size metrics and the number of eggs transferred.", fig.width=15, fig.height=5}
+#create a subset of only the females who mated
+mated_femSS <- fem_succSS[fem_succSS$MatingSuccess != 0, ]
+
+#Plot total number of eggs transferred against the different metrics for females size
+par(mfrow=c(1,3))
+plot(mated_femSS$length,
+     mated_femSS$totalEggs,
+     xlab = "Length (mm)",
+     ylab = "Number of eggs transferred",
+     col = "darkorange",
+     pch = 19)
+abline(lm(mated_femSS$totalEggs ~ mated_femSS$length), lwd = 3, lty = 2)
+plot(mated_femSS$depth_adj,
+     mated_femSS$totalEggs,
+     xlab = "Depth (mm)",
+     ylab = "Number of eggs transferred",
+     col = "cyan4",
+     pch = 19)
+abline(lm(mated_femSS$totalEggs ~ mated_femSS$depth_adj), lwd = 3, lty = 2)
+plot(mated_femSS$svl,
+     mated_femSS$totalEggs,
+     xlab = "Snout-vent Length (mm)",
+     ylab = "Number of eggs transferred",
+     col = "purple",
+     pch = 19)
+abline(lm(mated_femSS$totalEggs ~ mated_femSS$svl), lwd = 3, lty = 2)
+
+```
+
+There also appears to be a correlation between female body size and the number of eggs transferred, especially in terms of depth and snout-vent length. Let's run some correlations tests to see what they say.
+
+```{r eggs-fem-size-cor, echo=FALSE}
+cor.test(mated_femSS$length, as.numeric(mated_femSS$totalEggs))
+cor.test(mated_femSS$depth_adj, as.numeric(mated_femSS$totalEggs))
+cor.test(mated_femSS$svl, as.numeric(mated_femSS$totalEggs))
+
+```
+
+There is no sig. correlation between length or svl and the number of eggs transferred but we do see a significantly positive relationship between depth and number of eggs transferred! It seems to be depth is a good indicator of fecundity for females. 
+
+# Differences between mated individuals and unmated individuals
+I want to now see if there are any significant differences in the sizes of individuals who mated vs individuals that didn't mate in males and females. I am going to be focusing on the same morphometrics outlined above.
+
+## Females
+Similarly, now let's see if we can identify any significant differences in the morphometrics of females who were able to obtain mates versus those who were unsuccessful.
+
+### Visual Comparison
+
+```{r mat-status-morph-fem, echo=FALSE, fig.cap="_Four different morphometrics compared between females who sucessfully mated versus those that didn't. Orange represents unmated and blue represents mated females._", fig.height=10, fig.width=10}
+par(mfrow=c(2,2))
+fem_succSS$mated <- as.factor(fem_succSS$mated)
+
+boxplot(fem_succSS$length ~ fem_succSS$mated,
+        xlab = "Mated",
+        ylab = "Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succSS$depth_adj ~ fem_succSS$mated,
+        xlab = "Mated",
+        ylab = "Depth (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succSS$svl ~ fem_succSS$mated,
+        xlab = "Mated",
+        ylab = "Snout-vent Length (mm)",
+        col= c("darkorange", "cyan4"))
+boxplot(fem_succSS$weight ~ fem_succSS$mated,
+        xlab = "Mated",
+        ylab = "Weight (g)",
+        col= c("darkorange", "cyan4"))
+
+```
+
+I don't notice many differences, however, it appears that mated females are larger than unmated females.
+
+### Testing the difference
+Let's now put some statistical power behind the difference in various morphometrics between mated and unmated individuals. 
+
+```{r mat-stat-stat-fem, echo=FALSE, warning=FALSE}
+#Test the assumptions
+##Equal variances
+var.test(fem_succSS$length ~ fem_succSS$mated) #equal
+var.test(fem_succSS$depth_adj ~ fem_succSS$mated) #not equal
+var.test(fem_succSS$svl ~ fem_succSS$mated) #equal
+var.test(fem_succSS$weight ~ fem_succSS$mated) #equal
+
+##Normal Distributions
+normalTest(fem_succSS$length, method = "da") #normal
+normalTest(fem_succSS$depth_adj, method = "da") #not normal
+normalTest(fem_succSS$svl, method = "da") #normal
+normalTest(fem_succSS$weight, method = "da") #normal
+
+#Running the appropriate test
+t.test(fem_succSS$length ~ fem_succSS$mated, 
+       var.equal = TRUE) #not sig.
+wilcox.test(fem_succSS$depth_adj ~ fem_succSS$mated) #not sig.
+t.test(fem_succSS$svl ~ fem_succSS$mated, 
+       var.equal = TRUE) #not sig.
+t.test(fem_succSS$weight ~ fem_succSS$mated,
+       var.equal = TRUE) #not sig.
+```
+
+There are no significant differences, however, it does get close for torso depth and in every case the mated females were larger than the unmated.
+
+Let's explore this a bit more and overlay the distribution of torso depth in all females (mated and unmated) with the torso depth of females who did mate and see how it varies.
+
+```{r mated-unmated-hist-depth, echo=FALSE, fig.cap= "_Overlay of the torso depth of females who mated on top of the size range of all females._", fig.width= 15, fig.height= 10}
+
+hist(fem_all$depth_adj, 
+     xlab = "Torso Depth (mm)", 
+     ylab = "Number of female pipefish",
+     col = "#7fc97f", breaks = 20, main = "")
+
+hist(fem_all$depth_adj[fem_all$MatingSuccess != 0], 
+     add = TRUE,
+     col = "#548B54", breaks = 15)
+
+legend("topright",
+       legend = c("Mated Females", "All Females"),
+       col = c("#548B54", "#7fc97f"),
+       pch = 15)
+```
+
+We can see that the 5 deepest females all secured a mate, whereas the skinniest females did not.
