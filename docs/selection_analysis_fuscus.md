@@ -31,9 +31,21 @@ Selection pressures in *Syngnathus fuscus*
   - [Partitioning the Total Opportunity for Selection
     ($I$)](#partitioning-the-total-opportunity-for-selection-i)
 - [Mate success versus Reproductive success (Bateman Gradient,
-  $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
+  $\beta_{FU}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_fu)
   - [Omitting females with high
     mating](#omitting-females-with-high-mating)
+  - [Investigating the impact of “zeros” on the Bateman
+    Gradient](#investigating-the-impact-of-zeros-on-the-bateman-gradient)
+    - [Removing the zeros from the
+      plot](#removing-the-zeros-from-the-plot)
+    - [Removing the zeros from the calculation of relative
+      fitness](#removing-the-zeros-from-the-calculation-of-relative-fitness)
+- [Investing selection differentials on snout-vent-length ($s$ and
+  $s'$)](#investing-selection-differentials-on-snout-vent-length-s-and-s)
+  - [Looking into the Maximum Sexual Selection
+    Differential](#looking-into-the-maximum-sexual-selection-differential)
+- [Visualizing post-copulatory
+  selection](#visualizing-post-copulatory-selection)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -1623,9 +1635,9 @@ opportunity for sexual selection ($I_S$ or $I_1$), most of the variance
 in fitness for these individuals is found in whether or not they can
 obtain a mate.
 
-# Mate success versus Reproductive success (Bateman Gradient, $\beta_{SS}$)
+# Mate success versus Reproductive success (Bateman Gradient, $\beta_{FU}$)
 
-To calculate $\beta_{SS}$ we use *relative* measures of fitness:
+To calculate $\beta_{FU}$ we use *relative* measures of fitness:
 ($\frac{indvidual's fitness}{mean(fitness)}$)
 
 I am going to generate the measurements of relative fitness once again
@@ -1865,3 +1877,601 @@ with those points omitted.
 
 It doesn’t look like omitting those few individuals has any effect on
 the results of the Bateman gradient.
+
+## Investigating the impact of “zeros” on the Bateman Gradient
+
+It has been shown previously that the inclusion or exclusion of
+individuals who were unable to achieve a mate. When the non-mated
+individuals are included, the gradient is influenced by the relative
+fitness gain that is experienced from gaining a mate (i.e, moving from 0
+to 1). If we do not include the non-mated individuals, we can more
+clearly look at the fitness increase associated with obtaining more than
+one mate.
+
+### Removing the zeros from the plot
+
+The first way I am addressing this is by using the same datasets as
+before and just excluding the 0’s from the plot and the model:
+
+``` r
+#Generating Bateman's gradient
+#Define the model
+fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
+                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0])
+mal_model2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
+                   mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0])
+
+#define weights to use
+wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
+                    fem_model2$fitted.values)$fitted.values^2
+wt_mal2 <- 1 / lm(abs(mal_model2$residuals) ~
+                    mal_model2$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
+                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
+                    weights=wt_fem2)
+wls_model_mal2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
+                       mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
+                    weights=wt_mal2)
+
+#Investigate the results
+summary(wls_model_fem2) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 
+    ##     0] ~ fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 
+    ##     0], weights = wt_fem2)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.9352 -0.3313 -0.0358  0.1084  3.8665 
+    ## 
+    ## Coefficients:
+    ##                                                           Estimate Std. Error
+    ## (Intercept)                                                0.03698    0.36771
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]  0.99472    0.05267
+    ##                                                           t value Pr(>|t|)    
+    ## (Intercept)                                                 0.101    0.921    
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]  18.886 7.62e-13 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.46 on 17 degrees of freedom
+    ## Multiple R-squared:  0.9545, Adjusted R-squared:  0.9518 
+    ## F-statistic: 356.7 on 1 and 17 DF,  p-value: 7.618e-13
+
+``` r
+summary(wls_model_mal2) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 
+    ##     0] ~ mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 
+    ##     0], weights = wt_mal2)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.2888 -0.3582  0.1410  0.2022  4.3267 
+    ## 
+    ## Coefficients:
+    ##                                                           Estimate Std. Error
+    ## (Intercept)                                                 0.1152     0.7994
+    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   0.9677     0.1748
+    ##                                                           t value Pr(>|t|)    
+    ## (Intercept)                                                 0.144    0.887    
+    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   5.537 2.95e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.665 on 18 degrees of freedom
+    ## Multiple R-squared:  0.6301, Adjusted R-squared:  0.6095 
+    ## F-statistic: 30.66 on 1 and 18 DF,  p-value: 2.95e-05
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero1-1.png"
+alt="Relationship between reproductive success and mating success for female Syngnathus fuscus who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female <em>Syngnathus fuscus</em> who
+achieved at least one mate. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Bateman’s gradient is shown as the weighted
+least-squares regression line (dashed).</em></figcaption>
+</figure>
+
+When we exclude the non-mated individuals from the plot and the model,
+we can see the results do not change for males or females as the slope
+for both sexes is still significant.
+
+### Removing the zeros from the calculation of relative fitness
+
+The other way to approach this is rather than just eliminating the zeros
+from the scatter plot, I can remove the zeros in the calculation of
+relative fitness.
+
+``` r
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman_nozero <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(fem_bateman_nozero) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+#Loop through each trial to calculate relative fitness
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs[tmp$MatingSuccess != 0]/
+    mean(tmp$totalEggs[tmp$MatingSuccess != 0])
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess[tmp$MatingSuccess != 0]/
+    mean(tmp$MatingSuccess[tmp$MatingSuccess != 0])
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp[tmp$MatingSuccess != 0,])), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  fem_bateman_nozero <- rbind(fem_bateman_nozero, fitness)
+}
+
+#Repeat process for the Male mating data
+mal_bateman_nozero <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(mal_bateman_nozero) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs[tmp$MatingSuccess != 0]/
+    mean(tmp$totalEggs[tmp$MatingSuccess != 0])
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess[tmp$MatingSuccess != 0]/
+    mean(tmp$MatingSuccess[tmp$MatingSuccess != 0])
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp[tmp$MatingSuccess != 0,])), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  mal_bateman_nozero <- rbind(mal_bateman_nozero, fitness)
+}
+```
+
+Once we have the measures of relative fitness we can use them to run the
+weighted least-squares regression for males and females separately.
+
+``` r
+#Generating Bateman's gradient
+#Define the model
+fem_model3 <- lm(fem_bateman_nozero$rel_repo_fitness ~ 
+                  fem_bateman_nozero$MatingSuccess)
+mal_model3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
+                  mal_bateman_nozero$MatingSuccess)
+
+#define weights to use
+wt_fem3 <- 1 / lm(abs(fem_model3$residuals) ~
+                    fem_model3$fitted.values)$fitted.values^2
+wt_mal3 <- 1 / lm(abs(mal_model3$residuals) ~
+                    mal_model3$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem3 <- lm(fem_bateman_nozero$rel_repo_fitness ~
+                      fem_bateman_nozero$MatingSuccess,
+                    weights=wt_fem3)
+wls_model_mal3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
+                      mal_bateman_nozero$MatingSuccess,
+                     weights = wt_mal3)
+
+
+#Investigate the results
+summary(wls_model_fem3) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman_nozero$rel_repo_fitness ~ fem_bateman_nozero$MatingSuccess, 
+    ##     weights = wt_fem3)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.4410 -0.1991  0.0000  0.0316  5.4410 
+    ## 
+    ## Coefficients:
+    ##                                  Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)                       -0.7089     0.6559  -1.081   0.2949  
+    ## fem_bateman_nozero$MatingSuccess   1.7089     0.6521   2.621   0.0179 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 2.09 on 17 degrees of freedom
+    ## Multiple R-squared:  0.2877, Adjusted R-squared:  0.2458 
+    ## F-statistic: 6.867 on 1 and 17 DF,  p-value: 0.0179
+
+``` r
+summary(wls_model_mal3) #not significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = mal_bateman_nozero$rel_repo_fitness ~ mal_bateman_nozero$MatingSuccess, 
+    ##     weights = wt_mal3)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.3017 -0.3354  0.0000  0.1037  4.3017 
+    ## 
+    ## Coefficients:
+    ##                                  Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)                        1.3797     0.7173   1.924   0.0704 .
+    ## mal_bateman_nozero$MatingSuccess  -0.3797     0.7134  -0.532   0.6010  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.807 on 18 degrees of freedom
+    ## Multiple R-squared:  0.0155, Adjusted R-squared:  -0.03919 
+    ## F-statistic: 0.2834 on 1 and 18 DF,  p-value: 0.601
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero2-1.png"
+alt="Relationship between reproductive success and mating success for female Syngnathus fuscus who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female <em>Syngnathus fuscus</em> who
+achieved at least one mate. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Relative fitness is calculated without the
+individuals who did not mate. Bateman’s gradient is shown as the
+weighted least-squares regression line (dashed).</em></figcaption>
+</figure>
+
+With this way of excluding the individuals who did not mate, there is
+still a significant increase in relative fitness with each additional
+mating for females, however, not for males anymore.
+
+# Investing selection differentials on snout-vent-length ($s$ and $s'$)
+
+A selection differential is the covariance between a trait and relative
+fitness and is often thought of as the difference in a trait mean before
+and after selection.
+
+Just as I did for the decomposition of the opportunity for selection, I
+am going to decompose the total selection differentials into the
+different pre- and post-mating episodes.
+
+To keep things consistent with the analysis I conducted on *S.
+floridae*, I will once again be investigating snout-vent length as the
+trait of interest, even though standard length was also significantly
+different between males and females.
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+fem_succ_select_diff <- data.frame(matrix(ncol = ncol(fem_succFU) + 6,
+                                          nrow = 0))
+colnames(fem_succ_select_diff) <- c(colnames(fem_succFU),
+                                    "fit1", "eggs_per_mate","fit2", 
+                                    "prop_dev", "fit3", "StdLength")
+
+#Create a dataframe to store the final calculations of I in
+select_diff_fem <- data.frame(matrix(ncol = 11,
+                                     nrow = 0))
+colnames(select_diff_fem) <- c("trial", "s1", "s2", "s3", "s12", "s123",
+                               "s1_prime", "s2_prime", "s3_prime", 
+                               "s12_prime", "s123_prime")
+
+for (trial in unique(fem_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFU[fem_succFU$trial_num == trial, ]
+  
+  #Calculate fitness relating to pre-cop. selection (#matings)
+  tmp$fit1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+
+  #Calculate fitness relating to post-mating selection (#eggs transferred)
+  tmp$eggs_per_mate <- tmp$totalEggs/tmp$MatingSuccess
+  ##If mating success = 0, eggs_per_mate = NA and it not included in the calculation
+  ##of the relative fitness moving forward
+  tmp$fit2 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$eggs_per_mate/mean(tmp$eggs_per_mate, na.rm = TRUE),
+                     0) #Relative eggs transferred
+
+  #Calculate fitness relating to post-mating selection (eggs that developed)
+  tmp$prop_dev <- (tmp$NumDeveloped/tmp$MatingSuccess)/tmp$eggs_per_mate
+  tmp$fit3 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$prop_dev/mean(tmp$prop_dev, na.rm = TRUE),
+                     0)
+  
+  #Standardizing the trait value to have a mean of 0 and sd of unity
+  tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
+  
+  #Calculating the absolute selection differentials (s)
+  s1 <- cov(tmp$length, tmp$fit1)
+  s12 <- cov(tmp$length, tmp$fit2)
+  s123 <- cov(tmp$length, tmp$fit3)
+  s2 <- s12 - s1
+  s3 <- s123 - s12
+  
+  #Calculating the standardized selection differentials (s')
+  s1_prime <- cov(tmp$StdLength, tmp$fit1)
+  s12_prime <- cov(tmp$StdLength, tmp$fit2)
+  s123_prime <- cov(tmp$StdLength, tmp$fit3)
+  s2_prime <- s12_prime - s1_prime
+  s3_prime <- s123_prime - s12_prime
+  
+  #Combining all of the selection differentials (s, s') and saving the output
+  selection <- cbind(trial, s1, s2, s3, s12, s123, 
+                     s1_prime, s2_prime, s3_prime, s12_prime, s123_prime)
+  
+  select_diff_fem <- rbind(select_diff_fem, selection)
+  
+  #Save the intermediate values
+  fem_succ_select_diff <- rbind(fem_succ_select_diff, tmp)
+}
+
+#Exporting the data
+#write.csv(fem_succ_select_diff, "data/fuscus_int_diff_fem.csv", row.names = FALSE)
+```
+
+``` r
+#Create a dataframe to store all of the intermediate values of fitness in
+mal_succ_select_diff <- data.frame(matrix(ncol = ncol(mal_succFU) + 6,
+                                          nrow = 0))
+colnames(mal_succ_select_diff) <- c(colnames(mal_succFU),
+                                    "fit1", "eggs_per_mate","fit2", "prop_dev", 
+                                    "fit3", "StdLength")
+
+#Create a dataframe to store the final calculations of I in
+select_diff_mal <- data.frame(matrix(ncol = 11,
+                                     nrow = 0))
+colnames(select_diff_mal) <- c("trial", "s1", "s2", "s3", "s12", "s123",
+                               "s1_prime", "s2_prime", "s3_prime", 
+                               "s12_prime", "s123_prime")
+
+for (trial in unique(mal_succFU$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFU[mal_succFU$trial_num == trial, ]
+  
+  #Calculate fitness relating to pre-cop. selection (#matings)
+  tmp$fit1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
+
+  #Calculate fitness relating to post-mating selection (#eggs transferred)
+  tmp$eggs_per_mate <- tmp$totalEggs/tmp$MatingSuccess
+  tmp$fit2 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$eggs_per_mate/mean(tmp$eggs_per_mate, na.rm = TRUE),
+                     0) #Relative eggs transferred
+
+  #Calculate fitness relating to post-mating selection (eggs that developed)
+  tmp$prop_dev <- (tmp$NumDeveloped_Calc/tmp$MatingSuccess)/tmp$eggs_per_mate
+  tmp$fit3 <- ifelse(tmp$MatingSuccess > 0,
+                     tmp$prop_dev/mean(tmp$prop_dev, na.rm = TRUE),
+                     0)
+  
+  #Standardizing the trait value to have a mean of 0 and sd of unity
+  tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
+  
+  #Calculating the absolute selection differentials (s)
+  s1 <- cov(tmp$length, tmp$fit1)
+  s12 <- cov(tmp$length, tmp$fit2)
+  s123 <- cov(tmp$length, tmp$fit3)
+  s2 <- s12 - s1
+  s3 <- s123 - s12
+  
+  #Calculating the standardized selection differentials (s')
+  s1_prime <- cov(tmp$StdLength, tmp$fit1)
+  s12_prime <- cov(tmp$StdLength, tmp$fit2)
+  s123_prime <- cov(tmp$StdLength, tmp$fit3)
+  s2_prime <- s12_prime - s1_prime
+  s3_prime <- s123_prime - s12_prime
+  
+  #Combining all of the selection differentials (s, s') and saving the output
+  selection <- cbind(trial, s1, s2, s3, s12, s123, 
+                     s1_prime, s2_prime, s3_prime, s12_prime, s123_prime)
+  
+  select_diff_mal <- rbind(select_diff_mal, selection)
+  
+  #Save the intermediate values
+  mal_succ_select_diff <- rbind(mal_succ_select_diff, tmp)
+}
+
+#Exporting the data
+#write.csv(mal_succ_select_diff, "data/fuscus_int_diff_mal.csv", row.names = FALSE)
+```
+
+``` r
+#Merge the male and female datasets together
+select_diff_fem$Sex <- "F"
+select_diff_mal$Sex <- "M"
+
+select_diff_all <- rbind(select_diff_fem, select_diff_mal)
+
+#List the columns of interest
+columns <- c("s1", "s2", "s3", "s123",
+             "s1_prime", "s2_prime", "s3_prime", "s123_prime")
+
+#Create a dataframe to store the final values in
+sd_average <- data.frame(matrix(ncol = 4,
+                                nrow = 0))
+colnames(sd_average) <- c("Average", "Interval", "Select_diff", "Sex")
+
+#Calculate the critical value
+crit <- qt(p = 0.975, df = (nrow(select_diff_fem) - 1))
+
+#Calculating the averages and confidence intervals for each species and 
+#selection differential
+for (j in 1:length(columns)) {
+    
+    col_name <- columns[[j]]
+    
+    #Calculate the means
+    mean <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                       select_diff_all$Sex, mean)))
+    
+    #Calculate standard error
+    se <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                     select_diff_all$Sex, 
+                 function(x){
+                   
+                   sqrt(var(x))/sqrt(length(x))
+                   
+                 })))
+    
+    #Calculate the value that is added and subtracted from the mean
+    int <- se*crit
+    
+    #Combine the data together
+    episode <- as.data.frame(cbind(mean, int))
+    colnames(episode) <- c("Average", "Interval")
+    
+    episode$Select_diff <- col_name
+    episode$Sex <- rownames(episode)
+    
+    rownames(episode) <- NULL
+    
+    sd_average <- rbind(sd_average, episode)
+    
+}
+```
+
+Now that we have the average select diff for males and females alongside
+the 95% confidence intervals we can visualize some results:
+
+| Select_diff | F                    | M                   |
+|:------------|:---------------------|:--------------------|
+| s1          | 5.47 (-3.68, 14.62)  | -4.35 (-9.32, 0.62) |
+| s2          | -4.58 (-11.53, 2.37) | 3.05 (-0.54, 6.64)  |
+| s3          | -0.02 (-0.6, 0.56)   | 0.15 (-0.18, 0.49)  |
+| s123        | 0.86 (-1.55, 3.28)   | -1.14 (-2.68, 0.4)  |
+| s1_prime    | 0.45 (-0.2, 1.09)    | -0.18 (-0.54, 0.17) |
+| s2_prime    | -0.37 (-0.89, 0.15)  | 0.14 (-0.11, 0.4)   |
+| s3_prime    | 0 (-0.04, 0.05)      | 0 (-0.03, 0.03)     |
+| s123_prime  | 0.08 (-0.06, 0.22)   | -0.04 (-0.14, 0.07) |
+
+Average Selection Differentials (95% CI) for Males and Females
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/generate-fig-select-diff-1.png"
+alt="Absolute (left) and standardized (right) selection differentials for male (purple) and female (green) S. fuscus. Error bars represent the 95% confidence intervals around the mean." />
+<figcaption aria-hidden="true"><em>Absolute (left) and standardized
+(right) selection differentials for male (purple) and female (green) S.
+fuscus. Error bars represent the 95% confidence intervals around the
+mean.</em></figcaption>
+</figure>
+
+We can see from these results that males and females are experiencing
+largely different selection on snout-vent length. When the male
+selection differential is negative the female is positive and vice
+avers. Overall, it appears larger size in female svl is more beneficial
+in the pre-mating episode and in terms of the proportion of eggs
+developed, but not for the number of eggs transferred. However, while we
+can see these patterns, there is no significant selection on snout-vent
+length (all the 95% CI cross 0) for males or females.
+
+## Looking into the Maximum Sexual Selection Differential
+
+We can calculate $s'_{max}$:
+
+$$
+s'_{max}\ =\ \beta_{FU}\sqrt{I_S}
+$$
+
+One major benefit of this is that both the variation in mating success
+and the Bateman gradient are taken into effect. Additionally, $s'_{max}$
+places an upper bound on the strength of sexual selection during a
+sexual selection episode.
+
+Let’s now generate $s'_{max}$ for male and female *S. fuscus*.
+
+``` r
+#Pull out the Bateman gradient (slopes of the models)
+bateman_fem <- coefficients(wls_model_fem)[2]
+bateman_mal <- coefficients(wls_model_mal)[2]
+
+#Pull out the Average opp sexual selection for males and females
+opp_ss_fem <- opp_average$Average[opp_average$Sex == "F" & 
+                                    opp_average$Episode_sel == "I_s"]
+opp_ss_mal <- opp_average$Average[opp_average$Sex == "M" & 
+                                    opp_average$Episode_sel == "I_s"]
+
+#Calculate select diff max
+select_diff_max_fem <- bateman_fem * sqrt(opp_ss_fem)
+select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
+```
+
+For females, the $s'_{max}$ is 2.0459458, while $s'$ is 0.0809736, which
+is about 1/25 of the max selection that could be experiences. For males,
+$s'_{max}$ is 2.0023074 and $s'$ is -0.0383915.
+
+# Visualizing post-copulatory selection
+
+As a way to visualize selection acting AFTER the mating event
+(post-copulatory selection) I am plotting the proportion of eggs that
+survived against mating success. Hopefully this will tell us if
+acquiring more mates is having any affect on the ability for the eggs to
+develop.
+
+I am going to plot this relationship only looking into the individuals
+who mated.
+
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/surv-v-matings-1.png"
+alt="Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green)." />
+<figcaption aria-hidden="true"><em>Plotting the relationship between the
+proportion of eggs that developed and the number of mates aquired for
+both males (purple) and females (green).</em></figcaption>
+</figure>
+
+There may be a correlation for both males and females, let’s investigate
+further:
+
+``` r
+cor.test(fem_succFU$MatingSuccess[fem_succFU$MatingSuccess != 0],
+         fem_succFU$prop_surviving[fem_succFU$totalEggs != 0])
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  fem_succFU$MatingSuccess[fem_succFU$MatingSuccess != 0] and fem_succFU$prop_surviving[fem_succFU$totalEggs != 0]
+    ## t = -3.8901, df = 17, p-value = 0.001177
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.8694526 -0.3371292
+    ## sample estimates:
+    ##        cor 
+    ## -0.6862543
+
+``` r
+cor.test(mal_succFU$MatingSuccess[mal_succFU$MatingSuccess != 0],
+         mal_succFU$prop_surviving[mal_succFU$totalEggs != 0])
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  mal_succFU$MatingSuccess[mal_succFU$MatingSuccess != 0] and mal_succFU$prop_surviving[mal_succFU$totalEggs != 0]
+    ## t = -0.51631, df = 18, p-value = 0.6119
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.5347393  0.3398856
+    ## sample estimates:
+    ##       cor 
+    ## -0.120805
+
+There is a significantly negative correlation between mating success and
+reproductive success for female *S. fuscus* but not for males.
