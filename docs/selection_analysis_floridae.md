@@ -38,6 +38,12 @@ Selection pressures in *Syngnathus floridae*
   $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
   - [Omitting females with high
     mating](#omitting-females-with-high-mating)
+  - [Investigating the impact of “zeros” on the Bateman
+    Gradient](#investigating-the-impact-of-zeros-on-the-bateman-gradient)
+    - [Removing the zeros from the
+      plot](#removing-the-zeros-from-the-plot)
+    - [Removing the zeros from the calculation of relative
+      fitness](#removing-the-zeros-from-the-calculation-of-relative-fitness)
 - [Investing selection differentials on snout-vent-length ($s$ and
   $s'$)](#investing-selection-differentials-on-snout-vent-length-s-and-s)
   - [Looking into the Maximum Sexual Selection
@@ -2266,6 +2272,286 @@ with those points omitted.
 
 It doesn’t look like omitting those few individuals has any effect on
 the results of the Bateman gradient.
+
+## Investigating the impact of “zeros” on the Bateman Gradient
+
+It has been shown previously that the inclusion or exclusion of
+individuals who were unable to achieve a mate with impact the Bateman
+Gradient. When the non-mated individuals are included, the gradient is
+influenced by the relative fitness gain that is experienced from gaining
+a mate (i.e, moving from 0 to 1). If we do not include the non-mated
+individuals, we can more clearly look at the fitness increase associated
+with obtaining more than one mate.
+
+Because both male and female *S. floridae* both mate twice, I want to
+look at the fitness increase of achieving an additional mate for both
+sexes. I am going to adjust the way I plot/calculate the Bateman
+Gradient in two ways:
+
+1)  Keeping the same relative fitness dataset that I generated above, I
+    will re-plot the data and re-generate the models excluding the “0s”.
+
+2)  I am going to re-generate the relative fitness dataset. For this
+    re-generation I will not be including the 0s from the individuals
+    who did not mate. This will particularly influence the mean, as I
+    will be dividing an individual’s fitness by the trial’s mean across
+    the pipefish who did mate.
+
+### Removing the zeros from the plot
+
+The first way I am addressing this is by using the same datasets as
+before and just excluding the 0’s from the plot and the model:
+
+``` r
+#Generating Bateman's gradient
+#Define the model
+fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
+                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0])
+mal_model2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
+                   mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0])
+
+#define weights to use
+wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
+                    fem_model2$fitted.values)$fitted.values^2
+wt_mal2 <- 1 / lm(abs(mal_model2$residuals) ~
+                    mal_model2$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
+                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
+                    weights=wt_fem2)
+wls_model_mal2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
+                       mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
+                    weights=wt_mal2)
+
+#Investigate the results
+summary(wls_model_fem2) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 
+    ##     0] ~ fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 
+    ##     0], weights = wt_fem2)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.8479 -0.9214 -0.1881  0.5336  3.4420 
+    ## 
+    ## Coefficients:
+    ##                                                           Estimate Std. Error
+    ## (Intercept)                                                 0.4431     0.6214
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]   0.8338     0.2030
+    ##                                                           t value Pr(>|t|)    
+    ## (Intercept)                                                 0.713 0.484449    
+    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]   4.106 0.000601 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.351 on 19 degrees of freedom
+    ## Multiple R-squared:  0.4702, Adjusted R-squared:  0.4423 
+    ## F-statistic: 16.86 on 1 and 19 DF,  p-value: 0.000601
+
+``` r
+summary(wls_model_mal2) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 
+    ##     0] ~ mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 
+    ##     0], weights = wt_mal2)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.9006 -0.8353  0.0394  0.4617  4.4344 
+    ## 
+    ## Coefficients:
+    ##                                                           Estimate Std. Error
+    ## (Intercept)                                                 0.3523     0.4818
+    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   0.8456     0.2201
+    ##                                                           t value Pr(>|t|)    
+    ## (Intercept)                                                 0.731 0.472319    
+    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   3.842 0.000887 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.47 on 22 degrees of freedom
+    ## Multiple R-squared:  0.4015, Adjusted R-squared:  0.3743 
+    ## F-statistic: 14.76 on 1 and 22 DF,  p-value: 0.000887
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/plot-bateman-nozero1-1.png"
+alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female (green) and male (purple)
+<em>Syngnathus floridae</em> who achieved at least one mate.
+Reproductive success is shown as relative fitness (i.e. number of
+offspring produced divided by the mean number of offspring produced).
+Bateman’s gradient is shown as the weighted least-squares regression
+line (dashed).</em></figcaption>
+</figure>
+
+When we exclude the non-mated individuals from the plot and the model,
+we can see the results do not change for males or females as the slope
+for both sexes is still significant.
+
+### Removing the zeros from the calculation of relative fitness
+
+The other way to approach this is rather than just eliminating the zeros
+from the scatter plot, I can remove the zeros in the calculation of
+relative fitness.
+
+``` r
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman_nozero <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(fem_bateman_nozero) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+#Loop through each trial to calculate relative fitness
+for (trial in unique(fem_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- fem_succFL[fem_succFL$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs[tmp$MatingSuccess != 0]/
+    mean(tmp$totalEggs[tmp$MatingSuccess != 0])
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess[tmp$MatingSuccess != 0]/
+    mean(tmp$MatingSuccess[tmp$MatingSuccess != 0])
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp[tmp$MatingSuccess != 0,])), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  fem_bateman_nozero <- rbind(fem_bateman_nozero, fitness)
+}
+
+#Repeat process for the Male mating data
+mal_bateman_nozero <- data.frame(matrix(ncol = 3,
+                                 nrow = 0))
+colnames(mal_bateman_nozero) <- c("trial", "MatingSuccess","rel_repo_fitness")
+
+for (trial in unique(mal_succFL$trial_num)) {
+  
+  #Subset the overall dataframe to work with an individual trial
+  tmp <- mal_succFL[mal_succFL$trial_num == trial, ]
+  
+  #Calculate relative fitness
+  rel_repo_fitness <- tmp$totalEggs[tmp$MatingSuccess != 0]/
+    mean(tmp$totalEggs[tmp$MatingSuccess != 0])
+  
+  #Calculte mating fitness
+  rel_mate_succuess <- tmp$MatingSuccess[tmp$MatingSuccess != 0]/
+    mean(tmp$MatingSuccess[tmp$MatingSuccess != 0])
+  
+  #Column-bind the trial #, Mating success, and calculated rel. fitness
+  fitness <- cbind("trial" = rep(trial, nrow(tmp[tmp$MatingSuccess != 0,])), 
+                   "MatingSuccess" = rel_mate_succuess, 
+                   rel_repo_fitness)
+  
+  #Add this chunk of data to the dataframe we created
+  mal_bateman_nozero <- rbind(mal_bateman_nozero, fitness)
+}
+```
+
+Once we have the measures of relative fitness we can use them to run the
+weighted least-squares regression for males and females separately.
+
+``` r
+#Generating Bateman's gradient
+#Define the model
+fem_model3 <- lm(fem_bateman_nozero$rel_repo_fitness ~ 
+                  fem_bateman_nozero$MatingSuccess)
+mal_model3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
+                  mal_bateman_nozero$MatingSuccess)
+
+#define weights to use
+wt_fem3 <- 1 / lm(abs(fem_model3$residuals) ~
+                    fem_model3$fitted.values)$fitted.values^2
+wt_mal3 <- 1 / lm(abs(mal_model3$residuals) ~
+                    mal_model3$fitted.values)$fitted.values^2
+
+#perform weighted least squares regression
+wls_model_fem3 <- lm(fem_bateman_nozero$rel_repo_fitness ~
+                      fem_bateman_nozero$MatingSuccess,
+                    weights=wt_fem3)
+wls_model_mal3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
+                      mal_bateman_nozero$MatingSuccess,
+                     weights = wt_mal3)
+
+
+#Investigate the results
+summary(wls_model_fem3) #significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = fem_bateman_nozero$rel_repo_fitness ~ fem_bateman_nozero$MatingSuccess, 
+    ##     weights = wt_fem3)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1225 -0.8215 -0.0159  0.6389  4.0556 
+    ## 
+    ## Coefficients:
+    ##                                  Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)                        0.3061     0.3334   0.918   0.3702  
+    ## fem_bateman_nozero$MatingSuccess   0.6927     0.2880   2.405   0.0265 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.431 on 19 degrees of freedom
+    ## Multiple R-squared:  0.2334, Adjusted R-squared:  0.193 
+    ## F-statistic: 5.784 on 1 and 19 DF,  p-value: 0.02652
+
+``` r
+summary(wls_model_mal3) #not significant
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = mal_bateman_nozero$rel_repo_fitness ~ mal_bateman_nozero$MatingSuccess, 
+    ##     weights = wt_mal3)
+    ## 
+    ## Weighted Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.7478 -0.6503 -0.0604  0.6255  4.1553 
+    ## 
+    ## Coefficients:
+    ##                                  Estimate Std. Error t value Pr(>|t|)  
+    ## (Intercept)                        0.7192     0.4135    1.74   0.0959 .
+    ## mal_bateman_nozero$MatingSuccess   0.2804     0.4126    0.68   0.5039  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 1.473 on 22 degrees of freedom
+    ## Multiple R-squared:  0.02056,    Adjusted R-squared:  -0.02396 
+    ## F-statistic: 0.4618 on 1 and 22 DF,  p-value: 0.5039
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/plot-bateman-nozero2-1.png"
+alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female (green) and male (purple)
+<em>Syngnathus floridae</em> who achieved at least one mate.
+Reproductive success is shown as relative fitness (i.e. number of
+offspring produced divided by the mean number of offspring produced).
+Relative fitness is calculated without the individuals who did not mate.
+Bateman’s gradient is shown as the weighted least-squares regression
+line (dashed).</em></figcaption>
+</figure>
+
+With this way of excluding the individuals who did not mate, there is
+still a significant increase in relative fitness with each additional
+mating for females, however, not for males anymore.
 
 # Investing selection differentials on snout-vent-length ($s$ and $s'$)
 
