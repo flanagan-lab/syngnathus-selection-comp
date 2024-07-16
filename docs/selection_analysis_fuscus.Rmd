@@ -1493,9 +1493,9 @@ for (trial in unique(fem_succFU$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   
@@ -1559,9 +1559,9 @@ for (trial in unique(mal_succFU$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   

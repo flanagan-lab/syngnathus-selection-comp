@@ -1875,9 +1875,9 @@ for (trial in unique(fem_succSS$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   
@@ -1943,9 +1943,9 @@ for (trial in unique(mal_succSS$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   
@@ -2032,10 +2032,10 @@ the 95% confidence intervals we can visualize some results:
 
 | Select_diff | F                   | M                  |
 |:------------|:--------------------|:-------------------|
-| s1          | 1.6 (-0.62, 3.81)   | 0.39 (-0.49, 1.27) |
-| s2          | -1.07 (-3.04, 0.9)  | 0.32 (-0.25, 0.9)  |
-| s3          | 0 (-0.48, 0.48)     | -0.14 (-0.88, 0.6) |
-| s123        | 0.53 (-0.38, 1.44)  | 0.57 (-0.39, 1.54) |
+| s1          | 1.02 (0, 2.05)      | 0.01 (-0.44, 0.46) |
+| s2          | -0.76 (-1.62, 0.11) | 0.14 (-0.11, 0.39) |
+| s3          | 0.02 (-0.15, 0.18)  | 0.04 (-0.28, 0.36) |
+| s123        | 0.28 (-0.06, 0.62)  | 0.19 (-0.26, 0.63) |
 | s1_prime    | 0.34 (0.01, 0.68)   | 0.05 (-0.11, 0.21) |
 | s2_prime    | -0.24 (-0.53, 0.04) | 0.03 (-0.07, 0.13) |
 | s3_prime    | 0 (-0.07, 0.07)     | 0.03 (-0.08, 0.14) |

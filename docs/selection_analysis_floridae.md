@@ -2512,9 +2512,9 @@ for (trial in unique(fem_succFL$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   
@@ -2578,9 +2578,9 @@ for (trial in unique(mal_succFL$trial_num)) {
   tmp$StdLength <- (tmp$svl - mean(tmp$svl))/sd(tmp$svl)
   
   #Calculating the absolute selection differentials (s)
-  s1 <- cov(tmp$length, tmp$fit1)
-  s12 <- cov(tmp$length, tmp$fit2)
-  s123 <- cov(tmp$length, tmp$fit3)
+  s1 <- cov(tmp$svl, tmp$fit1)
+  s12 <- cov(tmp$svl, tmp$fit2)
+  s123 <- cov(tmp$svl, tmp$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
   
@@ -2663,16 +2663,16 @@ for (j in 1:length(columns)) {
 Now that we have the average select diff for males and females alongside
 the 95% confidence intervals we can visualize some results:
 
-| Select_diff | F                    | M                    |
-|:------------|:---------------------|:---------------------|
-| s1          | 2.36 (-10.43, 15.15) | -6.59 (-13.09, -0.1) |
-| s2          | -3.26 (-14.83, 8.32) | 4.04 (0.52, 7.55)    |
-| s3          | 1.89 (-2.44, 6.21)   | -0.72 (-1.99, 0.55)  |
-| s123        | 0.99 (-4.18, 6.17)   | -3.28 (-6.24, -0.32) |
-| s1_prime    | 0.21 (-0.32, 0.73)   | -0.43 (-0.95, 0.1)   |
-| s2_prime    | -0.23 (-0.71, 0.25)  | 0.3 (-0.04, 0.65)    |
-| s3_prime    | 0.08 (-0.11, 0.28)   | -0.07 (-0.15, 0.02)  |
-| s123_prime  | 0.06 (-0.17, 0.3)    | -0.19 (-0.38, -0.01) |
+| Select_diff | F                   | M                    |
+|:------------|:--------------------|:---------------------|
+| s1          | 2.28 (-3.76, 8.31)  | -2.83 (-6.14, 0.47)  |
+| s2          | -2.56 (-8.05, 2.94) | 1.99 (0.02, 3.95)    |
+| s3          | 0.97 (-1.34, 3.28)  | -0.52 (-1.18, 0.14)  |
+| s123        | 0.69 (-2.09, 3.48)  | -1.37 (-2.67, -0.06) |
+| s1_prime    | 0.21 (-0.32, 0.73)  | -0.43 (-0.95, 0.1)   |
+| s2_prime    | -0.23 (-0.71, 0.25) | 0.3 (-0.04, 0.65)    |
+| s3_prime    | 0.08 (-0.11, 0.28)  | -0.07 (-0.15, 0.02)  |
+| s123_prime  | 0.06 (-0.17, 0.3)   | -0.19 (-0.38, -0.01) |
 
 Average Selection Differentials (95% CI) for Males and Females
 
