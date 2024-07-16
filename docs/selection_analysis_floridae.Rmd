@@ -23,7 +23,7 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
-library(lme4)
+#library(lme4)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -64,12 +64,12 @@ Before comparing male size to female size I want to ensure the data meets the as
 
 The null hypotheses for these two tests are that the variances are equal and the data is normally distributed.
 
-To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the standard length of the pipefish prior to funning any analyses
+To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the snout-vent length of the pipefish prior to running any analyses. Snout-vent length was chosen over standard length as it is more representative of the size of the pipefish. It is possible for a pipefish to loose a part of its tail and remain alive, which would impact the standard length, but not the snout-vent length
 
 ```{r assump-test}
 #Adjust the torso depth
-fem_mesoFL$depth_adj <- fem_mesoFL$depth/fem_mesoFL$length
-mal_mesoFL$depth_adj <- mal_mesoFL$depth/mal_mesoFL$length
+fem_mesoFL$depth_adj <- fem_mesoFL$depth/fem_mesoFL$svl
+mal_mesoFL$depth_adj <- mal_mesoFL$depth/mal_mesoFL$svl
 
 #Testing to see if the variances are equal
 var.test(fem_mesoFL$length, mal_mesoFL$length) #EQUAL
@@ -490,7 +490,7 @@ Even though mated males were significantly smaller, some of the larger males wer
 ### Relationships with latency to mate
 There was some variety in the length of time that males were house in the same-sex tanks before being placed in the experimental breeding populations. I am now curious to see if there is any relationship between the latency to trials and various components of fitness.
 
-```{r lat-to-mate-matesucc, message=FALSE}
+```{r lat-to-mate-matesucc, message=FALSE, eval= FALSE}
 #Mating success
 ##Create the model
 mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
@@ -526,7 +526,7 @@ legend("topright",
 
 Now let's see if there is any relationship when we look at reproductive success (in terms of total eggs received) and the latency to the trial. Because we already accounted for the males who didn't mate in terms of mating success, I am going to remove them from this model. Therefore we will be looking at the impact on reproductive success on the individuals that were successfully able to obtain a mate.
 
-```{r lat-to-mate-reposucc, message=FALSE}
+```{r lat-to-mate-reposucc, message=FALSE, eval= FALSE}
 #Mating success
 ##Create the model
 tot_eggslm <- lmer(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + 
