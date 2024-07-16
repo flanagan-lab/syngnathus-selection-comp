@@ -23,7 +23,7 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
-library(lme4)
+#library(lme4)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -58,8 +58,8 @@ To account for the fact that fish who are longer may just inherently be deeper a
 
 ```{r assump-test}
 #Adjust the torso depth
-fem_mesoFU$depth_adj <- fem_mesoFU$depth/fem_mesoFU$length
-mal_mesoFU$depth_adj <- mal_mesoFU$depth/mal_mesoFU$length
+fem_mesoFU$depth_adj <- fem_mesoFU$depth/fem_mesoFU$svl
+mal_mesoFU$depth_adj <- mal_mesoFU$depth/mal_mesoFU$svl
 
 #Testing to see if the variances are equal
 var.test(fem_mesoFU$length, mal_mesoFU$length) #EQUAL
@@ -73,7 +73,7 @@ normalTest(fem_mesoFU$svl, method = "da") #NORMAL
 
 #Testing for normal distribution - Males
 normalTest(mal_mesoFU$length, method = "da") #NOT NORMAL
-normalTest(mal_mesoFU$depth_adj, method = "da") #NORMAL
+normalTest(mal_mesoFU$depth_adj, method = "da") #NOT NORMAL
 normalTest(mal_mesoFU$svl, method = "da") #NORMAL
 
 ```
@@ -129,7 +129,7 @@ wilcox.test(fem_mesoFU$depth_adj, mal_mesoFU$depth_adj)
 t.test(fem_mesoFU$svl, mal_mesoFU$svl, var.equal = TRUE)
 ```
 
-For the Northern pipefish, there are significant differences between males and females in terms of standard length, snout-vent length, and torso depth. 
+For the Northern pipefish, there are significant differences between males and females in terms of standard length, snout-vent length but not in torso depth. 
 
 ```{r power-test}
 
