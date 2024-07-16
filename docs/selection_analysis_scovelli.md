@@ -3,46 +3,76 @@ Selection pressures in *Syngnathus scovelli*
 
 
 
-- [Cleaning the datasets](#cleaning-the-datasets)
-- [Calculating the degree of sexual
-  dimorphism](#calculating-the-degree-of-sexual-dimorphism)
-  - [Checking the assumptions for a pairwise
-    comparison](#checking-the-assumptions-for-a-pairwise-comparison)
-  - [Investigate distributions and run the
-    tests](#investigate-distributions-and-run-the-tests)
-- [Summary statistics for successfully mated
-  individuals](#summary-statistics-for-successfully-mated-individuals)
-  - [Males](#males)
-  - [Females](#females)
-- [Differences between mated individuals and unmated
-  individuals](#differences-between-mated-individuals-and-unmated-individuals)
-  - [Males](#males-1)
-    - [Visual Comparison](#visual-comparison)
-    - [Testing the difference](#testing-the-difference)
-  - [Females](#females-1)
-    - [Visual Comparison](#visual-comparison-1)
-    - [Testing the difference](#testing-the-difference-1)
-- [Looking into the Opportunity for Selection in Males and
-  Females](#looking-into-the-opportunity-for-selection-in-males-and-females)
-  - [Generating the total opportunity for selection ($I$) and the
-    opportunity for sexual selection
-    ($I_S$)](#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s)
-  - [Partitioning the Total Opportunity for Selection
-    ($I$)](#partitioning-the-total-opportunity-for-selection-i)
-- [Mate success versus Reproductive success (Bateman Gradient,
-  $\beta_{SS}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_ss)
-  - [Investigating the impact of “zeros” on the Bateman
-    Gradient](#investigating-the-impact-of-zeros-on-the-bateman-gradient)
-    - [Removing the zeros from the
-      plot](#removing-the-zeros-from-the-plot)
-    - [Removing the zeros from the calculation of relative
-      fitness](#removing-the-zeros-from-the-calculation-of-relative-fitness)
-- [Investing selection differentials on snout-vent-length ($s$ and
-  $s'$)](#investing-selection-differentials-on-snout-vent-length-s-and-s)
-  - [Looking into the Maximum Sexual Selection
-    Differential](#looking-into-the-maximum-sexual-selection-differential)
-- [Visualizing post-copulatory
-  selection](#visualizing-post-copulatory-selection)
+- <a href="#cleaning-the-datasets" id="toc-cleaning-the-datasets">Cleaning
+  the datasets</a>
+- <a href="#calculating-the-degree-of-sexual-dimorphism"
+  id="toc-calculating-the-degree-of-sexual-dimorphism">Calculating the
+  degree of sexual dimorphism</a>
+  - <a href="#checking-the-assumptions-for-a-pairwise-comparison"
+    id="toc-checking-the-assumptions-for-a-pairwise-comparison">Checking the
+    assumptions for a pairwise comparison</a>
+  - <a href="#investigate-distributions-and-run-the-tests"
+    id="toc-investigate-distributions-and-run-the-tests">Investigate
+    distributions and run the tests</a>
+- <a href="#summary-statistics-for-successfully-mated-individuals"
+  id="toc-summary-statistics-for-successfully-mated-individuals">Summary
+  statistics for successfully mated individuals</a>
+  - <a href="#males" id="toc-males">Males</a>
+  - <a href="#females" id="toc-females">Females</a>
+- <a href="#differences-between-mated-individuals-and-unmated-individuals"
+  id="toc-differences-between-mated-individuals-and-unmated-individuals">Differences
+  between mated individuals and unmated individuals</a>
+  - <a href="#males-1" id="toc-males-1">Males</a>
+    - <a href="#visual-comparison" id="toc-visual-comparison">Visual
+      Comparison</a>
+    - <a href="#testing-the-difference"
+      id="toc-testing-the-difference">Testing the difference</a>
+  - <a href="#females-1" id="toc-females-1">Females</a>
+    - <a href="#visual-comparison-1" id="toc-visual-comparison-1">Visual
+      Comparison</a>
+    - <a href="#testing-the-difference-1"
+      id="toc-testing-the-difference-1">Testing the difference</a>
+- <a
+  href="#looking-into-the-opportunity-for-selection-in-males-and-females"
+  id="toc-looking-into-the-opportunity-for-selection-in-males-and-females">Looking
+  into the Opportunity for Selection in Males and Females</a>
+  - <a
+    href="#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s"
+    id="toc-generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s">Generating
+    the total opportunity for selection (<span
+    class="math inline"><em>I</em></span>) and the opportunity for sexual
+    selection (<span
+    class="math inline"><em>I</em><sub><em>S</em></sub></span>)</a>
+  - <a href="#partitioning-the-total-opportunity-for-selection-i"
+    id="toc-partitioning-the-total-opportunity-for-selection-i">Partitioning
+    the Total Opportunity for Selection (<span
+    class="math inline"><em>I</em></span>)</a>
+- <a
+  href="#mate-success-versus-reproductive-success-bateman-gradient-beta_ss"
+  id="toc-mate-success-versus-reproductive-success-bateman-gradient-beta_ss">Mate
+  success versus Reproductive success (Bateman Gradient, <span
+  class="math inline"><em>β</em><sub><em>S</em><em>S</em></sub></span>)</a>
+  - <a href="#investigating-the-impact-of-zeros-on-the-bateman-gradient"
+    id="toc-investigating-the-impact-of-zeros-on-the-bateman-gradient">Investigating
+    the impact of “zeros” on the Bateman Gradient</a>
+    - <a href="#removing-the-zeros-from-the-plot"
+      id="toc-removing-the-zeros-from-the-plot">Removing the zeros from the
+      plot</a>
+    - <a href="#removing-the-zeros-from-the-calculation-of-relative-fitness"
+      id="toc-removing-the-zeros-from-the-calculation-of-relative-fitness">Removing
+      the zeros from the calculation of relative fitness</a>
+- <a
+  href="#investing-selection-differentials-on-snout-vent-length-s-and-s"
+  id="toc-investing-selection-differentials-on-snout-vent-length-s-and-s">Investing
+  selection differentials on snout-vent-length (<span
+  class="math inline"><em>s</em></span> and <span
+  class="math inline"><em>s</em>′</span>)</a>
+  - <a href="#looking-into-the-maximum-sexual-selection-differential"
+    id="toc-looking-into-the-maximum-sexual-selection-differential">Looking
+    into the Maximum Sexual Selection Differential</a>
+- <a href="#visualizing-post-copulatory-selection"
+  id="toc-visualizing-post-copulatory-selection">Visualizing
+  post-copulatory selection</a>
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -50,7 +80,6 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
-library(lme4)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -141,14 +170,14 @@ The main two things that I will be looking into include:
 2.  Normal distribution of the data (using `normalTest()`).
 
 To account for the fact that fish who are longer may just inherently be
-deeper as well, I am going to adjust the depth by the standard length of
-the pipefish prior to running any analyses. This length-adjusted depth
+deeper as well, I am going to adjust the depth by the snout-vent length
+of the pipefish prior to running any analyses. This svl-adjusted depth
 will then be used in all consequent analyses.
 
 ``` r
 #Adjust the torso depth
-fem_succSS$depth_adj <- fem_succSS$depth/fem_succSS$length
-mal_succSS$depth_adj <- mal_succSS$depth/mal_succSS$length
+fem_succSS$depth_adj <- fem_succSS$depth/fem_succSS$svl
+mal_succSS$depth_adj <- mal_succSS$depth/mal_succSS$svl
 
 #Testing to see if the variances are equal
 var.test(fem_succSS$length, mal_succSS$length) #not equal
@@ -174,13 +203,13 @@ var.test(fem_succSS$depth_adj, mal_succSS$depth_adj) #not equal
     ##  F test to compare two variances
     ## 
     ## data:  fem_succSS$depth_adj and mal_succSS$depth_adj
-    ## F = 2.7842, num df = 54, denom df = 53, p-value = 0.0002681
+    ## F = 2.2275, num df = 54, denom df = 53, p-value = 0.00406
     ## alternative hypothesis: true ratio of variances is not equal to 1
     ## 95 percent confidence interval:
-    ##  1.618626 4.782552
+    ##  1.294973 3.826254
     ## sample estimates:
     ## ratio of variances 
-    ##           2.784223
+    ##           2.227502
 
 ``` r
 var.test(fem_succSS$svl, mal_succSS$svl) #equal
@@ -245,13 +274,13 @@ normalTest(fem_succSS$depth_adj, method = "da") #normal
     ## 
     ## Test Results:
     ##   STATISTIC:
-    ##     Chi2 | Omnibus: 3.0359
-    ##     Z3  | Skewness: -0.7509
-    ##     Z4  | Kurtosis: -1.5723
+    ##     Chi2 | Omnibus: 4.1601
+    ##     Z3  | Skewness: -0.9031
+    ##     Z4  | Kurtosis: -1.8288
     ##   P VALUE:
-    ##     Omnibus  Test: 0.2192 
-    ##     Skewness Test: 0.4527 
-    ##     Kurtosis Test: 0.1159
+    ##     Omnibus  Test: 0.1249 
+    ##     Skewness Test: 0.3665 
+    ##     Kurtosis Test: 0.06743
 
 ``` r
 normalTest(mal_succSS$depth_adj, method = "da") #normal
@@ -263,13 +292,13 @@ normalTest(mal_succSS$depth_adj, method = "da") #normal
     ## 
     ## Test Results:
     ##   STATISTIC:
-    ##     Chi2 | Omnibus: 2.1825
-    ##     Z3  | Skewness: -1.2096
-    ##     Z4  | Kurtosis: 0.8482
+    ##     Chi2 | Omnibus: 1.4518
+    ##     Z3  | Skewness: -1.0588
+    ##     Z4  | Kurtosis: 0.5752
     ##   P VALUE:
-    ##     Omnibus  Test: 0.3358 
-    ##     Skewness Test: 0.2264 
-    ##     Kurtosis Test: 0.3963
+    ##     Omnibus  Test: 0.4839 
+    ##     Skewness Test: 0.2897 
+    ##     Kurtosis Test: 0.5652
 
 ``` r
 normalTest(fem_succSS$svl, method = "da") #not normal
@@ -312,13 +341,8 @@ normalTest(mal_succSS$svl, method = "da") #normal
 I will run a Wilcoxon test for standard length and snout-vent length and
 a Welch’s two-sample t-test for depth.
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/histogram_sizes-1.png"
-alt="Histograms of male and female pipefish body sizes." />
-<figcaption aria-hidden="true"><em>Histograms of male and female
-pipefish body sizes.</em></figcaption>
-</figure>
+![*Histograms of male and female pipefish body
+sizes.*](selection_analysis_scovelli_files/figure-gfm/histogram_sizes-1.png)
 
 ``` r
 wilcox.test(fem_succSS$length, mal_succSS$length) #Sig. difference
@@ -351,13 +375,13 @@ t.test(fem_succSS$depth_adj, mal_succSS$depth_adj,
     ##  Welch Two Sample t-test
     ## 
     ## data:  fem_succSS$depth_adj and mal_succSS$depth_adj
-    ## t = 17.557, df = 88.648, p-value < 2.2e-16
+    ## t = 14.983, df = 94.535, p-value < 2.2e-16
     ## alternative hypothesis: true difference in means is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.01214261 0.01524191
+    ##  0.02186095 0.02853951
     ## sample estimates:
     ##  mean of x  mean of y 
-    ## 0.04942370 0.03573144
+    ## 0.11729070 0.09209047
 
 For the Gulf pipefish, there are significant differences between males
 and females in terms of standard length, snout-vent length, and torso
@@ -433,7 +457,7 @@ pwr.t.test(n = nrow(fem_succSS),
     ##      Two-sample t test power calculation 
     ## 
     ##               n = 55
-    ##               d = 3.356235
+    ##               d = 2.865307
     ##       sig.level = 0.05
     ##           power = 1
     ##     alternative = two.sided
@@ -474,13 +498,9 @@ I know want to see if there are correlations between morphometrics such
 as standard length and the size of the brood pouch and brood size (i.e.,
 are larger males securing larger broods).
 
-<figure>
-<img src="selection_analysis_scovelli_files/figure-gfm/em-v-bp-1.png"
-alt="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had." />
-<figcaption aria-hidden="true"><em>Scatterplot of the relationship
-between brood pouch size metrics and the number of embryos a male
-had.</em></figcaption>
-</figure>
+![*Scatterplot of the relationship between brood pouch size metrics and
+the number of embryos a male
+had.*](selection_analysis_scovelli_files/figure-gfm/em-v-bp-1.png)
 
 There may be some correlation happening here, but it doesn’t look
 particularly strong. Let’s run some correlations tests to see what they
@@ -514,13 +534,9 @@ There is no significant correlation with either of the brood pouch size
 metrics. Let’s see if there is some relationship with just the overall
 size of the male.
 
-<figure>
-<img src="selection_analysis_scovelli_files/figure-gfm/em-v-sl-1.png"
-alt="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had." />
-<figcaption aria-hidden="true"><em>Scatterplot of the relationship
-between standard length (mm) and the number of embryos a male
-had.</em></figcaption>
-</figure>
+![*Scatterplot of the relationship between standard length (mm) and the
+number of embryos a male
+had.*](selection_analysis_scovelli_files/figure-gfm/em-v-sl-1.png)
 
     ## 
     ##  Pearson's product-moment correlation
@@ -574,13 +590,9 @@ number of eggs and dividing it by the number of mates.
 
     ## [1] 1.293215
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/em-v-fem-size-1.png"
-alt="Scatterplot of the relationship between female size metrics and the number of eggs transferred." />
-<figcaption aria-hidden="true">Scatterplot of the relationship between
-female size metrics and the number of eggs transferred.</figcaption>
-</figure>
+![Scatterplot of the relationship between female size metrics and the
+number of eggs
+transferred.](selection_analysis_scovelli_files/figure-gfm/em-v-fem-size-1.png)
 
 There also appears to be a correlation between female body size and the
 number of eggs transferred, especially in terms of depth and snout-vent
@@ -602,13 +614,13 @@ length. Let’s run some correlations tests to see what they say.
     ##  Pearson's product-moment correlation
     ## 
     ## data:  mated_femSS$depth_adj and as.numeric(mated_femSS$totalEggs)
-    ## t = 3.2497, df = 27, p-value = 0.003089
+    ## t = 2.3662, df = 27, p-value = 0.02541
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.2032293 0.7508322
+    ##  0.05649854 0.67795500
     ## sample estimates:
     ##       cor 
-    ## 0.5302402
+    ## 0.4144227
 
     ## 
     ##  Pearson's product-moment correlation
@@ -641,14 +653,10 @@ above.
 Before conducting any analyses, let’s see if we can visually detect any
 differences between males who mated and unmated individuals.
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/mat-status-morph-mal-1.png"
-alt="Six different morphometrics compared between males who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated males." />
-<figcaption aria-hidden="true"><em>Six different morphometrics compared
-between males who sucessfully mated versus those that didn’t. Orange
-represents unmated and blue represents mated males.</em></figcaption>
-</figure>
+![*Six different morphometrics compared between males who sucessfully
+mated versus those that didn’t. Orange represents unmated and blue
+represents mated
+males.*](selection_analysis_scovelli_files/figure-gfm/mat-status-morph-mal-1.png)
 
 I don’t notice many differences, however, it appears that males who
 mated may be slightly larger.
@@ -675,13 +683,13 @@ test the assumptions and then run the appropriate version of a t-test.
     ##  F test to compare two variances
     ## 
     ## data:  mal_succSS$depth_adj by as.factor(mal_succSS$MatingSuccess)
-    ## F = 1.2394, num df = 4, denom df = 48, p-value = 0.6137
+    ## F = 1.0676, num df = 4, denom df = 48, p-value = 0.7658
     ## alternative hypothesis: true ratio of variances is not equal to 1
     ## 95 percent confidence interval:
-    ##   0.4042091 10.3934219
+    ##  0.3481692 8.9524694
     ## sample estimates:
     ## ratio of variances 
-    ##           1.239399
+    ##           1.067568
 
     ## 
     ##  F test to compare two variances
@@ -739,13 +747,13 @@ test the assumptions and then run the appropriate version of a t-test.
     ## 
     ## Test Results:
     ##   STATISTIC:
-    ##     Chi2 | Omnibus: 2.1825
-    ##     Z3  | Skewness: -1.2096
-    ##     Z4  | Kurtosis: 0.8482
+    ##     Chi2 | Omnibus: 1.4518
+    ##     Z3  | Skewness: -1.0588
+    ##     Z4  | Kurtosis: 0.5752
     ##   P VALUE:
-    ##     Omnibus  Test: 0.3358 
-    ##     Skewness Test: 0.2264 
-    ##     Kurtosis Test: 0.3963
+    ##     Omnibus  Test: 0.4839 
+    ##     Skewness Test: 0.2897 
+    ##     Kurtosis Test: 0.5652
 
     ## 
     ## Title:
@@ -805,13 +813,13 @@ test the assumptions and then run the appropriate version of a t-test.
     ##  Two Sample t-test
     ## 
     ## data:  mal_succSS$depth_adj by as.factor(mal_succSS$MatingSuccess)
-    ## t = -1.0137, df = 52, p-value = 0.3154
+    ## t = -2.3573, df = 52, p-value = 0.02221
     ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
     ## 95 percent confidence interval:
-    ##  -0.004204435  0.001382214
+    ##  -0.013611257 -0.001093714
     ## sample estimates:
     ## mean in group 0 mean in group 1 
-    ##      0.03445099      0.03586210
+    ##      0.08541877      0.09277125
 
     ## 
     ##  Two Sample t-test
@@ -852,14 +860,9 @@ Let’s explore this a bit more and overlay the distribution of all males
 (mated and unmated) with the males who did mate and see how it varies
 for snout-vent length and depth.
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/mated-unmated-hist-1.png"
-alt="Overlay of the size range of males who mated on top of the size range of all males for snout-vent length (left) and torso depth (right)." />
-<figcaption aria-hidden="true"><em>Overlay of the size range of males
-who mated on top of the size range of all males for snout-vent length
-(left) and torso depth (right).</em></figcaption>
-</figure>
+![*Overlay of the size range of males who mated on top of the size range
+of all males for snout-vent length (left) and torso depth
+(right).*](selection_analysis_scovelli_files/figure-gfm/mated-unmated-hist-1.png)
 
 ## Females
 
@@ -869,14 +872,10 @@ those who were unsuccessful.
 
 ### Visual Comparison
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/mat-status-morph-fem-1.png"
-alt="Four different morphometrics compared between females who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated females." />
-<figcaption aria-hidden="true"><em>Four different morphometrics compared
-between females who sucessfully mated versus those that didn’t. Orange
-represents unmated and blue represents mated females.</em></figcaption>
-</figure>
+![*Four different morphometrics compared between females who sucessfully
+mated versus those that didn’t. Orange represents unmated and blue
+represents mated
+females.*](selection_analysis_scovelli_files/figure-gfm/mat-status-morph-fem-1.png)
 
 For all categories it appears that females are larger in length, depth,
 and snout-vent length.
@@ -902,13 +901,13 @@ morphometrics between mated and unmated individuals.
     ##  F test to compare two variances
     ## 
     ## data:  fem_succSS$depth_adj by fem_succSS$mated
-    ## F = 0.80279, num df = 25, denom df = 28, p-value = 0.5823
+    ## F = 0.55912, num df = 25, denom df = 28, p-value = 0.1458
     ## alternative hypothesis: true ratio of variances is not equal to 1
     ## 95 percent confidence interval:
-    ##  0.3714146 1.7655035
+    ##  0.2586767 1.2296090
     ## sample estimates:
     ## ratio of variances 
-    ##          0.8027946
+    ##          0.5591173
 
     ## 
     ##  F test to compare two variances
@@ -942,13 +941,13 @@ morphometrics between mated and unmated individuals.
     ## 
     ## Test Results:
     ##   STATISTIC:
-    ##     Chi2 | Omnibus: 3.0359
-    ##     Z3  | Skewness: -0.7509
-    ##     Z4  | Kurtosis: -1.5723
+    ##     Chi2 | Omnibus: 4.1601
+    ##     Z3  | Skewness: -0.9031
+    ##     Z4  | Kurtosis: -1.8288
     ##   P VALUE:
-    ##     Omnibus  Test: 0.2192 
-    ##     Skewness Test: 0.4527 
-    ##     Kurtosis Test: 0.1159
+    ##     Omnibus  Test: 0.1249 
+    ##     Skewness Test: 0.3665 
+    ##     Kurtosis Test: 0.06743
 
     ## 
     ## Title:
@@ -975,13 +974,13 @@ morphometrics between mated and unmated individuals.
     ##  Two Sample t-test
     ## 
     ## data:  fem_succSS$depth_adj by fem_succSS$mated
-    ## t = -2.8392, df = 53, p-value = 0.006399
+    ## t = -2.8757, df = 53, p-value = 0.005794
     ## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
     ## 95 percent confidence interval:
-    ##  -0.006089768 -0.001047592
+    ##  -0.012789147 -0.002279209
     ## sample estimates:
     ## mean in group 0 mean in group 1 
-    ##      0.04754204      0.05111072
+    ##       0.1133181       0.1208523
 
     ## 
     ##  Wilcoxon rank sum exact test
@@ -997,14 +996,9 @@ Let’s explore this a bit more and overlay the distribution of sizes in
 all females (mated and unmated) with the sizes of females who did mate
 and see how it varies.
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/mated-unmated-hist-depth-1.png"
-alt="Overlay of the standard length, torso depth, and snout-vent length of females who mated on top of the size range of all females." />
-<figcaption aria-hidden="true"><em>Overlay of the standard length, torso
-depth, and snout-vent length of females who mated on top of the size
-range of all females.</em></figcaption>
-</figure>
+![*Overlay of the standard length, torso depth, and snout-vent length of
+females who mated on top of the size range of all
+females.*](selection_analysis_scovelli_files/figure-gfm/mated-unmated-hist-depth-1.png)
 
 There is still quite a spread in the sizes of females who mated, but in
 every case the female with the largest value secured a mate.
@@ -1150,15 +1144,10 @@ Let’s now explore some results:
 
 Average Opportunity of Selection (95% CI) for Males and Females
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/opp-selection-figure-1.png"
-alt="Average opportunity for selection and opportunity for sexual selection for male (purple) and female (green) S. scovelli. Errorbars represent the 95% confidence intervals around the mean" />
-<figcaption aria-hidden="true"><em>Average opportunity for selection and
-opportunity for sexual selection for male (purple) and female (green) S.
-scovelli. Errorbars represent the 95% confidence intervals around the
-mean</em></figcaption>
-</figure>
+![*Average opportunity for selection and opportunity for sexual
+selection for male (purple) and female (green) S. scovelli. Errorbars
+represent the 95% confidence intervals around the
+mean*](selection_analysis_scovelli_files/figure-gfm/opp-selection-figure-1.png)
 
 We can see that for female *S. scovelli* there is a significant
 opportunity for selection and opportunity for sexual selection, however,
@@ -1395,15 +1384,10 @@ Let’s now explore some results:
 
 Average Episode of Selection (95% CI) for Males and Females
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/opp-select-episodes-figure-1.png"
-alt="Average opportunity for selection for the different episodes for male (purple) and female (green) S. scovelli. Errorbars represent the 95% confidence intervals around the mean" />
-<figcaption aria-hidden="true"><em>Average opportunity for selection for
-the different episodes for male (purple) and female (green) S. scovelli.
-Errorbars represent the 95% confidence intervals around the
-mean</em></figcaption>
-</figure>
+![*Average opportunity for selection for the different episodes for male
+(purple) and female (green) S. scovelli. Errorbars represent the 95%
+confidence intervals around the
+mean*](selection_analysis_scovelli_files/figure-gfm/opp-select-episodes-figure-1.png)
 
 From the table and the plot we can see that once again there are some
 significant differences in the selection between males and females.
@@ -1446,14 +1430,9 @@ for (sex in sexes) {
   }
 ```
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/generate-figa-opp-selection-1.png"
-alt="The proportion of the total opportunity for selection that is represented by each episode of selection for males and females." />
-<figcaption aria-hidden="true"><em>The proportion of the total
-opportunity for selection that is represented by each episode of
-selection for males and females.</em></figcaption>
-</figure>
+![*The proportion of the total opportunity for selection that is
+represented by each episode of selection for males and
+females.*](selection_analysis_scovelli_files/figure-gfm/generate-figa-opp-selection-1.png)
 
 Matching the previous plots, most of the opportunity for selection in
 *Syngnathus scovelli* females can be attributed to variance in mating
@@ -1588,9 +1567,9 @@ summary(wls_model_mal) #significant
     ## -3.1059 -0.9700  0.0000  0.6263  2.9816 
     ## 
     ## Coefficients:
-    ##                            Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)               1.615e-16  3.560e-02    0.00        1    
-    ## mal_bateman$MatingSuccess 1.000e+00  5.242e-02   19.08   <2e-16 ***
+    ##                             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)               -3.230e-16  3.560e-02    0.00        1    
+    ## mal_bateman$MatingSuccess  1.000e+00  5.242e-02   19.08   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
@@ -1660,18 +1639,12 @@ things:
 
 Let’s visually look at this pattern now:
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/plot-bateman3-1.png"
-alt="Relationship between reproductive success and mating success for male (purple) and female (green) Syngnathus scovelli. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed) for males and females." />
-<figcaption aria-hidden="true"><em>Relationship between reproductive
-success and mating success for male (purple) and female (green)
-<em>Syngnathus scovelli</em>. Reproductive success is shown as relative
-fitness (i.e. number of offspring produced divided by the mean number of
-offspring produced). Bateman’s gradient is shown as the weighted
-least-squares regression line (dashed) for males and
-females.</em></figcaption>
-</figure>
+![*Relationship between reproductive success and mating success for male
+(purple) and female (green) *Syngnathus scovelli*. Reproductive success
+is shown as relative fitness (i.e. number of offspring produced divided
+by the mean number of offspring produced). Bateman’s gradient is shown
+as the weighted least-squares regression line (dashed) for males and
+females.*](selection_analysis_scovelli_files/figure-gfm/plot-bateman3-1.png)
 
 The plot confirms the results from the two models. We can see that there
 is a steep slope for both males and females, however, the two lines are
@@ -1739,17 +1712,13 @@ summary(wls_model_fem2) #significant
     ## Multiple R-squared:  0.7245, Adjusted R-squared:  0.7143 
     ## F-statistic:    71 on 1 and 27 DF,  p-value: 4.884e-09
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/plot-bateman2-1.png"
-alt="Relationship between reproductive success and mating success for female Syngnathus scovelli who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
-<figcaption aria-hidden="true"><em>Relationship between reproductive
-success and mating success for female <em>Syngnathus scovelli</em> who
-achieved at least one mate. Reproductive success is shown as relative
-fitness (i.e. number of offspring produced divided by the mean number of
-offspring produced). Bateman’s gradient is shown as the weighted
-least-squares regression line (dashed).</em></figcaption>
-</figure>
+![*Relationship between reproductive success and mating success for
+female *Syngnathus scovelli* who achieved at least one mate.
+Reproductive success is shown as relative fitness (i.e. number of
+offspring produced divided by the mean number of offspring produced).
+Bateman’s gradient is shown as the weighted least-squares regression
+line
+(dashed).*](selection_analysis_scovelli_files/figure-gfm/plot-bateman2-1.png)
 
 When we exclude the non-mated individuals from the plot and the model,
 we can see the results do not change for females, the slope is still
@@ -1837,18 +1806,14 @@ summary(wls_model_fem3) #significant
     ## Multiple R-squared:  0.6537, Adjusted R-squared:  0.6409 
     ## F-statistic: 50.97 on 1 and 27 DF,  p-value: 1.12e-07
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/plot-bateman-1.png"
-alt="Relationship between reproductive success and mating success for female Syngnathus scovelli who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
-<figcaption aria-hidden="true"><em>Relationship between reproductive
-success and mating success for female <em>Syngnathus scovelli</em> who
-achieved at least one mate. Reproductive success is shown as relative
-fitness (i.e. number of offspring produced divided by the mean number of
-offspring produced). Relative fitness is calculated without the
-individuals who did not mate. Bateman’s gradient is shown as the
-weighted least-squares regression line (dashed).</em></figcaption>
-</figure>
+![*Relationship between reproductive success and mating success for
+female *Syngnathus scovelli* who achieved at least one mate.
+Reproductive success is shown as relative fitness (i.e. number of
+offspring produced divided by the mean number of offspring produced).
+Relative fitness is calculated without the individuals who did not mate.
+Bateman’s gradient is shown as the weighted least-squares regression
+line
+(dashed).*](selection_analysis_scovelli_files/figure-gfm/plot-bateman-1.png)
 
 With this way of excluding the individuals who did not mate, there is
 still a significant increase in relative fitness with each additional
@@ -2078,15 +2043,10 @@ the 95% confidence intervals we can visualize some results:
 
 Average Selection Differentials (95% CI) for Males and Females
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/generate-fig-select-diff-1.png"
-alt="Absolute (left) and standardized (right) selection differentials for male (purple) and female (green) S. fuscus. Error bars represent the 95% confidence intervals around the mean." />
-<figcaption aria-hidden="true"><em>Absolute (left) and standardized
-(right) selection differentials for male (purple) and female (green) S.
-fuscus. Error bars represent the 95% confidence intervals around the
-mean.</em></figcaption>
-</figure>
+![*Absolute (left) and standardized (right) selection differentials for
+male (purple) and female (green) S. fuscus. Error bars represent the 95%
+confidence intervals around the
+mean.*](selection_analysis_scovelli_files/figure-gfm/generate-fig-select-diff-1.png)
 
 We can see from these results that males and females are experiencing
 largely similar selection on snout-vent length except for in the first
@@ -2144,14 +2104,10 @@ develop.
 I am going to plot this relationship only looking into the individuals
 who mated.
 
-<figure>
-<img
-src="selection_analysis_scovelli_files/figure-gfm/surv-v-matings-1.png"
-alt="Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green)." />
-<figcaption aria-hidden="true"><em>Plotting the relationship between the
-proportion of eggs that developed and the number of mates aquired for
-both males (purple) and females (green).</em></figcaption>
-</figure>
+![*Plotting the relationship between the proportion of eggs that
+developed and the number of mates aquired for both males (purple) and
+females
+(green).*](selection_analysis_scovelli_files/figure-gfm/surv-v-matings-1.png)
 
 There may be a correlation for females, let’s investigate further:
 

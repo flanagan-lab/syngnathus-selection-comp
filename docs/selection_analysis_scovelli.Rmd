@@ -23,7 +23,6 @@ library(ggplot2)
 library(cowplot)
 library(fBasics)
 library(pwr)
-library(lme4)
 library(dplyr)
 library(tidyr)
 library(knitr)
@@ -99,13 +98,13 @@ Now, we can see if males and females differ in standard length, torso depth, and
 1. Equal variances between groups (using `var.test()`).
 2. Normal distribution of the data (using `normalTest()`).
 
-To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the standard length of the pipefish prior to running any analyses. This length-adjusted depth will then be used in all consequent analyses.
+To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the snout-vent length of the pipefish prior to running any analyses. This svl-adjusted depth will then be used in all consequent analyses.
 
 ```{r sd-assumption-test}
 
 #Adjust the torso depth
-fem_succSS$depth_adj <- fem_succSS$depth/fem_succSS$length
-mal_succSS$depth_adj <- mal_succSS$depth/mal_succSS$length
+fem_succSS$depth_adj <- fem_succSS$depth/fem_succSS$svl
+mal_succSS$depth_adj <- mal_succSS$depth/mal_succSS$svl
 
 #Testing to see if the variances are equal
 var.test(fem_succSS$length, mal_succSS$length) #not equal
