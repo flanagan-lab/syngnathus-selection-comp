@@ -2536,7 +2536,7 @@ for (trial in unique(fem_succFL$trial_num)) {
 }
 
 #Exporting the data
-#write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
+write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
 ```
 
 ``` r
@@ -2611,6 +2611,8 @@ select_diff_fem$Sex <- "F"
 select_diff_mal$Sex <- "M"
 
 select_diff_all <- rbind(select_diff_fem, select_diff_mal)
+
+write.csv(select_diff_all, "data/floridae_select_diff.csv", row.names = FALSE)
 
 #List the columns of interest
 columns <- c("s1", "s2", "s3", "s123",
