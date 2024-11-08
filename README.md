@@ -18,7 +18,7 @@ The code refers to data that is found in the data/ directory at the top of the r
       - _*_ There will be one male and female .csv file for only two of the three species (`_floridae` and `_fuscus`). _S. scovelli_ does not have a file in this format as the publically accesible dataset already contains information about reproductive fitness and mating success. 
 
 ### Data Availability
-The raw dat files containing XXX are archived for review purposes on XXX.
+The raw data files containing raw genotyping sequences generated from a 3130xl Genetic Analyzer for _Synganthus fuscus_ are archived for review purposes on Zenodo (DOI: 10.5281/zenodo.14053624).
 
 ## Navigating this repository
 The analysis is documented in a series of RMarkdown documents.
@@ -36,4 +36,4 @@ All Rmarkdown documents used for the various analyses are located in the directo
 The directory R/ contains the script `calc_fitness.R` that was used to convert the results from the genetic parentage analysis into overall mating and reproductive success.
 
 ## Contributors
-The contributors to this repository are Coley Tosto and Sarah Flanagan. Please contact XXX with any questions.
+The contributors to this repository are Coley Tosto and Sarah Flanagan. Please contact Coley with any questions at coley.tosto@canterbury.ac.nz.
