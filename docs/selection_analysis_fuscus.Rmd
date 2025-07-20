@@ -731,24 +731,24 @@ ggplot(opp_average,
 We can see that for male and female _S. fuscus_ there is a significant opportunity for selection and opportunity for sexual selection, however, we don't see significant differences between the sexes for either one. There is also not a large difference between the opportunity for selection and the opportunity for sexual selection.
 
 ## Partitioning the Total Opportunity for Selection ($I$)
-Once again for partitioning the opportunity for selection, I am going to calculate selection for the trials individually in males and females and then average across all trials to get the final values and the 95% CIs. For pre-mating processes I am focusing on mating success and then for post-mating processes I am looking at the total number of eggs transferred/received and the proportion of those eggs which developed (showing fertilization success).
+Once again for partitioning the opportunity for selection, I am going to calculate selection for the trials individually in males and females and then average across all trials to get the final values and the 95% CIs. For pre-mating processes I am focusing on mating success and then for post-mating processes I am looking at the total number of eggs transferred/received and the proportion of those eggs which developed (showing fertilization success). See the `selection_analysis_floridae` documents for more details about the equations and variables used.
 
 ```{r opp-select-episodes-females}
 
 #Create a dataframe to store all of the intermediate values of fitness in
-fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFU) + 9,
+fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFU) + 5,
                                       nrow = 0))
 colnames(fem_succ_fitness) <- c(colnames(fem_succFU),
-                                "w1", "w1_squared",
-                                "W2", "W2_bar", "w2",
-                                "W3", "W3_bar", "w3", "i3")
+                                "w1", "W1W2", "w2", "W1W2W3", "w3")
 
 #Create a dataframe to store the final calculations of I in
-opp_selection_episodes_fem <- data.frame(matrix(ncol = 12,
+opp_selection_episodes_fem <- data.frame(matrix(ncol = 16,
                                             nrow = 0))
-colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
-                                          "I_3", "I_3per", "I_12", "I_12per",
-                                          "I", "Iper")
+colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_2", "coi1_2",
+                                          "coi1_2given1", "coi12_2", "coi12_2given1",
+                                          "diff_12", "I_12", "I_3", "coi12_3",
+                                          "coi12_3given2", "coi123_3", "coi123_3given2",
+                                          "diff_123", "I")
 
 for (trial in unique(fem_succFU$trial_num)) {
   
@@ -758,45 +758,54 @@ for (trial in unique(fem_succFU$trial_num)) {
   #Calculate the absolute pre-copulatory fitness (Eq. 14 Arnold & Wade 1984)
   #This is the same as the calculation of I_s
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
-  tmp$w1_squared <- (tmp$w1)^2
+  p <- (1)/(nrow(tmp) - 1)
   
-  I_1 <- var(tmp$w1) #Variance in relative mating success
+  I_1 <- sum(p*((tmp$w1 - 1)^2))
   
-  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
-  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
-                   tmp$totalEggs/tmp$MatingSuccess,
-                   0) #Number of eggs per mate
-  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
-  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
-  
-  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
-  
-  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
-  tmp$W3 <- ifelse(tmp$totalEggs > 0,
-                   tmp$NumDeveloped/tmp$totalEggs,
-                   0) #Proportion of transferred eggs that developed
-  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
-  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
-  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
-  
-  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+  #Post-copulatory selection event 1 (Number of eggs transferred per mate) (Eq. 15 Arnold & Wade 1984)
+  tmp$W1W2 <- tmp$totalEggs/mean(tmp$totalEggs) #Relative num. eggs transferred
+  tmp$w2 <- tmp$W1W2/tmp$w1 #Relative num. eggs transferred PER MATE
+  tmp$w2[is.na(tmp$w2)] <- 0
+  p1 <- tmp$w1/(nrow(tmp) - 1)
 
-  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  I_2 <- sum(p1*((tmp$w2 - 1)^2))
+  
+  #Post-copulatory selection event 2 (Proportion eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W1W2W3 <- tmp$NumDeveloped/mean(tmp$NumDeveloped) #Relative num. eggs developed
+  tmp$w3 <- tmp$W1W2W3/tmp$W1W2 #Relative PROPORTION eggs developed
+  tmp$w3[is.na(tmp$w3)] <- 0
+  p2 <- (tmp$w1*tmp$w2)/(nrow(tmp)-1)
+  
+  I_3 <- sum(p2*((tmp$w3 - 1)^2))
+
+  I_12 <- var(tmp$W1W2)/(mean(tmp$W1W2)^2)
   
   #Total opportunity for selection
-  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  I <- var(tmp$W1W2W3)/(mean(tmp$W1W2W3)^2)
   
-  #Calculating percentages for each selection event
-  I_1per <- (I_1/I)*100
-  I_2per <- (I_2/I)*100
-  I_3per <- (I_3/I)*100
-  I_12per <- (I_12/I)*100
-  Iper <- (I/I)*100
+  ##Calculating the co-variances
+  coi1_2 <- cov(tmp$w1,tmp$w2) ##COI(1, 2) Eq. A1
+  coi1_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) - ((1/(nrow(tmp) - 1))*sum(tmp$w1^2)) ##COI(1, 2|1) Eq. A2
   
-  #Combining all of the selection values (Is) and saving the output
+  coi12_2 <- (1/(nrow(tmp) - 1))*sum(tmp$w1*(tmp$w2^2)) - (1/(nrow(tmp) - 1))*sum(tmp$w2) ##COI(12, 2) Eq. A3
+  coi12_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) ##COI(12, 2|1) Eq. A4
+  
+  diff_12 <- coi12_2given1 - coi12_2 ##Used in Eq. A5 for calculating I_12
+
+  coi12_3 <- sum(p*((tmp$w1*tmp$w2) - 1)*(tmp$w3 - 1)) ##COI(12, 3) Eq. A6
+  coi12_3given2 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2)*(tmp$w3))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) ##COI(12, 3|2) Eq. A9
+  
+  coi123_3 <- sum(p*((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1)) ##COI(123, 3) Eq. A10
+  coi123_3given2 <- sum(p2*(((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1))) ##COI(123, 3|2) Eq. All
+
+  diff_123 <- coi123_3given2 - coi123_3 ##Used in Eq. A12 for calculating I
+  
+
+  #Combining all of the selection values (Is) and covariances (COIs) and saving the output
   trial_num <- trial
-  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper)
+  selection <- cbind(trial_num, I_1, I_2, coi1_2, coi1_2given1, coi12_2, coi12_2given1,
+                     diff_12, I_12, I_3, coi12_3, coi12_3given2, coi123_3, coi123_3given2,
+                     diff_123, I)
   
   opp_selection_episodes_fem <- rbind(opp_selection_episodes_fem, selection)
   
@@ -810,19 +819,19 @@ for (trial in unique(fem_succFU$trial_num)) {
 
 ```{r opp-select-episodes-males}
 #Create a dataframe to store all of the intermediate values of fitness in
-mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFU) + 9,
+mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFU) + 5,
                                       nrow = 0))
 colnames(mal_succ_fitness) <- c(colnames(mal_succFU),
-                                "w1", "w1_squared",
-                                "W2", "W2_bar", "w2",
-                                "W3", "W3_bar", "w3", "i3")
+                                "w1", "W1W2", "w2", "W1W2W3", "w3")
 
 #Create a dataframe to store the final calculations of I in
-opp_selection_episodes_mal <- data.frame(matrix(ncol = 12,
+opp_selection_episodes_mal <- data.frame(matrix(ncol = 16,
                                             nrow = 0))
-colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
-                                          "I_3", "I_3per", "I_12", "I_12per",
-                                          "I", "Iper", "I_s")
+colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_2", "coi1_2",
+                                          "coi1_2given1", "coi12_2", "coi12_2given1",
+                                          "diff_12", "I_12", "I_3", "coi12_3",
+                                          "coi12_3given2", "coi123_3", "coi123_3given2",
+                                          "diff_123", "I")
 
 for (trial in unique(mal_succFU$trial_num)) {
   
@@ -831,45 +840,54 @@ for (trial in unique(mal_succFU$trial_num)) {
   
   #Calculate the absolute pre-copultory fitness (Eq. 14 Arnold & Wade 1984)
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
-  tmp$w1_squared <- (tmp$w1)^2
+  p <- (1)/(nrow(tmp) - 1)
   
-  I_1 <- var(tmp$w1) #Variance in relative mating success
+  I_1 <- sum(p*((tmp$w1 - 1)^2))
   
-  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
-  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
-                   tmp$totalEggs/tmp$MatingSuccess,
-                   0) #Number of eggs per mate
-  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
-  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
-  
-  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  #Post-copulatory selection event 1 (Number of eggs transferred per mate) (Eq. 15 Arnold & Wade 1984)
+  tmp$W1W2 <- tmp$totalEggs/mean(tmp$totalEggs) #Relative num. eggs transferred
+  tmp$w2 <- tmp$W1W2/tmp$w1 #Relative num. eggs transferred PER MATE
+  tmp$w2[is.na(tmp$w2)] <- 0
+  p1 <- tmp$w1/(nrow(tmp) - 1)
+
+  I_2 <- sum(p1*((tmp$w2 - 1)^2))
   
   #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
-  tmp$W3 <- ifelse(tmp$totalEggs > 0,
-                   tmp$NumDeveloped_Calc/tmp$totalEggs,
-                   0) #Proportion of transferred eggs that developed
-  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
-  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
-  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  tmp$W1W2W3 <- tmp$NumDeveloped_Calc/mean(tmp$NumDeveloped_Calc) #Relative num. eggs developed
+  tmp$w3 <- tmp$W1W2W3/tmp$W1W2 #Relative PROPORTION eggs developed
+  tmp$w3[is.na(tmp$w3)] <- 0
+  p2 <- (tmp$w1*tmp$w2)/(nrow(tmp)-1)
   
-  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+  I_3 <- sum(p2*((tmp$w3 - 1)^2))
 
-  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  I_12 <- var(tmp$W1W2)/(mean(tmp$W1W2)^2)
   
   #Total opportunity for selection
-  I <- var(tmp$NumDeveloped_Calc)/(mean(tmp$NumDeveloped_Calc)^2)
-
-  #Calculating percentages for each selection event
-  I_1per <- (I_1/I)*100
-  I_2per <- (I_2/I)*100
-  I_3per <- (I_3/I)*100
-  I_12per <- (I_12/I)*100
-  Iper <- (I/I)*100
+  I <- var(tmp$W1W2W3)/(mean(tmp$W1W2W3)^2)
   
-  #Combining all of the selection values (Is) and saving the output
+  ##Calculating the co-variances
+  coi1_2 <- cov(tmp$w1,tmp$w2) ##COI(1, 2) Eq. A1
+  coi1_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) - ((1/(nrow(tmp) - 1))*sum(tmp$w1^2)) ##COI(1, 2|1) Eq. A2
+  
+  coi12_2 <- (1/(nrow(tmp) - 1))*sum(tmp$w1*(tmp$w2^2)) - (1/(nrow(tmp) - 1))*sum(tmp$w2) ##COI(12, 2) Eq. A3
+  coi12_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) ##COI(12, 2|1) Eq. A4
+  
+  diff_12 <- coi12_2given1 - coi12_2 ##Used in Eq. A5 for calculating I_12
+
+  coi12_3 <- sum(p*((tmp$w1*tmp$w2) - 1)*(tmp$w3 - 1)) ##COI(12, 3) Eq. A6
+  coi12_3given2 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2)*(tmp$w3))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) ##COI(12, 3|2) Eq. A9
+  
+  coi123_3 <- sum(p*((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1)) ##COI(123, 3) Eq. A10
+  coi123_3given2 <- sum(p2*(((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1))) ##COI(123, 3|2) Eq. All
+
+  diff_123 <- coi123_3given2 - coi123_3 ##Used in Eq. A12 for calculating I
+  
+
+  #Combining all of the selection values (Is) and covariances (COIs) and saving the output
   trial_num <- trial
-  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper)
+  selection <- cbind(trial_num, I_1, I_2, coi1_2, coi1_2given1, coi12_2, coi12_2given1,
+                     diff_12, I_12, I_3, coi12_3, coi12_3given2, coi123_3, coi123_3given2,
+                     diff_123, I)
   
   opp_selection_episodes_mal <- rbind(opp_selection_episodes_mal, selection)
   
@@ -893,7 +911,9 @@ opp_selection_episodes_all <- rbind(opp_selection_episodes_fem, opp_selection_ep
 #write.csv(opp_selection_episodes_all, "data/fuscus_opp_selection.csv", row.names = FALSE)
 
 #List the columns of interest
-columns <- c("I_1", "I_2", "I_12", "I_3","I")
+columns <- c("I_1", "I_2", "coi1_2", "coi1_2given1", "coi12_2", "coi12_2given1", "diff_12",
+             "I_12", "I_3", "coi12_3", "coi12_3given2", "coi123_3", "coi123_3given2", 
+             "diff_123", "I")
 
 #Create a dataframe to store the final values in
 opp_episodes_average <- data.frame(matrix(ncol = 4,

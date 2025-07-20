@@ -3,81 +3,49 @@ Selection pressures in *Syngnathus fuscus*
 
 
 
-- <a href="#calculating-the-degree-of-sexual-dimorphism"
-  id="toc-calculating-the-degree-of-sexual-dimorphism">Calculating the
-  degree of sexual dimorphism</a>
-  - <a href="#checking-the-assumptions-for-a-pairwise-comparison"
-    id="toc-checking-the-assumptions-for-a-pairwise-comparison">Checking the
-    assumptions for a pairwise comparison</a>
-  - <a href="#investigate-distributions-and-run-the-tests"
-    id="toc-investigate-distributions-and-run-the-tests">Investigate
-    distributions and run the tests</a>
-- <a
-  href="#calculating-mating-and-reproductive-success-for-individuals-who-mated"
-  id="toc-calculating-mating-and-reproductive-success-for-individuals-who-mated">Calculating
-  mating and reproductive success for individuals who mated</a>
-- <a href="#summary-statistics-for-successfully-mated-individuals"
-  id="toc-summary-statistics-for-successfully-mated-individuals">Summary
-  statistics for successfully mated individuals</a>
-  - <a href="#males" id="toc-males">Males</a>
-  - <a href="#females" id="toc-females">Females</a>
-- <a href="#differences-between-mated-individuals-and-unmated-individuals"
-  id="toc-differences-between-mated-individuals-and-unmated-individuals">Differences
-  between mated individuals and unmated individuals</a>
-  - <a href="#males-1" id="toc-males-1">Males</a>
-    - <a href="#visual-comparison" id="toc-visual-comparison">Visual
-      Comparison</a>
-    - <a href="#testing-the-difference"
-      id="toc-testing-the-difference">Testing the difference</a>
-  - <a href="#females-1" id="toc-females-1">Females</a>
-    - <a href="#visual-comparison-1" id="toc-visual-comparison-1">Visual
-      Comparison</a>
-    - <a href="#testing-the-difference-1"
-      id="toc-testing-the-difference-1">Testing the difference</a>
-- <a
-  href="#looking-into-the-opportunity-for-selection-in-males-and-females"
-  id="toc-looking-into-the-opportunity-for-selection-in-males-and-females">Looking
-  into the Opportunity for Selection in Males and Females</a>
-  - <a
-    href="#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s"
-    id="toc-generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s">Generating
-    the total opportunity for selection (<span
-    class="math inline"><em>I</em></span>) and the opportunity for sexual
-    selection (<span
-    class="math inline"><em>I</em><sub><em>S</em></sub></span>)</a>
-  - <a href="#partitioning-the-total-opportunity-for-selection-i"
-    id="toc-partitioning-the-total-opportunity-for-selection-i">Partitioning
-    the Total Opportunity for Selection (<span
-    class="math inline"><em>I</em></span>)</a>
-- <a
-  href="#mate-success-versus-reproductive-success-bateman-gradient-beta_fu"
-  id="toc-mate-success-versus-reproductive-success-bateman-gradient-beta_fu">Mate
-  success versus Reproductive success (Bateman Gradient, <span
-  class="math inline"><em>β</em><sub><em>F</em><em>U</em></sub></span>)</a>
-  - <a href="#omitting-females-with-high-mating"
-    id="toc-omitting-females-with-high-mating">Omitting females with high
-    mating</a>
-  - <a href="#investigating-the-impact-of-zeros-on-the-bateman-gradient"
-    id="toc-investigating-the-impact-of-zeros-on-the-bateman-gradient">Investigating
-    the impact of “zeros” on the Bateman Gradient</a>
-    - <a href="#removing-the-zeros-from-the-plot"
-      id="toc-removing-the-zeros-from-the-plot">Removing the zeros from the
-      plot</a>
-    - <a href="#removing-the-zeros-from-the-calculation-of-relative-fitness"
-      id="toc-removing-the-zeros-from-the-calculation-of-relative-fitness">Removing
-      the zeros from the calculation of relative fitness</a>
-- <a
-  href="#investing-selection-differentials-on-snout-vent-length-s-and-s"
-  id="toc-investing-selection-differentials-on-snout-vent-length-s-and-s">Investing
-  selection differentials on snout-vent-length (<span
-  class="math inline"><em>s</em></span> and <span
-  class="math inline"><em>s</em>′</span>)</a>
-  - <a href="#looking-into-the-maximum-sexual-selection-differential"
-    id="toc-looking-into-the-maximum-sexual-selection-differential">Looking
-    into the Maximum Sexual Selection Differential</a>
-- <a href="#visualizing-post-copulatory-selection"
-  id="toc-visualizing-post-copulatory-selection">Visualizing
-  post-copulatory selection</a>
+- [Calculating the degree of sexual
+  dimorphism](#calculating-the-degree-of-sexual-dimorphism)
+  - [Checking the assumptions for a pairwise
+    comparison](#checking-the-assumptions-for-a-pairwise-comparison)
+  - [Investigate distributions and run the
+    tests](#investigate-distributions-and-run-the-tests)
+- [Calculating mating and reproductive success for individuals who
+  mated](#calculating-mating-and-reproductive-success-for-individuals-who-mated)
+- [Summary statistics for successfully mated
+  individuals](#summary-statistics-for-successfully-mated-individuals)
+  - [Males](#males)
+  - [Females](#females)
+- [Differences between mated individuals and unmated
+  individuals](#differences-between-mated-individuals-and-unmated-individuals)
+  - [Males](#males-1)
+    - [Visual Comparison](#visual-comparison)
+    - [Testing the difference](#testing-the-difference)
+  - [Females](#females-1)
+    - [Visual Comparison](#visual-comparison-1)
+    - [Testing the difference](#testing-the-difference-1)
+- [Looking into the Opportunity for Selection in Males and
+  Females](#looking-into-the-opportunity-for-selection-in-males-and-females)
+  - [Generating the total opportunity for selection ($I$) and the
+    opportunity for sexual selection
+    ($I_S$)](#generating-the-total-opportunity-for-selection-i-and-the-opportunity-for-sexual-selection-i_s)
+  - [Partitioning the Total Opportunity for Selection
+    ($I$)](#partitioning-the-total-opportunity-for-selection-i)
+- [Mate success versus Reproductive success (Bateman Gradient,
+  $\beta_{FU}$)](#mate-success-versus-reproductive-success-bateman-gradient-beta_fu)
+  - [Omitting females with high
+    mating](#omitting-females-with-high-mating)
+  - [Investigating the impact of “zeros” on the Bateman
+    Gradient](#investigating-the-impact-of-zeros-on-the-bateman-gradient)
+    - [Removing the zeros from the
+      plot](#removing-the-zeros-from-the-plot)
+    - [Removing the zeros from the calculation of relative
+      fitness](#removing-the-zeros-from-the-calculation-of-relative-fitness)
+- [Investing selection differentials on snout-vent-length ($s$ and
+  $s'$)](#investing-selection-differentials-on-snout-vent-length-s-and-s)
+  - [Looking into the Maximum Sexual Selection
+    Differential](#looking-into-the-maximum-sexual-selection-differential)
+- [Visualizing post-copulatory
+  selection](#visualizing-post-copulatory-selection)
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
@@ -297,8 +265,13 @@ normalTest(mal_mesoFU$svl, method = "da") #NORMAL
 I will run a Wilcoxon test for standard length, a two sample t-test for
 snout-vent length, and a Wilcoxon test for torso depth (adjusted).
 
-![*Histograms of male and female pipefish body
-sizes.*](selection_analysis_fuscus_files/figure-gfm/histogram_sizes-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/histogram_sizes-1.png"
+alt="Histograms of male and female pipefish body sizes." />
+<figcaption aria-hidden="true"><em>Histograms of male and female
+pipefish body sizes.</em></figcaption>
+</figure>
 
 ``` r
 #Running the appropriate test
@@ -596,9 +569,13 @@ who mated there is still a wide range in the brood size. I want to see
 what relationship there is between brood pouch size (in terms of both
 total area and length) and brood size (total number of embryos).
 
-![*Scatterplot of the relationship between brood pouch size metrics and
-the number of embryos a male
-had.*](selection_analysis_fuscus_files/figure-gfm/em-v-bp-1.png)
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/em-v-bp-1.png"
+alt="Scatterplot of the relationship between brood pouch size metrics and the number of embryos a male had." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between brood pouch size metrics and the number of embryos a male
+had.</em></figcaption>
+</figure>
 
 There may be some correlation happening here, but it doesn’t look
 particularly strong. Let’s run some correlations tests to see what they
@@ -635,9 +612,13 @@ length.
 Let’s see if this changes if we just look at the overall size of the
 male
 
-![*Scatterplot of the relationship between standard length (mm) and the
-number of embryos a male
-had.*](selection_analysis_fuscus_files/figure-gfm/em-v-sl-1.png)
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/em-v-sl-1.png"
+alt="Scatterplot of the relationship between standard length (mm) and the number of embryos a male had." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between standard length (mm) and the number of embryos a male
+had.</em></figcaption>
+</figure>
 
     ## 
     ##  Pearson's product-moment correlation
@@ -693,9 +674,13 @@ number of eggs and dividing it by the number of mates.
 
     ## [1] 18.6399
 
-![Scatterplot of the relationship between female size metrics and the
-number of eggs
-transferred.](selection_analysis_fuscus_files/figure-gfm/em-v-fem-size-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/em-v-fem-size-1.png"
+alt="Scatterplot of the relationship between female size metrics and the number of eggs transferred." />
+<figcaption aria-hidden="true">Scatterplot of the relationship between
+female size metrics and the number of eggs transferred.</figcaption>
+</figure>
 
 There also appears to be a correlation between female body size and the
 number of eggs transferred, especially in terms of depth. Let’s run some
@@ -755,10 +740,14 @@ above.
 Before conducting any analyses, let’s see if we can visually detect any
 differences between males who mated and unmated individuals.
 
-![*Six different morphometrics compared between males who sucessfully
-mated versus those that didn’t. Orange represents unmated and blue
-represents mated
-males.*](selection_analysis_fuscus_files/figure-gfm/mat-status-morph-mal-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mat-status-morph-mal-1.png"
+alt="Six different morphometrics compared between males who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated males." />
+<figcaption aria-hidden="true"><em>Six different morphometrics compared
+between males who sucessfully mated versus those that didn’t. Orange
+represents unmated and blue represents mated males.</em></figcaption>
+</figure>
 
 I don’t notice many differences, however, it appears that unmated males
 are slightly larger in terms of standard length a somewhat surprising
@@ -991,9 +980,14 @@ Let’s explore this a bit more and overlay the distribution of all males
 (mated and unmated) with the males who did mate and see how it varies
 for the brood pouch.
 
-![*Overlay of the size range of males who mated on top of the size range
-of all males for length of brood
-pouch.*](selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-1.png"
+alt="Overlay of the size range of males who mated on top of the size range of all males for length of brood pouch." />
+<figcaption aria-hidden="true"><em>Overlay of the size range of males
+who mated on top of the size range of all males for length of brood
+pouch.</em></figcaption>
+</figure>
 
 ## Females
 
@@ -1003,10 +997,14 @@ those who were unsuccessful.
 
 ### Visual Comparison
 
-![*Four different morphometrics compared between females who sucessfully
-mated versus those that didn’t. Orange represents unmated and blue
-represents mated
-females.*](selection_analysis_fuscus_files/figure-gfm/mat-status-morph-fem-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mat-status-morph-fem-1.png"
+alt="Four different morphometrics compared between females who sucessfully mated versus those that didn’t. Orange represents unmated and blue represents mated females." />
+<figcaption aria-hidden="true"><em>Four different morphometrics compared
+between females who sucessfully mated versus those that didn’t. Orange
+represents unmated and blue represents mated females.</em></figcaption>
+</figure>
 
 I don’t notice many differences, however, it appears that mated females
 are larger than unmated females.
@@ -1171,9 +1169,13 @@ Let’s explore this a bit more and overlay the distribution of torso
 depth in all females (mated and unmated) with the torso depth of females
 who did mate and see how it varies.
 
-![*Overlay of the torso depth of females who mated on top of the size
-range of all
-females.*](selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-depth-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/mated-unmated-hist-depth-1.png"
+alt="Overlay of the torso depth of females who mated on top of the size range of all females." />
+<figcaption aria-hidden="true"><em>Overlay of the torso depth of females
+who mated on top of the size range of all females.</em></figcaption>
+</figure>
 
 We can see that the 5 deepest females all secured a mate, whereas the
 skinniest females did not.
@@ -1317,10 +1319,15 @@ Let’s now explore some results:
 
 Average Opportunity of Selection (95% CI) for Males and Females
 
-![*Average opportunity for selection and opportunity for sexual
-selection for male (purple) and female (green) S. fuscus. Errorbars
-represent the 95% confidence intervals around the
-mean*](selection_analysis_fuscus_files/figure-gfm/opp-selection-figure-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/opp-selection-figure-1.png"
+alt="Average opportunity for selection and opportunity for sexual selection for male (purple) and female (green) S. fuscus. Errorbars represent the 95% confidence intervals around the mean" />
+<figcaption aria-hidden="true"><em>Average opportunity for selection and
+opportunity for sexual selection for male (purple) and female (green) S.
+fuscus. Errorbars represent the 95% confidence intervals around the
+mean</em></figcaption>
+</figure>
 
 We can see that for male and female *S. fuscus* there is a significant
 opportunity for selection and opportunity for sexual selection, however,
@@ -1336,23 +1343,24 @@ then average across all trials to get the final values and the 95% CIs.
 For pre-mating processes I am focusing on mating success and then for
 post-mating processes I am looking at the total number of eggs
 transferred/received and the proportion of those eggs which developed
-(showing fertilization success).
+(showing fertilization success). See the `selection_analysis_floridae`
+documents for more details about the equations and variables used.
 
 ``` r
 #Create a dataframe to store all of the intermediate values of fitness in
-fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFU) + 9,
+fem_succ_fitness <- data.frame(matrix(ncol = ncol(fem_succFU) + 5,
                                       nrow = 0))
 colnames(fem_succ_fitness) <- c(colnames(fem_succFU),
-                                "w1", "w1_squared",
-                                "W2", "W2_bar", "w2",
-                                "W3", "W3_bar", "w3", "i3")
+                                "w1", "W1W2", "w2", "W1W2W3", "w3")
 
 #Create a dataframe to store the final calculations of I in
-opp_selection_episodes_fem <- data.frame(matrix(ncol = 12,
+opp_selection_episodes_fem <- data.frame(matrix(ncol = 16,
                                             nrow = 0))
-colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
-                                          "I_3", "I_3per", "I_12", "I_12per",
-                                          "I", "Iper")
+colnames(opp_selection_episodes_fem) <- c("trial_num", "I_1", "I_2", "coi1_2",
+                                          "coi1_2given1", "coi12_2", "coi12_2given1",
+                                          "diff_12", "I_12", "I_3", "coi12_3",
+                                          "coi12_3given2", "coi123_3", "coi123_3given2",
+                                          "diff_123", "I")
 
 for (trial in unique(fem_succFU$trial_num)) {
   
@@ -1362,45 +1370,54 @@ for (trial in unique(fem_succFU$trial_num)) {
   #Calculate the absolute pre-copulatory fitness (Eq. 14 Arnold & Wade 1984)
   #This is the same as the calculation of I_s
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
-  tmp$w1_squared <- (tmp$w1)^2
+  p <- (1)/(nrow(tmp) - 1)
   
-  I_1 <- var(tmp$w1) #Variance in relative mating success
+  I_1 <- sum(p*((tmp$w1 - 1)^2))
   
-  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
-  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
-                   tmp$totalEggs/tmp$MatingSuccess,
-                   0) #Number of eggs per mate
-  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
-  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
-  
-  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
-  
-  #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
-  tmp$W3 <- ifelse(tmp$totalEggs > 0,
-                   tmp$NumDeveloped/tmp$totalEggs,
-                   0) #Proportion of transferred eggs that developed
-  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
-  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
-  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
-  
-  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+  #Post-copulatory selection event 1 (Number of eggs transferred per mate) (Eq. 15 Arnold & Wade 1984)
+  tmp$W1W2 <- tmp$totalEggs/mean(tmp$totalEggs) #Relative num. eggs transferred
+  tmp$w2 <- tmp$W1W2/tmp$w1 #Relative num. eggs transferred PER MATE
+  tmp$w2[is.na(tmp$w2)] <- 0
+  p1 <- tmp$w1/(nrow(tmp) - 1)
 
-  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  I_2 <- sum(p1*((tmp$w2 - 1)^2))
+  
+  #Post-copulatory selection event 2 (Proportion eggs developed) (Eq. 16 Arnold & Wade 1984)
+  tmp$W1W2W3 <- tmp$NumDeveloped/mean(tmp$NumDeveloped) #Relative num. eggs developed
+  tmp$w3 <- tmp$W1W2W3/tmp$W1W2 #Relative PROPORTION eggs developed
+  tmp$w3[is.na(tmp$w3)] <- 0
+  p2 <- (tmp$w1*tmp$w2)/(nrow(tmp)-1)
+  
+  I_3 <- sum(p2*((tmp$w3 - 1)^2))
+
+  I_12 <- var(tmp$W1W2)/(mean(tmp$W1W2)^2)
   
   #Total opportunity for selection
-  I <- var(tmp$NumDeveloped)/(mean(tmp$NumDeveloped)^2)
+  I <- var(tmp$W1W2W3)/(mean(tmp$W1W2W3)^2)
   
-  #Calculating percentages for each selection event
-  I_1per <- (I_1/I)*100
-  I_2per <- (I_2/I)*100
-  I_3per <- (I_3/I)*100
-  I_12per <- (I_12/I)*100
-  Iper <- (I/I)*100
+  ##Calculating the co-variances
+  coi1_2 <- cov(tmp$w1,tmp$w2) ##COI(1, 2) Eq. A1
+  coi1_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) - ((1/(nrow(tmp) - 1))*sum(tmp$w1^2)) ##COI(1, 2|1) Eq. A2
   
-  #Combining all of the selection values (Is) and saving the output
+  coi12_2 <- (1/(nrow(tmp) - 1))*sum(tmp$w1*(tmp$w2^2)) - (1/(nrow(tmp) - 1))*sum(tmp$w2) ##COI(12, 2) Eq. A3
+  coi12_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) ##COI(12, 2|1) Eq. A4
+  
+  diff_12 <- coi12_2given1 - coi12_2 ##Used in Eq. A5 for calculating I_12
+
+  coi12_3 <- sum(p*((tmp$w1*tmp$w2) - 1)*(tmp$w3 - 1)) ##COI(12, 3) Eq. A6
+  coi12_3given2 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2)*(tmp$w3))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) ##COI(12, 3|2) Eq. A9
+  
+  coi123_3 <- sum(p*((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1)) ##COI(123, 3) Eq. A10
+  coi123_3given2 <- sum(p2*(((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1))) ##COI(123, 3|2) Eq. All
+
+  diff_123 <- coi123_3given2 - coi123_3 ##Used in Eq. A12 for calculating I
+  
+
+  #Combining all of the selection values (Is) and covariances (COIs) and saving the output
   trial_num <- trial
-  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper)
+  selection <- cbind(trial_num, I_1, I_2, coi1_2, coi1_2given1, coi12_2, coi12_2given1,
+                     diff_12, I_12, I_3, coi12_3, coi12_3given2, coi123_3, coi123_3given2,
+                     diff_123, I)
   
   opp_selection_episodes_fem <- rbind(opp_selection_episodes_fem, selection)
   
@@ -1414,19 +1431,19 @@ for (trial in unique(fem_succFU$trial_num)) {
 
 ``` r
 #Create a dataframe to store all of the intermediate values of fitness in
-mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFU) + 9,
+mal_succ_fitness <- data.frame(matrix(ncol = ncol(mal_succFU) + 5,
                                       nrow = 0))
 colnames(mal_succ_fitness) <- c(colnames(mal_succFU),
-                                "w1", "w1_squared",
-                                "W2", "W2_bar", "w2",
-                                "W3", "W3_bar", "w3", "i3")
+                                "w1", "W1W2", "w2", "W1W2W3", "w3")
 
 #Create a dataframe to store the final calculations of I in
-opp_selection_episodes_mal <- data.frame(matrix(ncol = 12,
+opp_selection_episodes_mal <- data.frame(matrix(ncol = 16,
                                             nrow = 0))
-colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_1per", "I_2", "I_2per", 
-                                          "I_3", "I_3per", "I_12", "I_12per",
-                                          "I", "Iper", "I_s")
+colnames(opp_selection_episodes_mal) <- c("trial_num", "I_1", "I_2", "coi1_2",
+                                          "coi1_2given1", "coi12_2", "coi12_2given1",
+                                          "diff_12", "I_12", "I_3", "coi12_3",
+                                          "coi12_3given2", "coi123_3", "coi123_3given2",
+                                          "diff_123", "I")
 
 for (trial in unique(mal_succFU$trial_num)) {
   
@@ -1435,45 +1452,54 @@ for (trial in unique(mal_succFU$trial_num)) {
   
   #Calculate the absolute pre-copultory fitness (Eq. 14 Arnold & Wade 1984)
   tmp$w1 <- tmp$MatingSuccess/mean(tmp$MatingSuccess) #Relative mating success
-  tmp$w1_squared <- (tmp$w1)^2
+  p <- (1)/(nrow(tmp) - 1)
   
-  I_1 <- var(tmp$w1) #Variance in relative mating success
+  I_1 <- sum(p*((tmp$w1 - 1)^2))
   
-  #Post-copulatory selection event 1 (Number of eggs transferred) (Eq. 15 Arnold & Wade 1984)
-  tmp$W2 <- ifelse(tmp$MatingSuccess > 0,
-                   tmp$totalEggs/tmp$MatingSuccess,
-                   0) #Number of eggs per mate
-  tmp$W2_bar <- tmp$W2 * (tmp$w1/nrow(tmp)) #Number of eggs per mate adjusted by the # of individuals with fitness W
-  tmp$w2 <- tmp$W2/sum(tmp$W2_bar)
-  
-  I_2 <- (sum((tmp$w1 * (tmp$w2)^2))/nrow(tmp) - 1) * nrow(tmp)/(nrow(tmp) - 1)
+  #Post-copulatory selection event 1 (Number of eggs transferred per mate) (Eq. 15 Arnold & Wade 1984)
+  tmp$W1W2 <- tmp$totalEggs/mean(tmp$totalEggs) #Relative num. eggs transferred
+  tmp$w2 <- tmp$W1W2/tmp$w1 #Relative num. eggs transferred PER MATE
+  tmp$w2[is.na(tmp$w2)] <- 0
+  p1 <- tmp$w1/(nrow(tmp) - 1)
+
+  I_2 <- sum(p1*((tmp$w2 - 1)^2))
   
   #Post-copulatory selection event 2 (Number of eggs developed) (Eq. 16 Arnold & Wade 1984)
-  tmp$W3 <- ifelse(tmp$totalEggs > 0,
-                   tmp$NumDeveloped_Calc/tmp$totalEggs,
-                   0) #Proportion of transferred eggs that developed
-  tmp$W3_bar <- tmp$W3 * ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) #Prop. of eggs developed adjusted by the # of individuals with fitness W
-  tmp$w3 <- tmp$W3/sum(tmp$W3_bar)
-  tmp$i3 <- ((tmp$totalEggs/mean(tmp$totalEggs))/nrow(tmp)) * ((tmp$w3 - 1)^2)
+  tmp$W1W2W3 <- tmp$NumDeveloped_Calc/mean(tmp$NumDeveloped_Calc) #Relative num. eggs developed
+  tmp$w3 <- tmp$W1W2W3/tmp$W1W2 #Relative PROPORTION eggs developed
+  tmp$w3[is.na(tmp$w3)] <- 0
+  p2 <- (tmp$w1*tmp$w2)/(nrow(tmp)-1)
   
-  I_3 <- sum(tmp$i3) * nrow(tmp)/(nrow(tmp) - 1)
+  I_3 <- sum(p2*((tmp$w3 - 1)^2))
 
-  I_12 <- var(tmp$totalEggs)/(mean(tmp$totalEggs)^2)
+  I_12 <- var(tmp$W1W2)/(mean(tmp$W1W2)^2)
   
   #Total opportunity for selection
-  I <- var(tmp$NumDeveloped_Calc)/(mean(tmp$NumDeveloped_Calc)^2)
-
-  #Calculating percentages for each selection event
-  I_1per <- (I_1/I)*100
-  I_2per <- (I_2/I)*100
-  I_3per <- (I_3/I)*100
-  I_12per <- (I_12/I)*100
-  Iper <- (I/I)*100
+  I <- var(tmp$W1W2W3)/(mean(tmp$W1W2W3)^2)
   
-  #Combining all of the selection values (Is) and saving the output
+  ##Calculating the co-variances
+  coi1_2 <- cov(tmp$w1,tmp$w2) ##COI(1, 2) Eq. A1
+  coi1_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) - ((1/(nrow(tmp) - 1))*sum(tmp$w1^2)) ##COI(1, 2|1) Eq. A2
+  
+  coi12_2 <- (1/(nrow(tmp) - 1))*sum(tmp$w1*(tmp$w2^2)) - (1/(nrow(tmp) - 1))*sum(tmp$w2) ##COI(12, 2) Eq. A3
+  coi12_2given1 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*tmp$w2)) ##COI(12, 2|1) Eq. A4
+  
+  diff_12 <- coi12_2given1 - coi12_2 ##Used in Eq. A5 for calculating I_12
+
+  coi12_3 <- sum(p*((tmp$w1*tmp$w2) - 1)*(tmp$w3 - 1)) ##COI(12, 3) Eq. A6
+  coi12_3given2 <- ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2)*(tmp$w3))) - ((1/(nrow(tmp) - 1))*sum((tmp$w1^2)*(tmp$w2^2))) ##COI(12, 3|2) Eq. A9
+  
+  coi123_3 <- sum(p*((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1)) ##COI(123, 3) Eq. A10
+  coi123_3given2 <- sum(p2*(((tmp$w1*tmp$w2*tmp$w3) - 1)*(tmp$w3 - 1))) ##COI(123, 3|2) Eq. All
+
+  diff_123 <- coi123_3given2 - coi123_3 ##Used in Eq. A12 for calculating I
+  
+
+  #Combining all of the selection values (Is) and covariances (COIs) and saving the output
   trial_num <- trial
-  selection <- cbind(trial_num, I_1, I_1per, I_2, I_2per, I_3, I_3per,
-                     I_12, I_12per, I, Iper)
+  selection <- cbind(trial_num, I_1, I_2, coi1_2, coi1_2given1, coi12_2, coi12_2given1,
+                     diff_12, I_12, I_3, coi12_3, coi12_3given2, coi123_3, coi123_3given2,
+                     diff_123, I)
   
   opp_selection_episodes_mal <- rbind(opp_selection_episodes_mal, selection)
   
@@ -1497,7 +1523,9 @@ opp_selection_episodes_all <- rbind(opp_selection_episodes_fem, opp_selection_ep
 #write.csv(opp_selection_episodes_all, "data/fuscus_opp_selection.csv", row.names = FALSE)
 
 #List the columns of interest
-columns <- c("I_1", "I_2", "I_12", "I_3","I")
+columns <- c("I_1", "I_2", "coi1_2", "coi1_2given1", "coi12_2", "coi12_2given1", "diff_12",
+             "I_12", "I_3", "coi12_3", "coi12_3given2", "coi123_3", "coi123_3given2", 
+             "diff_123", "I")
 
 #Create a dataframe to store the final values in
 opp_episodes_average <- data.frame(matrix(ncol = 4,
@@ -1545,20 +1573,35 @@ for (j in 1:length(columns)) {
 
 Let’s now explore some results:
 
-| Episode_sel | F                   | M                   |
-|:------------|:--------------------|:--------------------|
-| I_1         | 4.217 (2.89, 5.54)  | 3.919 (2.71, 5.13)  |
-| I_2         | 0.082 (-0.06, 0.22) | 0.118 (-0.02, 0.26) |
-| I_12        | 4.497 (3.27, 5.72)  | 4.223 (2.98, 5.47)  |
-| I_3         | 0.001 (0, 0)        | 0.003 (0, 0.01)     |
-| I           | 4.512 (3.3, 5.73)   | 4.269 (3.04, 5.5)   |
+| Episode_sel    | F                     | M                     |
+|:---------------|:----------------------|:----------------------|
+| I_1            | 4.217 (2.89, 5.54)    | 3.919 (2.71, 5.13)    |
+| I_2            | 0.082 (-0.06, 0.22)   | 0.118 (-0.02, 0.26)   |
+| coi1_2         | 0.886 (0.8, 0.97)     | 0.866 (0.78, 0.95)    |
+| coi1_2given1   | 0.024 (-0.03, 0.08)   | -0.046 (-0.15, 0.06)  |
+| coi12_2        | 0.968 (0.83, 1.1)     | 0.983 (0.84, 1.12)    |
+| coi12_2given1  | 0.256 (-0.16, 0.68)   | 0.35 (-0.19, 0.88)    |
+| diff_12        | -0.712 (-1.03, -0.39) | -0.634 (-1.05, -0.21) |
+| I_12           | 4.497 (3.27, 5.72)    | 4.223 (2.98, 5.47)    |
+| I_3            | 0.001 (0, 0)          | 0.003 (0, 0.01)       |
+| coi12_3        | 0.885 (0.8, 0.97)     | 0.874 (0.79, 0.95)    |
+| coi12_3given2  | 0.007 (0, 0.02)       | 0.02 (-0.02, 0.06)    |
+| coi123_3       | 0.885 (0.8, 0.97)     | 0.877 (0.8, 0.96)     |
+| coi123_3given2 | 0.008 (0, 0.02)       | 0.026 (-0.02, 0.08)   |
+| diff_123       | -0.877 (-0.97, -0.79) | -0.851 (-0.95, -0.75) |
+| I              | 4.512 (3.3, 5.73)     | 4.269 (3.04, 5.5)     |
 
 Average Episode of Selection (95% CI) for Males and Females
 
-![*Average opportunity for selection for the different episodes for male
-(purple) and female (green) S. fuscus. Errorbars represent the 95%
-confidence intervals around the
-mean*](selection_analysis_fuscus_files/figure-gfm/opp-select-episodes-figure-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/opp-select-episodes-figure-1.png"
+alt="Average opportunity for selection for the different episodes for male (purple) and female (green) S. fuscus. Errorbars represent the 95% confidence intervals around the mean" />
+<figcaption aria-hidden="true"><em>Average opportunity for selection for
+the different episodes for male (purple) and female (green) S. fuscus.
+Errorbars represent the 95% confidence intervals around the
+mean</em></figcaption>
+</figure>
 
 From the table and the plot we can see that once again there are no
 significant differences in the selection between males and females.
@@ -1605,9 +1648,14 @@ for (sex in sexes) {
   }
 ```
 
-![*The proportion of the total opportunity for selection that is
-represented by each episode of selection for males and
-females.*](selection_analysis_fuscus_files/figure-gfm/generate-figa-opp-selection-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/generate-figa-opp-selection-1.png"
+alt="The proportion of the total opportunity for selection that is represented by each episode of selection for males and females." />
+<figcaption aria-hidden="true"><em>The proportion of the total
+opportunity for selection that is represented by each episode of
+selection for males and females.</em></figcaption>
+</figure>
 
 Matching the previous plots, most of the opportunity for selection in
 *Syngnathus fuscus* males and females can be attributed to variance in
@@ -1810,12 +1858,17 @@ things:
 
 Let’s visually look at this pattern now:
 
-![*Relationship between reproductive success and mating success for male
-(purple) and female (green) *Syngnathus fuscus*. Reproductive success is
-shown as relative fitness (i.e. number of offspring produced divided by
-the mean number of offspring produced). Bateman’s gradient is shown as
-the weighted least-squares regression line (dashed) for males and
-females.*](selection_analysis_fuscus_files/figure-gfm/plot-bateman-1.png)
+<figure>
+<img src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-1.png"
+alt="Relationship between reproductive success and mating success for male (purple) and female (green) Syngnathus fuscus. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed) for males and females." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for male (purple) and female (green)
+<em>Syngnathus fuscus</em>. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Bateman’s gradient is shown as the weighted
+least-squares regression line (dashed) for males and
+females.</em></figcaption>
+</figure>
 
 The plot confirms the results from the two models. We can see that there
 is a steep slope for both males and females, however, the two lines are
@@ -1949,12 +2002,17 @@ summary(wls_model_mal2) #significant
     ## Multiple R-squared:  0.6301, Adjusted R-squared:  0.6095 
     ## F-statistic: 30.66 on 1 and 18 DF,  p-value: 2.95e-05
 
-![*Relationship between reproductive success and mating success for
-female *Syngnathus fuscus* who achieved at least one mate. Reproductive
-success is shown as relative fitness (i.e. number of offspring produced
-divided by the mean number of offspring produced). Bateman’s gradient is
-shown as the weighted least-squares regression line
-(dashed).*](selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero1-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero1-1.png"
+alt="Relationship between reproductive success and mating success for female Syngnathus fuscus who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female <em>Syngnathus fuscus</em> who
+achieved at least one mate. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Bateman’s gradient is shown as the weighted
+least-squares regression line (dashed).</em></figcaption>
+</figure>
 
 When we exclude the non-mated individuals from the plot and the model,
 we can see the results do not change for males or females as the slope
@@ -2098,13 +2156,18 @@ summary(wls_model_mal3) #not significant
     ## Multiple R-squared:  0.0155, Adjusted R-squared:  -0.03919 
     ## F-statistic: 0.2834 on 1 and 18 DF,  p-value: 0.601
 
-![*Relationship between reproductive success and mating success for
-female *Syngnathus fuscus* who achieved at least one mate. Reproductive
-success is shown as relative fitness (i.e. number of offspring produced
-divided by the mean number of offspring produced). Relative fitness is
-calculated without the individuals who did not mate. Bateman’s gradient
-is shown as the weighted least-squares regression line
-(dashed).*](selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero2-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/plot-bateman-nozero2-1.png"
+alt="Relationship between reproductive success and mating success for female Syngnathus fuscus who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+<figcaption aria-hidden="true"><em>Relationship between reproductive
+success and mating success for female <em>Syngnathus fuscus</em> who
+achieved at least one mate. Reproductive success is shown as relative
+fitness (i.e. number of offspring produced divided by the mean number of
+offspring produced). Relative fitness is calculated without the
+individuals who did not mate. Bateman’s gradient is shown as the
+weighted least-squares regression line (dashed).</em></figcaption>
+</figure>
 
 With this way of excluding the individuals who did not mate, there is
 still a significant increase in relative fitness with each additional
@@ -2333,10 +2396,15 @@ the 95% confidence intervals we can visualize some results:
 
 Average Selection Differentials (95% CI) for Males and Females
 
-![*Absolute (left) and standardized (right) selection differentials for
-male (purple) and female (green) S. fuscus. Error bars represent the 95%
-confidence intervals around the
-mean.*](selection_analysis_fuscus_files/figure-gfm/generate-fig-select-diff-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/generate-fig-select-diff-1.png"
+alt="Absolute (left) and standardized (right) selection differentials for male (purple) and female (green) S. fuscus. Error bars represent the 95% confidence intervals around the mean." />
+<figcaption aria-hidden="true"><em>Absolute (left) and standardized
+(right) selection differentials for male (purple) and female (green) S.
+fuscus. Error bars represent the 95% confidence intervals around the
+mean.</em></figcaption>
+</figure>
 
 We can see from these results that males and females are experiencing
 largely different selection on snout-vent length. When the male
@@ -2393,10 +2461,14 @@ develop.
 I am going to plot this relationship only looking into the individuals
 who mated.
 
-![*Plotting the relationship between the proportion of eggs that
-developed and the number of mates aquired for both males (purple) and
-females
-(green).*](selection_analysis_fuscus_files/figure-gfm/surv-v-matings-1.png)
+<figure>
+<img
+src="selection_analysis_fuscus_files/figure-gfm/surv-v-matings-1.png"
+alt="Plotting the relationship between the proportion of eggs that developed and the number of mates aquired for both males (purple) and females (green)." />
+<figcaption aria-hidden="true"><em>Plotting the relationship between the
+proportion of eggs that developed and the number of mates aquired for
+both males (purple) and females (green).</em></figcaption>
+</figure>
 
 There may be a correlation for both males and females, let’s investigate
 further:
