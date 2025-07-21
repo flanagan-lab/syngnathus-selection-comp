@@ -49,22 +49,31 @@ mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
 
 ## Opportunity for selection
 
-```{r boot-floridae}
+```{r boot-floridae, eval=FALSE}
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
                                        fem_succFL,
                                        mal_succFL)
-
+write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions.csv",
+          quote=FALSE, row.names = FALSE)
 ```
 
-```{r boot-fuscus}
+```{r boot-fuscus, eval=FALSE}
 
-
-
+boot_fuscus <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succFU,
+                                       mal_succFU)
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions.csv",
+          quote=FALSE, row.names = FALSE)
 ```
 
-```{r boot-scovelli}
+```{r boot-scovelli, eval=FALSE}
 
-
-
+boot_scovelli <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succSC,
+                                       mal_succSC)
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions.csv",
+          quote=FALSE, row.names = FALSE)
 ```
+
+
 

@@ -559,7 +559,7 @@ There is still quite a spread in the sizes of females who mated, but in every ca
 One of the benefits of using genetic parentage analysis is that we can now calculate the opportunity for selection and the opportunity for sexual selection in male and female pipefish. 
 
 ```{r write-reprod-succ, eval=FALSE}
-write.csv(fem_succSS,"data/scovelli_fem_succ.csv", quote=FALSE, row.names = FALSE)
+write.csv(fem_succSS[,-4],"data/scovelli_fem_succ.csv", quote=FALSE, row.names = FALSE) # removing 'days_mated', which is not needed and added changes
 write.csv(mal_succSS,"data/scovelli_mal_succ.csv", quote=FALSE, row.names = FALSE)
 ```
 
