@@ -40,20 +40,8 @@ mal_succFL <- read.csv("data/floridae_mal_succ.csv")
 ## Opportunity for selection
 
 
-```{r}
-### Dummy code
 
-means <- NULL
-for(i in 1:num_bootstraps){
-  all_i <- NULL
-  for(t in unique(fem_succFL$trial_num)){
-    this_trial<-dat[dat$trial %in% t,]
-    resamp <- dat[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
-    all_i <- list(all_i, partition_i(resamp)) # where partition_i is the function with the code from today
-  }
-  # calculate means of partitioned I
-  means<-c(means, mean(all_i)) #(note: I know this is not correct format based on what I've dummy coded, but I can't be bothered)
-}
+```
 
 # calc 95% CI from the means from all bootstraps
 
