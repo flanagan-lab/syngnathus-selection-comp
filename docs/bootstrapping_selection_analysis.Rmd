@@ -58,6 +58,10 @@ boot_floridae <- bootstrap_partition_I(num_bootstraps,
 write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions.csv",
           quote=FALSE, row.names = FALSE)
 ```
+```{r get-floridae-boot}
+boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions.csv")
+```
+
 
 ```{r boot-fuscus, eval=FALSE}
 
@@ -67,6 +71,10 @@ boot_fuscus <- bootstrap_partition_I(num_bootstraps,
 write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions.csv",
           quote=FALSE, row.names = FALSE)
 ```
+```{r get-fuscus-boot}
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions.csv")
+```
+
 
 ```{r boot-scovelli, eval=FALSE}
 
@@ -76,6 +84,10 @@ boot_scovelli <- bootstrap_partition_I(num_bootstraps,
 write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions.csv",
           quote=FALSE, row.names = FALSE)
 ```
+```{r get-scovelli-boot}
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions.csv")
+```
+
 
 
 ## Generating summary statistics from bootstraps
