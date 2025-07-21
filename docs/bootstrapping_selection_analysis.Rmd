@@ -106,7 +106,7 @@ female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
 colnames(female_CIs)<-c("floridae_low","floridae_upp",
                         "fuscus_low","fuscus_upp",
                         "scovelli_low","scovelli_upp")
-kable(female_CIs)
+kable(round(female_CIs,2))
 ```
 ```{r show-mal-cis}
 male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
@@ -115,6 +115,6 @@ male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
 colnames(male_CIs)<-c("floridae_low","floridae_upp",
                         "fuscus_low","fuscus_upp",
                         "scovelli_low","scovelli_upp")
-kable(male_CIs)
+kable(round(male_CIs,2))
 ```
 
