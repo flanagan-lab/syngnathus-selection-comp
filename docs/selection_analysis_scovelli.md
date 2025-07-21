@@ -1014,6 +1014,11 @@ One of the benefits of using genetic parentage analysis is that we can
 now calculate the opportunity for selection and the opportunity for
 sexual selection in male and female pipefish.
 
+``` r
+write.csv(fem_succSS,"data/scovelli_fem_succ.csv", quote=FALSE, row.names = FALSE)
+write.csv(mal_succSS,"data/scovelli_mal_succ.csv", quote=FALSE, row.names = FALSE)
+```
+
 ## Generating the total opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$)
 
 Because each trial provides an independent “population” (i.e., pipefish

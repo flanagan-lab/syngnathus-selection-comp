@@ -558,6 +558,12 @@ There is still quite a spread in the sizes of females who mated, but in every ca
 # Looking into the Opportunity for Selection in Males and Females
 One of the benefits of using genetic parentage analysis is that we can now calculate the opportunity for selection and the opportunity for sexual selection in male and female pipefish. 
 
+```{r write-reprod-succ, eval=FALSE}
+write.csv(fem_succSS,"data/scovelli_fem_succ.csv", quote=FALSE, row.names = FALSE)
+write.csv(mal_succSS,"data/scovelli_mal_succ.csv", quote=FALSE, row.names = FALSE)
+```
+
+
 ## Generating the total opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$)
 Because each trial provides an independent "population" (i.e., pipefish from one trial **cannot mate** with pipefish from another trial), I am going to calculate these metrics for each trial individually and then I will average it. With these I can then also generate 95% confidence intervals which I will investigate for indications of significance in two ways:
 
