@@ -552,6 +552,11 @@ fem_succFL[, c("MatingSuccess", "NumDeveloped",
 fem_succFL$mated <- ifelse(fem_succFL$MatingSuccess > 0, 1, 0)
 ```
 
+``` r
+write.csv(fem_succFL, "floridae_fem_succ.csv",quote=FALSE, row.names = FALSE)
+write.csv(fem_succFL, "floridae_mal_succ.csv",quote=FALSE, row.names = FALSE)
+```
+
 # Summary statistics for successfully mated individuals
 
 ## Males
