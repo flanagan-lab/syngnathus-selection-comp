@@ -24,8 +24,10 @@ library(knitr)
 ```
 
 ```{r load-functions}
-source("R/partition_fem_I.R")
-source("R/partition_mal_I.R")
+set.seed(2025)
+num_bootstraps<-1000 #change this as needed
+source("R/partition_I.R")
+source("R/bootstrap_partition_I.R")
 ```
 
 
@@ -35,15 +37,33 @@ source("R/partition_mal_I.R")
 fem_succFL <- read.csv("data/floridae_fem_succ.csv")
 mal_succFL <- read.csv("data/floridae_mal_succ.csv")
 ```
+``` {r read-fuscus-data, message = FALSE, warning = FALSE}
+fem_succFU <- read.csv("data/fuscus_fem_succ.csv")
+mal_succFU <- read.csv("data/fuscus_mal_succ.csv")
+```
+``` {r read-scovelli-data, message = FALSE, warning = FALSE}
+fem_succSC <- read.csv("data/scovelli_fem_succ.csv")
+mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
+```
 
 
 ## Opportunity for selection
+
+```{r boot-floridae}
+boot_floridae <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succFL,
+                                       mal_succFL)
+
+```
+
+```{r boot-fuscus}
 
 
 
 ```
 
-# calc 95% CI from the means from all bootstraps
+```{r boot-scovelli}
+
 
 
 ```
