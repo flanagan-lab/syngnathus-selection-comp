@@ -20,7 +20,9 @@ knitr::opts_knit$set(root.dir='../',
 ``` {r library, message = FALSE, warning = FALSE}
 #This is a cohesive list of all the libraries used in this document
 library(knitr)
-
+# To install spfTools:
+# devtools::install_github("https://github.com/spflanagan/spfTools/")
+library(spfTools)
 ```
 
 ```{r load-functions}
@@ -76,4 +78,31 @@ write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions.csv",
 ```
 
 
+## Generating summary statistics from bootstraps
+
+```{r calc-cis}
+floridae_CIs<-apply(boot_floridae,2,cim)
+fuscus_CIs<-apply(boot_fuscus,2,cim)
+scovelli_CIs<-apply(boot_scovelli,2,cim)
+```
+
+
+```{r show-fem-cis}
+female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
+colnames(female_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(female_CIs)
+```
+```{r show-mal-cis}
+male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
+colnames(male_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(male_CIs)
+```
 
