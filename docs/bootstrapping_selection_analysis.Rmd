@@ -203,3 +203,40 @@ kable(round(male_CIs,2))
 
 ## Selection differentials
 
+```{r boot-floridae-s, eval=FALSE}
+boot_floridae <- bootstrap_s(num_bootstraps,
+                                       fem_succFL,
+                                       mal_succFL)
+write.csv(boot_floridae, "data/floridae_bootstrapped_s.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-floridae-boot-s}
+boot_floridae<-read.csv("data/floridae_bootstrapped_s.csv")
+```
+
+
+```{r boot-fuscus-s, eval=FALSE}
+
+boot_fuscus <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succFU,
+                                       mal_succFU)
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_s.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-fuscus-boot-s}
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_s.csv")
+```
+
+
+```{r boot-scovelli-s, eval=FALSE}
+
+boot_scovelli <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succSC,
+                                       mal_succSC)
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_s.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-scovelli-boot-s}
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_s.csv")
+```
+
