@@ -49,7 +49,9 @@ mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
 ```
 
 
-## Opportunity for selection (all individuals)
+## Opportunity for selection 
+
+### Partitioning *I* for all individuals
 
 ```{r boot-floridae, eval=FALSE}
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
@@ -90,7 +92,7 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions.csv")
 
 
 
-### Generating summary statistics from bootstraps
+#### Generating summary statistics from bootstraps
 
 ```{r calc-cis}
 floridae_CIs<-apply(boot_floridae,2,cim)
@@ -121,7 +123,7 @@ kable(round(male_CIs,2))
 
 
 
-## Opportunity for selection (only mated individuals)
+### Partitioning *I* for only mated individuals
 
 ```{r boot-floridae, eval=FALSE}
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
@@ -171,7 +173,7 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
 
 
 
-### Generating summary statistics from bootstraps (only mated)
+#### Generating summary statistics from bootstraps (only mated)
 
 ```{r calc-cis}
 floridae_CIs<-apply(boot_floridae,2,cim)
