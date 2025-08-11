@@ -2,10 +2,12 @@
 # intended for use on a single population (trial in this case)
 # reformatted version of Coley Tosto's code in selection_analysis_floridae.Rmd
 calc_selection_diffs<-function(reprod_succ){
-  
+
   # calculate fitness due to mating success (relative mating)
   reprod_succ$fit1 <- reprod_succ$MatingSuccess/mean(reprod_succ$MatingSuccess)
   
+  # calculate eggs per mate
+  reprod_succ$eggs_per_mate <- reprod_succ$totalEggs/reprod_succ$MatingSuccess
   ##If mating success = 0, eggs_per_mate = NA and it not included in the calculation
   ##of the relative fitness moving forward
   reprod_succ$fit2 <- ifelse(reprod_succ$MatingSuccess > 0,
