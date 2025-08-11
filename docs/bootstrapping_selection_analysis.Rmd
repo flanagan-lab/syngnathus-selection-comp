@@ -240,3 +240,32 @@ write.csv(boot_scovelli, "data/scovelli_bootstrapped_s.csv",
 boot_scovelli<-read.csv("data/scovelli_bootstrapped_s.csv")
 ```
 
+#### Generating summary statistics for selection differentials
+
+```{r calc-cis-s}
+floridae_CIs<-apply(boot_floridae,2,cim)
+fuscus_CIs<-apply(boot_fuscus,2,cim)
+scovelli_CIs<-apply(boot_scovelli,2,cim)
+```
+
+
+```{r show-fem-cis-s}
+female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
+colnames(female_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(round(female_CIs,2))
+```
+```{r show-mal-cis}
+male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
+colnames(male_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(round(male_CIs,2))
+```
+
+
