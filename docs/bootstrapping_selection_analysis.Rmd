@@ -201,3 +201,5 @@ colnames(male_CIs)<-c("floridae_low","floridae_upp",
 kable(round(male_CIs,2))
 ```
 
+## Selection differentials
+
