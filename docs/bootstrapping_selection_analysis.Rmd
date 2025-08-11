@@ -175,14 +175,14 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
 
 #### Generating summary statistics from bootstraps (only mated)
 
-```{r calc-cis}
+```{r calc-cis-mated}
 floridae_CIs<-apply(boot_floridae,2,cim)
 fuscus_CIs<-apply(boot_fuscus,2,cim)
 scovelli_CIs<-apply(boot_scovelli,2,cim)
 ```
 
 
-```{r show-fem-cis}
+```{r show-fem-cis-mated}
 female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
       t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
       t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
@@ -191,7 +191,7 @@ colnames(female_CIs)<-c("floridae_low","floridae_upp",
                         "scovelli_low","scovelli_upp")
 kable(round(female_CIs,2))
 ```
-```{r show-mal-cis}
+```{r show-mal-cis-mated}
 male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
       t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
       t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
@@ -217,7 +217,7 @@ boot_floridae<-read.csv("data/floridae_bootstrapped_s.csv")
 
 ```{r boot-fuscus-s, eval=FALSE}
 
-boot_fuscus <- bootstrap_partition_I(num_bootstraps,
+boot_fuscus <- bootstrap_s(num_bootstraps,
                                        fem_succFU,
                                        mal_succFU)
 write.csv(boot_fuscus, "data/fuscus_bootstrapped_s.csv",
@@ -230,7 +230,7 @@ boot_fuscus<-read.csv("data/fuscus_bootstrapped_s.csv")
 
 ```{r boot-scovelli-s, eval=FALSE}
 
-boot_scovelli <- bootstrap_partition_I(num_bootstraps,
+boot_scovelli <- bootstrap_s(num_bootstraps,
                                        fem_succSC,
                                        mal_succSC)
 write.csv(boot_scovelli, "data/scovelli_bootstrapped_s.csv",
