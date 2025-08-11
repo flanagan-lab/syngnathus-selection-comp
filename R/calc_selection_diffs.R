@@ -29,7 +29,7 @@ calc_selection_diffs<-function(reprod_succ){
   s123 <- cov(reprod_succ$svl, reprod_succ$fit3)
   s2 <- s12 - s1
   s3 <- s123 - s12
-  
+ 
   #Calculating the standardized selection differentials (s')
   s1_prime <- cov(reprod_succ$StdLength, reprod_succ$fit1)
   s12_prime <- cov(reprod_succ$StdLength, reprod_succ$fit2)

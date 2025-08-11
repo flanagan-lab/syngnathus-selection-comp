@@ -29,15 +29,23 @@ bootstrap_s <- function(num_bootstraps,
     for(t in unique(fem_succ$trial_num)){
       # females
       this_trial<-fem_succ[fem_succ$trial_num %in% t,]
-      resamp <- this_trial[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
-      resamp_sf <- calc_selection_diffs(resamp)
+      resampf <- this_trial[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
+      while(sum(resampf$MatingSuccess)==0){
+        # if the resampling resulted in no MS variation, resample
+        resampf <- this_trial[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
+      }
+      resamp_sf <- calc_selection_diffs(resampf)
       
-      this_boot_fem[count,]<- resamp_Is
+      this_boot_fem[count,]<- resamp_sf
       
       
       # males
       this_trial<-mal_succ[mal_succ$trial_num %in% t,]
       resamp <- this_trial[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
+      while(sum(resamp$MatingSuccess)==0){
+        # if the resampling resulted in no MS variation, resample
+        resamp <- this_trial[sample(1:nrow(this_trial), nrow(this_trial), replace=TRUE),]
+      }
       resamp_sm <- calc_selection_diffs(resamp)
       this_boot_mal[count,]<-resamp_sm
       
