@@ -49,7 +49,7 @@ mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
 ```
 
 
-## Opportunity for selection
+## Opportunity for selection (all individuals)
 
 ```{r boot-floridae, eval=FALSE}
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
@@ -90,7 +90,88 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions.csv")
 
 
 
-## Generating summary statistics from bootstraps
+### Generating summary statistics from bootstraps
+
+```{r calc-cis}
+floridae_CIs<-apply(boot_floridae,2,cim)
+fuscus_CIs<-apply(boot_fuscus,2,cim)
+scovelli_CIs<-apply(boot_scovelli,2,cim)
+```
+
+
+```{r show-fem-cis}
+female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
+colnames(female_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(round(female_CIs,2))
+```
+```{r show-mal-cis}
+male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
+      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
+      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
+colnames(male_CIs)<-c("floridae_low","floridae_upp",
+                        "fuscus_low","fuscus_upp",
+                        "scovelli_low","scovelli_upp")
+kable(round(male_CIs,2))
+```
+
+
+
+
+## Opportunity for selection (only mated individuals)
+
+```{r boot-floridae, eval=FALSE}
+boot_floridae <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succFL[fem_succFL$mated==1,],
+                                       mal_succFL[mal_succFL$mated==1,])
+write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_mated.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-floridae-boot}
+boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated.csv")
+```
+
+
+Because some of the fuscus trials only had one male and/or one female mate (which cannot have a variance calculated on it for partitioning I, if all non-mated individuals are removed), I first need to sub-set the data to only include trials with 2 or more mated individuals.
+
+```{r boot-fuscus, eval=FALSE}
+fem_fu_mated<-fem_succFU[fem_succFU$mated==1,]
+mal_fu_mated <- mal_succFU[mal_succFU$MatingSuccess>0,]
+fem_tab<-table(fem_fu_mated$trial_num)
+mal_tab<-table(mal_fu_mated$trial_num)
+
+trials_to_use<-intersect(names(fem_tab[which(fem_tab>1)]),
+                         names(mal_tab[which(mal_tab>1)]))
+
+boot_fuscus <- bootstrap_partition_I(num_bootstraps,
+                                       fem_fu_mated[which(fem_fu_mated$trial_num %in% trials_to_use),],
+                                       mal_fu_mated[which(mal_fu_mated$trial_num %in% trials_to_use),])
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_mated.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-fuscus-boot}
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated.csv")
+```
+
+
+```{r boot-scovelli, eval=FALSE}
+
+boot_scovelli <- bootstrap_partition_I(num_bootstraps,
+                                       fem_succSC[fem_succSC$mated==1,],
+                                       mal_succSC[mal_succSC$MatingSuccess>0,])
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_mated.csv",
+          quote=FALSE, row.names = FALSE)
+```
+```{r get-scovelli-boot}
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
+```
+
+
+
+### Generating summary statistics from bootstraps (only mated)
 
 ```{r calc-cis}
 floridae_CIs<-apply(boot_floridae,2,cim)
