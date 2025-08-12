@@ -125,21 +125,21 @@ kable(round(male_CIs,2))
 
 ### Partitioning *I* for only mated individuals
 
-```{r boot-floridae, eval=FALSE}
+```{r boot-floridae-mated, eval=FALSE}
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
                                        fem_succFL[fem_succFL$mated==1,],
                                        mal_succFL[mal_succFL$mated==1,])
 write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_mated.csv",
           quote=FALSE, row.names = FALSE)
 ```
-```{r get-floridae-boot}
+```{r get-floridae-boot-mated}
 boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated.csv")
 ```
 
 
 Because some of the fuscus trials only had one male and/or one female mate (which cannot have a variance calculated on it for partitioning I, if all non-mated individuals are removed), I first need to sub-set the data to only include trials with 2 or more mated individuals.
 
-```{r boot-fuscus, eval=FALSE}
+```{r boot-fuscus-mated, eval=FALSE}
 fem_fu_mated<-fem_succFU[fem_succFU$mated==1,]
 mal_fu_mated <- mal_succFU[mal_succFU$MatingSuccess>0,]
 fem_tab<-table(fem_fu_mated$trial_num)
@@ -154,12 +154,12 @@ boot_fuscus <- bootstrap_partition_I(num_bootstraps,
 write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_mated.csv",
           quote=FALSE, row.names = FALSE)
 ```
-```{r get-fuscus-boot}
+```{r get-fuscus-boot-mated}
 boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated.csv")
 ```
 
 
-```{r boot-scovelli, eval=FALSE}
+```{r boot-scovelli-mated, eval=FALSE}
 
 boot_scovelli <- bootstrap_partition_I(num_bootstraps,
                                        fem_succSC[fem_succSC$mated==1,],
@@ -167,7 +167,7 @@ boot_scovelli <- bootstrap_partition_I(num_bootstraps,
 write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_mated.csv",
           quote=FALSE, row.names = FALSE)
 ```
-```{r get-scovelli-boot}
+```{r get-scovelli-boot-mated}
 boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
 ```
 
@@ -258,7 +258,7 @@ colnames(female_CIs)<-c("floridae_low","floridae_upp",
                         "scovelli_low","scovelli_upp")
 kable(round(female_CIs,2))
 ```
-```{r show-mal-cis}
+```{r show-mal-cis-s}
 male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
       t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
       t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
