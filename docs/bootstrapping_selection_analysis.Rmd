@@ -26,10 +26,12 @@ library(spfTools)
 ```
 
 ```{r load-functions}
+
 set.seed(2025)
 num_bootstraps<-1000 #change this as needed
 source("R/partition_I.R")
 source("R/bootstrap_partition_I.R")
+
 ```
 
 
@@ -91,36 +93,64 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions.csv")
 ```
 
 
-
 #### Generating summary statistics from bootstraps
 
-```{r calc-cis}
-floridae_CIs<-apply(boot_floridae,2,cim)
-fuscus_CIs<-apply(boot_fuscus,2,cim)
-scovelli_CIs<-apply(boot_scovelli,2,cim)
+```{r calc-cis-function}
+#Function to calculate confidence intervals from bootstrap results - employing percentile-based
+#confidence intervals
+
+calculate_CIs <- function(boot_results, conf_level = 0.95){
+  
+  alpha <- 1 - conf_level
+  
+  #Calculate percentile-based confidence intervals
+  CIs <- apply(boot_results, 2, function(x){
+
+    c(mean = mean(x),
+      lower = quantile(x, alpha/2, na.rm = TRUE),
+      upper = quantile(x, 1 - alpha/2, na.rm = TRUE))
+    
+  })
+  
+  return(t(CIs))
+}
 ```
 
+```{r calc-CIs}
+
+floridae_CIs <- calculate_CIs(boot_floridae)
+fuscus_CIs <- calculate_CIs(boot_fuscus)
+scovelli_CIs <- calculate_CIs(boot_scovelli)
+
+```
 
 ```{r show-fem-cis}
-female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
-colnames(female_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(female_CIs,2))
+
+female_CIs <- as.data.frame(rbind(floridae_CIs[grep("fem", rownames(floridae_CIs)), ],
+                    fuscus_CIs[grep("fem", rownames(fuscus_CIs)), ],
+                    scovelli_CIs[grep("fem", rownames(scovelli_CIs)), ]))
+
+female_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("fem", rownames(floridae_CIs)),])),
+                        rep("fuscus", times = nrow(fuscus_CIs[grep("fem", rownames(fuscus_CIs)),])),
+                        rep("scovelli", times = nrow(scovelli_CIs[grep("fem", rownames(scovelli_CIs)),])))
+
+kable(round(female_CIs[,colnames(female_CIs) != "species"],6))
+
 ```
+
 ```{r show-mal-cis}
-male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
-colnames(male_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(male_CIs,2))
+
+male_CIs <- as.data.frame(rbind(floridae_CIs[grep("mal", rownames(floridae_CIs)), ],
+                  fuscus_CIs[grep("mal", rownames(fuscus_CIs)), ],
+                  scovelli_CIs[grep("mal", rownames(scovelli_CIs)), ]))
+
+male_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("mal", rownames(floridae_CIs)),])),
+                      rep("fuscus", times = nrow(fuscus_CIs[grep("mal", rownames(fuscus_CIs)),])),
+                      rep("scovelli", times = nrow(scovelli_CIs[grep("mal", rownames(scovelli_CIs)),])))
+
+kable(round(male_CIs,6))
+
 ```
-
-
 
 
 ### Partitioning *I* for only mated individuals
