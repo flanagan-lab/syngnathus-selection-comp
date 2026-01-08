@@ -334,3 +334,100 @@ ggsave("figs/fig_opp_select.png", fig, height = 5, width=11)
 
 ```
 
+## The Bateman Gradient - Comparing reproductive and mating success
+
+For the Bateman gradient I will only be comparing females across the three species as they are the sex which consistently mates multiply.
+
+```{r fem-bate,am}
+fem_bateman_all <- rbind(FL_fem_bateman[,-4], FU_fem_bateman)
+fem_bateman_all <- rbind(fem_bateman_all, SS_fem_bateman)
+
+fem_bateman_all$species <- as.factor(fem_bateman_all$species)
+
+species_cols <- c("floridae" = "#2F97C1",
+                  "fuscus" = "#C05746",
+                  "scovelli" = "#FAC748")
+species_shapes <- c("floridae" = 15,
+                  "fuscus" = 16,
+                  "scovelli" = 17)
+
+slopes <- numeric(length(levels(fem_bateman_all$species)))
+names(slopes) <- levels(fem_bateman_all$species)
+
+pdf("figs/fem_bateman.pdf", width = 8, height=8)
+
+par(oma = c(2,2,1,1),
+    mar = c(1,1,2,1),
+    xpd = FALSE)
+
+plot(fem_bateman_all$rel_repo_fitness ~ fem_bateman_all$MatingSuccess,
+     ylab = "", xlab = "",
+     bty = "n", type = "n", axes = FALSE)
+
+axis(1, pos = 0, lwd = 2, cex = 2, cex.axis = 1.5, las=1)
+axis(2, pos = 0, lwd = 2, cex = 2, cex.axis = 1.5, las = 1)
+
+clip(0, 7.1, 0, 7.1)
+
+for(species in levels(fem_bateman_all$species)){
+  
+  points(fem_bateman_all$rel_repo_fitness[fem_bateman_all$species == species] ~
+           fem_bateman_all$MatingSuccess[fem_bateman_all$species == species],
+         col = paste0(species_cols[species], "85"),
+         pch = species_shapes[species],
+         cex = 1.5)
+
+}
+
+x_seq <- seq(0, 7, length.out = 100)
+
+for (sp in levels(fem_bateman_all$species)) {
+  
+  dat_sub <- subset(fem_bateman_all, species == sp)
+
+  mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = dat_sub)
+  new_dat <- data.frame(MatingSuccess = x_seq,
+                          trial = NA) 
+    
+  preds <- predict(mod, newdata = new_dat, re.form = NA)
+    
+  lines(x_seq, preds,
+        col = species_cols[sp],
+        lwd = 3,
+        lty = which(levels(fem_bateman_all$species) %in% sp),
+        xpd = FALSE)
+    
+  cat(sp, "slope =", fixef(mod)["MatingSuccess"], "\n")
+  slopes[sp] <- fixef(mod)["MatingSuccess"]
+}
+
+mtext("Relative Mating Success", 1 , cex = 1.5, line = 1.5)
+mtext("Relative Reproductive Success", 2, cex = 1.5, line = 1.0)
+
+#Add slopes as extra text on the plot
+text(x = 5.75, y = 1.0, labels = "Slopes:", 
+     adj = c(0, 0), cex = 1, font = 2)
+
+slope_values <- paste0("S. floridae = ", round(slopes["floridae"], 3), "\n",
+                       "S. fuscus = ", round(slopes["fuscus"], 3), "\n",
+                       "S. scovelli = ", round(slopes["scovelli"], 3))
+
+text(x = 5.75, y = 0.3, labels = slope_values, 
+     adj = c(0, 0), cex = 1, font = 1)
+
+outer_legend("top",
+             c("S. floridae", "S. fuscus", "S. scovelli"),
+             col = c("#2F97C1", "#C05746", "#FAC748"),
+             lwd = 3,
+             bty = 'n',
+             cex = 1.5,
+             pch = c(22, 21, 24),
+             pt.bg = c("#2F97C175", "#C0574675", "#FAC74875"),
+             lty = 1:3,
+             ncol = 3,
+             text.font = 3)
+
+dev.off()
+
+```
+
