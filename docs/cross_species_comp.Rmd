@@ -543,3 +543,13 @@ t.test(data$eggs_per_mate[data$species == "scovelli"] ~ data$mating_status[data$
 
 The only significant difference present is in _S. scovelli_. For the other two species, even if there were a significant difference, it is likely that the sample size of the multiply mated females is too small to detect one.
 
+```{r}
+figB <- image_ggplot(image_read_pdf('figs/SM_boxplot.pdf'),interpolate = TRUE)
+figA <- image_ggplot(image_read_pdf('figs/fem_bateman.pdf'),interpolate = TRUE)
+
+fig <- figA + figB + plot_annotation(tag_levels = "A")
+
+ggsave("figs/Fig_bateman_prop.pdf", fig, height=5, width=10)
+ggsave("figs/Fig_bateman_prop.png", fig, height=5, width=10) # also save as a png
+```
+
