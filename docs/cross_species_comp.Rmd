@@ -431,3 +431,115 @@ dev.off()
 
 ```
 
+The Bateman gradient primarily focuses on pre-copulatory selection, to add an extra component I am going to compare the proportion of eggs developed (post-copulatory selection) between singly and multiply mated females across the species.
+
+```{r s-m-prop-developed}
+fem_fitness_all <- rbind(FL_fem_fitness[,c(2:3,12:17)], FU_fem_fitness[,c(2:3,12:17)])
+fem_fitness_all <- rbind(fem_fitness_all, SS_fem_fitness[,c(1:3,7:8,6,13,15)])
+
+
+
+fem_fitness_all$prop_developed <- ifelse(fem_fitness_all$totalEggs == 0,
+                                         0,
+                                         fem_fitness_all$NumDeveloped/fem_fitness_all$totalEggs)
+fem_fitness_all$mating_status <- ifelse(fem_fitness_all$MatingSuccess == 0,
+                                        paste0("U"),
+                                        ifelse(fem_fitness_all$MatingSuccess == 1,
+                                               paste0("S"),
+                                               paste0("M")))
+
+data <- fem_fitness_all[fem_fitness_all$MatingSuccess !=0,]
+data$group <- interaction(data$species, data$mating_status, sep = "_")
+data$group <- factor(data$group, 
+                     levels = c("floridae_S", "floridae_M",
+                                "fuscus_S", "fuscus_M",
+                                "scovelli_S", "scovelli_M"))
+
+mated_colors <- c("S" = "#D6D6D6", 
+                  "M" = "#8C8A8A")
+
+pdf("figs/SM_boxplot.pdf", width = 8, height=8)
+
+par(oma=c(4,5,1,1), 
+    mar=c(1,1,1,0))
+
+boxplot(prop_developed ~ group, 
+        data = data,
+        col = rep(mated_colors, 3),
+        frame = FALSE,
+        axes = FALSE,
+        ylim = c(0, 1),
+        lwd = 1.5,
+        outline = FALSE,
+        border = "#454545")
+
+points(jitter(as.numeric(data$group), amount = 0.15), 
+       data$prop_developed,
+       col = "#00000095",
+       pch = 19,
+       cex = 1.4)
+
+axis(1, labels = c("",rep(c("S", "M"), 3),""),
+     at = 0:7,
+     lwd = 2, lwd.ticks = 2, 
+     las = 1, cex.axis = 1.25)
+
+axis(2, labels = seq(-1, 1, 0.2),
+     at = seq(-1, 1, 0.2), 
+     lwd = 2,
+     ylim = c(0, 1),
+     cex.axis = 1.5,
+     las = 2)
+
+mtext("S. floridae", side = 1, line = 2.5, at = 1.5, cex = 1.5, font = 3)
+mtext("S. fuscus", side = 1, line = 2.5, at = 3.5, cex = 1.5, font = 3)
+mtext("S. scovelli", side = 1, line = 2.5, at = 5.5, cex = 1.5, font = 3)
+
+mtext("Proportion Eggs Developed",side = 2, cex = 1.5, outer = TRUE, line = 2.25)
+
+# Add legend
+par(fig = c(0, 1, 0, 1), oma = c(5, 5, 5, 0),
+    mar = c(3, 1, 2, 1), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+
+legend("bottomright", 
+       legend = c("Single Mating",
+                  "Mutiple Matings"),
+       pt.bg=mated_colors,
+       pch=22, ncol=1, cex=1.25,
+       y.intersp = 1.5, pt.cex=2,
+       border = NA, bty = "n", xpd = TRUE)
+
+
+
+dev.off()
+
+
+```
+
+We can test to see if there are any significant differences as well.
+
+```{r}
+data$eggs_per_mate <- data$totalEggs/data$MatingSuccess
+t.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
+       var.equal = FALSE)
+
+t.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"],
+       var.equal = FALSE)
+
+t.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
+       var.equal = FALSE)
+
+t.test(data$eggs_per_mate[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
+       var.equal = FALSE)
+
+t.test(data$eggs_per_mate[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"],
+       var.equal = FALSE)
+
+t.test(data$eggs_per_mate[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
+       var.equal = FALSE)
+
+```
+
+The only significant difference present is in _S. scovelli_. For the other two species, even if there were a significant difference, it is likely that the sample size of the multiply mated females is too small to detect one.
+
