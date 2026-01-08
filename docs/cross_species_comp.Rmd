@@ -1,0 +1,336 @@
+---
+title: "Comparing selection pressures across the three species of _Syngnathus_"
+author: Coley Tosto
+output: 
+  github_document:
+    toc: true
+header-includes: >
+  \usepackage{lipsum}
+  \usepackage{float}
+  \floatplacement{figure}{H}
+editor_options:
+  chunk_output_type: console
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir='../',
+                     fig_path="../figs/")
+```
+
+``` {r library, message = FALSE, warning = FALSE}
+#This is a cohesive list of all the libraries used in this document
+library(lme4)
+library(spfTools)
+library(magick)
+library(patchwork)
+library(ggplot2)
+
+```
+
+``` {r read-data, message = FALSE, warning = FALSE}
+##Data for the Opportunity of selection
+opp_select <- read.csv("data/episode_select_data.csv", header = TRUE)
+
+##Data for generating the female bateman gradients
+FL_fem_bateman <- read.csv("data/FL_fem_bateman.csv", header = TRUE)
+FL_fem_bateman$species <- rep("floridae", times = nrow(FL_fem_bateman))
+
+FU_fem_bateman <- read.csv("data/FU_fem_bateman.csv", header = TRUE)
+FU_fem_bateman$species <- rep("fuscus", times = nrow(FU_fem_bateman))
+
+SS_fem_bateman <- read.csv("data/SS_fem_bateman.csv", header = TRUE)
+SS_fem_bateman$species <- rep("scovelli", times = nrow(SS_fem_bateman))
+
+
+FL_fem_fitness <- read.csv("data/fem_fitnessFL.csv", header = TRUE)
+FL_fem_fitness$species <- rep("floridae", times = nrow(FL_fem_fitness))
+
+FU_fem_fitness <- read.csv("data/fem_fitnessFU.csv", header = TRUE)
+FU_fem_fitness$species <- rep("fuscus", times = nrow(FU_fem_fitness))
+
+SS_fem_fitness <- read.csv("data/fem_fitnessSS.csv", header = TRUE)
+SS_fem_fitness$species <- rep("scovelli", times = nrow(SS_fem_fitness))
+
+```
+
+## The Opportunity for Selection across Species
+We can start by comparing the episodes of selection calculated for males and females across the species. The data I will be using for this includes the average selection across the trials for each episode along side the upper and lower percentile-based confidence intervals we generated from bootstrapping.
+
+I am first going to plot the average fitness value with the confidence intervals as error bars. 
+
+```{r opp-select-ave-CI}
+#Set colors used for the two sexes
+sex_cols <- c("F" = "#7fc97f", "M" = "#beaed4" )
+
+#Create a vector of the species names
+species_names <- c("S. floridae", "S. fuscus", "S. scovelli")
+
+pdf("figs/opp_select_aveCI.pdf", width = 10, height=8)
+
+#Set up the plotting parameters
+par(mfrow = c(1, 3), 
+    oma = c(4, 5, 2, 6),  
+    mar = c(1, 1, 2, 1))
+
+#Subset data to only keep the episodes of selection which we are interested in
+opp_select_sub <- opp_select[opp_select$episode_sel %in% c("I", "I_1", "I_2", "I_12", "I_3"),]
+
+#Set positioning for between m and f points
+dodge_amount <- 0.4
+
+#Define the desired order for x-axis
+x_order <- c("I", "I_1", "I_12", "I_2", "I_3")
+x_labels_orig <- x_order[x_order %in% unique(opp_select_sub$episode_sel)]
+
+#Create subscripted labels to use for the plots
+x_labels_display <- sapply(x_labels_orig, function(x) {
+  
+  if (grepl("_", x)) {
+    
+    parts <- strsplit(x, "_")[[1]]
+    return(bquote(.(parts[1])[.(parts[2])]))
+    
+    } else {
+      
+      return(x)
+    
+      }
+  })
+  
+#Loop through the three species and plot data
+for (i in 1:length(unique(opp_select_sub$species))) {
+  
+  #Subset for the species of interest
+  species_data <- opp_select_sub[opp_select_sub$species == species_levels[i], ]
+  
+  #Set up empty plot with no axes
+  plot(NULL, xlim = c(0, 5.5),
+       ylim = c(0, 5),
+       xlab = "", ylab = "",
+       xaxt = "n", yaxt = "n",
+       bty = "n")
+  
+  #Add the x-axis, adjusting fot the subscripted labels with mtext()
+  axis(1, at = 1:5, labels = FALSE, lwd = 2)
+  for (j in 1:5) {
+    
+    mtext(x_labels_display[[j]], side = 1, at = j, line = 1.5, family = "serif", cex = 1.3)
+    
+    }
+  
+  #Add y-axis only for the first plot, extend x-axis for the other two
+  if (i == 1) {
+    
+    axis(2, cex.axis = 1.8, lwd = 2)
+    box(bty = "l", lwd = 2)  
+    
+  } else {
+    
+      axis(1, at = 0:6, labels = NA, family = "serif", cex.axis = 1, las = 2, lwd = 2, lwd.ticks = NA)
+    
+  }
+  
+  #Plot points and error bars for each sex
+  for (j in 1:length(unique(opp_select_sub$sex))) {
+    
+    #Subset for the sex of interest
+    sex_data <- species_data[species_data$sex == sex_levels[j], ]
+    
+    #Match x positions to categorical positions
+    x_positions <- match(sex_data$episode_sel, x_labels_orig)
+    
+    #Apply position adjustment to the points
+    x_pos <- x_positions + (j - (length(unique(opp_select_sub$sex)) + 1)/2) * dodge_amount
+    
+    #Add the error bars
+    arrows(x_pos, 
+           sex_data$lower,
+           x_pos,
+           sex_data$upper,
+           angle = 90, code = 3, length = 0.1, lwd = 2, col = "black")
+    
+    #Add the points
+    points(x_pos, sex_data$average_cal,
+           pch = 15 + i,  
+           col = sex_cols[unique(opp_select_sub$sex)[j]],
+           cex = 3)
+  }
+  
+  #Add species label as title
+  mtext(bquote(italic(.(species_names[i]))), side = 3, line = -1, cex = 1.6)
+}
+
+#Add overall axis labels
+mtext("Episode of Selection", side = 1, outer = TRUE, line = 2.0, cex = 1.3)
+mtext("Average Fitness Value", side = 2, outer = TRUE, line = 2.5, cex = 1.3)
+
+#Add a legend
+par(fig = c(0, 1, 0, 1), oma = c(5, 5, 5, 0),
+    mar = c(3, 1, 2, 1), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+
+legend("right",
+       c("Male", "Female"),
+       col = c("#beaed4", "#7fc97f"),
+       bty = 'n',
+       cex = 2,
+       pch = 16,
+       ncol = 1)
+
+dev.off()
+
+#Reset par
+par(mfrow = c(1, 1))
+
+```
+
+We can then visualize what percentage pre- versus post-copulatory episodes of selection make up in the total opportunity for selection. To do that we will assume that "I" is 100% and every other episode will make up some portion of that. 
+
+First, we need to calculate the percentages.
+
+```{r calc-opp-percents}
+sexes <- c("M", "F")
+
+#Create a dataframe to store the final values in
+opp_percents <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(opp_percents) <- c("Percent", "Species", "Episode_sel", "Sex")
+
+for (pipefish in unique(opp_select_sub$species)) {
+  
+  #Subset for the species of interest
+  tmp <- opp_select_sub[opp_select_sub$species == pipefish, ]
+  
+  for (sex in sexes) {
+    
+    #subset for the sex
+    tmp_sex <- tmp[tmp$sex == sex, ]
+    percents <- as.data.frame(t(t(apply(tmp_sex, 1, function(x){
+      
+      (as.numeric(x[1])/tmp_sex$average_cal[tmp_sex$episode_sel == "I"])*100
+      
+    }))))
+    
+    colnames(percents) <- "Percent"
+    percents$Species <- pipefish
+    percents$Episode_sel <- tmp_sex$episode_sel
+    percents$Sex <- sex
+    
+    rownames(percents) <- NULL
+    
+    opp_percents <- rbind(opp_percents, percents)
+    
+  }
+}
+```
+
+Once we have the percentages we can use them to generate stacked bar plots for the different species.
+
+```{r opp-select-percent}
+#Set the colors
+selection_colors <- c("I_2" = "#2F97C1", "I_3" = "#C05746", "I_1" = "#FAC748")
+
+#Filter data to keep the three episodes we want
+opp_percents_sub <- opp_percents[opp_percents$Episode_sel %in% c("I_1", "I_2", "I_3"), ]
+
+#List the sexes and episodes of selection
+sex_list <- c("F", "M")
+episodes <- c("I_1", "I_2", "I_3")
+
+pdf("figs/opp_select_per.pdf", width = 8, height=8)
+
+#Set up plotting parameters
+par(mfrow = c(1, 3), 
+    oma = c(4, 5, 2, 6),  # outer margins (bottom, left, top, right)
+    mar = c(1, 1, 2, 1))   # inner margins
+
+#Loop through species and create the box plots
+for (i in 1:length(unique(opp_percents_sub$Species))) {
+
+  ##Pull out the species of interest
+  sp <- unique(opp_percents_sub$Species)[i]
+
+  ##Create matrix for this species
+  plot_matrix <- matrix(0, nrow = length(episodes), ncol = length(sex_list))
+  rownames(plot_matrix) <- episodes
+  colnames(plot_matrix) <- sex_list
+  
+  ##Loop through the episodes and sexes to fill in matrix with approriate values
+  for (j in 1:length(episodes)) {
+    for (k in 1:length(sex_list)) {
+      
+      subset_val <- plot_data[plot_data$Species == sp & 
+                              plot_data$Episode_sel == episodes[j] & 
+                              plot_data$Sex == sex_list[k], "Percent"]
+      
+      if (length(subset_val) > 0) {
+        
+        plot_matrix[j, k] <- subset_val
+        
+      }
+    }
+  }
+  
+  ##Create the stacked barplot
+  bp <- barplot(plot_matrix, 
+                col = selection_colors[episodes],
+                border = NA,
+                space = 0.2,
+                axes = FALSE,
+                ylim = c(0, 105),
+                main = "",
+                names.arg = rep("", ncol(plot_matrix)))
+  
+  ##Add axes
+  axis(1, at = 1:2, labels = c("Female", "Male"), lwd = 2, cex.axis = 1.8)
+  
+  if (i == 1) {
+    
+    axis(2, las = 1, cex.axis = 1.8, lwd = 2)
+    box(bty = "l", lwd = 2)
+    
+  }else{
+    
+      axis(1, at = 0:3, labels = NA, lwd = 2, lwd.ticks = NA)
+
+  }
+  
+  #Add species label as title
+  mtext(bquote(italic(.(species_names[i]))), side = 3, line = -1.4, cex = 1.6)
+}
+
+#Add overall axis labels
+mtext("Sex", side = 1, outer = TRUE, line = 2, cex = 1.3)
+mtext("Percent", side = 2, outer = TRUE, line = 3, cex = 1.3)
+
+# Add legend
+par(fig = c(0, 1, 0, 1), oma = c(5, 5, 5, 0),
+    mar = c(3, 1, 2, 1), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+
+legend("right", 
+       legend = c(expression("I"[1]), expression("I"[2]), expression("I"[3])),
+       fill = selection_colors[c("I_1", "I_2", "I_3")],
+       border = NA,
+       cex = 2,
+       bty = "n",
+       xpd = TRUE)
+
+dev.off()
+
+```
+
+
+```{r fig-opp-select-assemble, message=FALSE}
+
+figA <- image_ggplot(image_read_pdf('figs/opp_select_aveCI.pdf'),interpolate = TRUE)
+figB <- image_ggplot(image_read_pdf('figs/opp_select_per.pdf'),interpolate = TRUE)
+
+fig <- figA + figB + plot_annotation(tag_levels = "A")
+
+ggsave("figs/fig_opp_select.pdf", fig, height = 5, width=11)
+ggsave("figs/fig_opp_select.png", fig, height = 5, width=11)
+
+```
+
