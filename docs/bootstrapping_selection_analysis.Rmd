@@ -31,7 +31,8 @@ set.seed(2025)
 num_bootstraps<-1000 #change this as needed
 source("R/partition_I.R")
 source("R/bootstrap_partition_I.R")
-
+source("R/bootstrap_s.R")
+source("R/calc_selection_diffs.R")
 ```
 
 
@@ -59,11 +60,11 @@ mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
                                        fem_succFL,
                                        mal_succFL)
-write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions.csv",
+write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-floridae-boot}
-boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions.csv")
+boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_R1.csv")
 ```
 
 
@@ -72,11 +73,11 @@ boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions.csv")
 boot_fuscus <- bootstrap_partition_I(num_bootstraps,
                                        fem_succFU,
                                        mal_succFU)
-write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions.csv",
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-fuscus-boot}
-boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions.csv")
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_R1.csv")
 ```
 
 
@@ -85,11 +86,11 @@ boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions.csv")
 boot_scovelli <- bootstrap_partition_I(num_bootstraps,
                                        fem_succSC,
                                        mal_succSC)
-write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions.csv",
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-scovelli-boot}
-boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions.csv")
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_R1.csv")
 ```
 
 
@@ -133,8 +134,9 @@ female_CIs <- as.data.frame(rbind(floridae_CIs[grep("fem", rownames(floridae_CIs
 female_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("fem", rownames(floridae_CIs)),])),
                         rep("fuscus", times = nrow(fuscus_CIs[grep("fem", rownames(fuscus_CIs)),])),
                         rep("scovelli", times = nrow(scovelli_CIs[grep("fem", rownames(scovelli_CIs)),])))
+female_CIs[,colnames(female_CIs) != "species"]<-round(female_CIs[,colnames(female_CIs) != "species"],6)
 
-kable(round(female_CIs[,colnames(female_CIs) != "species"],6))
+kable(female_CIs)
 
 ```
 
@@ -160,11 +162,11 @@ kable(male_CIs)
 boot_floridae <- bootstrap_partition_I(num_bootstraps,
                                        fem_succFL[fem_succFL$mated==1,],
                                        mal_succFL[mal_succFL$mated==1,])
-write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_mated.csv",
+write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_mated_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-floridae-boot-mated}
-boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated.csv")
+boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated_R1.csv")
 ```
 
 
@@ -182,11 +184,11 @@ trials_to_use<-intersect(names(fem_tab[which(fem_tab>1)]),
 boot_fuscus <- bootstrap_partition_I(num_bootstraps,
                                        fem_fu_mated[which(fem_fu_mated$trial_num %in% trials_to_use),],
                                        mal_fu_mated[which(mal_fu_mated$trial_num %in% trials_to_use),])
-write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_mated.csv",
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_mated_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-fuscus-boot-mated}
-boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated.csv")
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated_R1.csv")
 ```
 
 
@@ -195,11 +197,11 @@ boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated.csv")
 boot_scovelli <- bootstrap_partition_I(num_bootstraps,
                                        fem_succSC[fem_succSC$mated==1,],
                                        mal_succSC[mal_succSC$MatingSuccess>0,])
-write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_mated.csv",
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_mated_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-scovelli-boot-mated}
-boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated_R1.csv")
 ```
 
 
@@ -238,11 +240,11 @@ kable(round(male_CIs,2))
 boot_floridae <- bootstrap_s(num_bootstraps,
                                        fem_succFL,
                                        mal_succFL)
-write.csv(boot_floridae, "data/floridae_bootstrapped_s.csv",
+write.csv(boot_floridae, "data/floridae_bootstrapped_s_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-floridae-boot-s}
-boot_floridae<-read.csv("data/floridae_bootstrapped_s.csv")
+boot_floridae<-read.csv("data/floridae_bootstrapped_s_R1.csv")
 ```
 
 
@@ -251,11 +253,11 @@ boot_floridae<-read.csv("data/floridae_bootstrapped_s.csv")
 boot_fuscus <- bootstrap_s(num_bootstraps,
                                        fem_succFU,
                                        mal_succFU)
-write.csv(boot_fuscus, "data/fuscus_bootstrapped_s.csv",
+write.csv(boot_fuscus, "data/fuscus_bootstrapped_s_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-fuscus-boot-s}
-boot_fuscus<-read.csv("data/fuscus_bootstrapped_s.csv")
+boot_fuscus<-read.csv("data/fuscus_bootstrapped_s_R1.csv")
 ```
 
 
@@ -264,38 +266,39 @@ boot_fuscus<-read.csv("data/fuscus_bootstrapped_s.csv")
 boot_scovelli <- bootstrap_s(num_bootstraps,
                                        fem_succSC,
                                        mal_succSC)
-write.csv(boot_scovelli, "data/scovelli_bootstrapped_s.csv",
+write.csv(boot_scovelli, "data/scovelli_bootstrapped_s_R1.csv",
           quote=FALSE, row.names = FALSE)
 ```
 ```{r get-scovelli-boot-s}
-boot_scovelli<-read.csv("data/scovelli_bootstrapped_s.csv")
+boot_scovelli<-read.csv("data/scovelli_bootstrapped_s_R1.csv")
 ```
 
 #### Generating summary statistics for selection differentials
 
 ```{r calc-cis-s}
-floridae_CIs<-apply(boot_floridae,2,cim)
-fuscus_CIs<-apply(boot_fuscus,2,cim)
-scovelli_CIs<-apply(boot_scovelli,2,cim)
+floridae_CIs<-calculate_CIs(boot_floridae)
+fuscus_CIs<-calculate_CIs(boot_fuscus)
+scovelli_CIs<-calculate_CIs(boot_scovelli)
 ```
 
 
 ```{r show-fem-cis-s}
-female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
-colnames(female_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
+female_CIs<-cbind(floridae_CIs[grep("fem",rownames(floridae_CIs)),],
+                  fuscus_CIs[grep("fem",rownames(fuscus_CIs)),],
+                  scovelli_CIs[grep("fem",rownames(scovelli_CIs)),])
+colnames(female_CIs)[1:3]<-paste0("floridae_",colnames(female_CIs)[1:3])
+colnames(female_CIs)[4:6]<-paste0("fuscus",colnames(female_CIs)[4:6])
+colnames(female_CIs)[7:9]<-paste0("scovelli_",colnames(female_CIs)[7:9])
+
 kable(round(female_CIs,2))
 ```
 ```{r show-mal-cis-s}
-male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
-colnames(male_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
+male_CIs<-cbind(floridae_CIs[grep("mal",rownames(floridae_CIs)),],
+      fuscus_CIs[grep("mal",rownames(floridae_CIs)),],
+      scovelli_CIs[grep("mal",rownames(floridae_CIs)),])
+colnames(male_CIs)[1:3]<-paste0("floridae_",colnames(male_CIs)[1:3])
+colnames(male_CIs)[4:6]<-paste0("fuscus_",colnames(male_CIs)[4:6])
+colnames(male_CIs)[7:9]<-paste0("scovelli_",colnames(male_CIs)[7:9])
 kable(round(male_CIs,2))
 ```
 
