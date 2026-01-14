@@ -148,7 +148,8 @@ male_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("mal", rown
                       rep("fuscus", times = nrow(fuscus_CIs[grep("mal", rownames(fuscus_CIs)),])),
                       rep("scovelli", times = nrow(scovelli_CIs[grep("mal", rownames(scovelli_CIs)),])))
 
-kable(round(male_CIs,6))
+male_CIs[,1:3]<-round(male_CIs[,1:3],6)
+kable(male_CIs)
 
 ```
 
@@ -167,7 +168,7 @@ boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated.csv")
 ```
 
 
-Because some of the fuscus trials only had one male and/or one female mate (which cannot have a variance calculated on it for partitioning I, if all non-mated individuals are removed), I first need to sub-set the data to only include trials with 2 or more mated individuals.
+Because some of the S. fuscus trials only had one male and/or one female mate (which cannot have a variance calculated on it for partitioning I, if all non-mated individuals are removed), I first need to sub-set the data to only include trials with 2 or more mated individuals.
 
 ```{r boot-fuscus-mated, eval=FALSE}
 fem_fu_mated<-fem_succFU[fem_succFU$mated==1,]
