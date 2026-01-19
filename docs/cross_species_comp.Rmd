@@ -25,6 +25,7 @@ library(spfTools)
 library(magick)
 library(patchwork)
 library(ggplot2)
+library(nnet)
 
 ```
 
@@ -59,14 +60,14 @@ We can start by comparing the episodes of selection calculated for males and fem
 
 I am first going to plot the average fitness value with the confidence intervals as error bars. 
 
-```{r opp-select-ave-CI}
+```{r opp-select-ave-CI, echo = FALSE, fig.height=8, fig.width=10}
 #Set colors used for the two sexes
 sex_cols <- c("F" = "#7fc97f", "M" = "#beaed4" )
 
 #Create a vector of the species names
 species_names <- c("S. floridae", "S. fuscus", "S. scovelli")
 
-pdf("figs/opp_select_aveCI.pdf", width = 10, height=8)
+#pdf("figs/opp_select_aveCI.pdf", width = 10, height=8)
 
 #Set up the plotting parameters
 par(mfrow = c(1, 3), 
@@ -102,7 +103,7 @@ x_labels_display <- sapply(x_labels_orig, function(x) {
 for (i in 1:length(unique(opp_select_sub$species))) {
   
   #Subset for the species of interest
-  species_data <- opp_select_sub[opp_select_sub$species == species_levels[i], ]
+  species_data <- opp_select_sub[opp_select_sub$species == unique(opp_select_sub$species)[i], ]
   
   #Set up empty plot with no axes
   plot(NULL, xlim = c(0, 5.5),
@@ -135,7 +136,7 @@ for (i in 1:length(unique(opp_select_sub$species))) {
   for (j in 1:length(unique(opp_select_sub$sex))) {
     
     #Subset for the sex of interest
-    sex_data <- species_data[species_data$sex == sex_levels[j], ]
+    sex_data <- species_data[species_data$sex == unique(opp_select_sub$sex)[j], ]
     
     #Match x positions to categorical positions
     x_positions <- match(sex_data$episode_sel, x_labels_orig)
@@ -178,7 +179,7 @@ legend("right",
        pch = 16,
        ncol = 1)
 
-dev.off()
+#dev.off()
 
 #Reset par
 par(mfrow = c(1, 1))
@@ -227,7 +228,7 @@ for (pipefish in unique(opp_select_sub$species)) {
 
 Once we have the percentages we can use them to generate stacked bar plots for the different species.
 
-```{r opp-select-percent}
+```{r opp-select-percent, echo = FALSE, fig.height=8, fig.width=8}
 #Set the colors
 selection_colors <- c("I_2" = "#2F97C1", "I_3" = "#C05746", "I_1" = "#FAC748")
 
@@ -238,7 +239,7 @@ opp_percents_sub <- opp_percents[opp_percents$Episode_sel %in% c("I_1", "I_2", "
 sex_list <- c("F", "M")
 episodes <- c("I_1", "I_2", "I_3")
 
-pdf("figs/opp_select_per.pdf", width = 8, height=8)
+#pdf("figs/opp_select_per.pdf", width = 8, height=8)
 
 #Set up plotting parameters
 par(mfrow = c(1, 3), 
@@ -260,9 +261,9 @@ for (i in 1:length(unique(opp_percents_sub$Species))) {
   for (j in 1:length(episodes)) {
     for (k in 1:length(sex_list)) {
       
-      subset_val <- plot_data[plot_data$Species == sp & 
-                              plot_data$Episode_sel == episodes[j] & 
-                              plot_data$Sex == sex_list[k], "Percent"]
+      subset_val <- opp_percents_sub[opp_percents_sub$Species == sp & 
+                              opp_percents_sub$Episode_sel == episodes[j] & 
+                              opp_percents_sub$Sex == sex_list[k], "Percent"]
       
       if (length(subset_val) > 0) {
         
@@ -317,12 +318,11 @@ legend("right",
        bty = "n",
        xpd = TRUE)
 
-dev.off()
+#dev.off()
 
 ```
 
-
-```{r fig-opp-select-assemble, message=FALSE}
+```{r fig-opp-select-assemble, message=FALSE, eval = FALSE}
 
 figA <- image_ggplot(image_read_pdf('figs/opp_select_aveCI.pdf'),interpolate = TRUE)
 figB <- image_ggplot(image_read_pdf('figs/opp_select_per.pdf'),interpolate = TRUE)
@@ -338,7 +338,9 @@ ggsave("figs/fig_opp_select.png", fig, height = 5, width=11)
 
 For the Bateman gradient I will only be comparing females across the three species as they are the sex which consistently mates multiply.
 
-```{r fem-bate,am}
+The model we have chosen for the gradient is a linear mixed effects model where we have used the trial number as a random effect.
+
+```{r fem-bateman, echo=FALSE, fig.height=8, fig.width=8, message = FALSE}
 fem_bateman_all <- rbind(FL_fem_bateman[,-4], FU_fem_bateman)
 fem_bateman_all <- rbind(fem_bateman_all, SS_fem_bateman)
 
@@ -354,7 +356,7 @@ species_shapes <- c("floridae" = 15,
 slopes <- numeric(length(levels(fem_bateman_all$species)))
 names(slopes) <- levels(fem_bateman_all$species)
 
-pdf("figs/fem_bateman.pdf", width = 8, height=8)
+#pdf("figs/fem_bateman.pdf", width = 8, height=8)
 
 par(oma = c(2,2,1,1),
     mar = c(1,1,2,1),
@@ -427,13 +429,13 @@ outer_legend("top",
              ncol = 3,
              text.font = 3)
 
-dev.off()
+#dev.off()
 
 ```
 
 The Bateman gradient primarily focuses on pre-copulatory selection, to add an extra component I am going to compare the proportion of eggs developed (post-copulatory selection) between singly and multiply mated females across the species.
 
-```{r s-m-prop-developed}
+```{r s-m-prop-developed, echo= FALSE, fig.width=8, fig.height=8}
 fem_fitness_all <- rbind(FL_fem_fitness[,c(2:3,12:17)], FU_fem_fitness[,c(2:3,12:17)])
 fem_fitness_all <- rbind(fem_fitness_all, SS_fem_fitness[,c(1:3,7:8,6,13,15)])
 
@@ -458,7 +460,7 @@ data$group <- factor(data$group,
 mated_colors <- c("S" = "#D6D6D6", 
                   "M" = "#8C8A8A")
 
-pdf("figs/SM_boxplot.pdf", width = 8, height=8)
+#pdf("figs/SM_boxplot.pdf", width = 8, height=8)
 
 par(oma=c(4,5,1,1), 
     mar=c(1,1,1,0))
@@ -512,7 +514,7 @@ legend("bottomright",
 
 
 
-dev.off()
+#dev.off()
 
 
 ```
@@ -543,7 +545,7 @@ t.test(data$eggs_per_mate[data$species == "scovelli"] ~ data$mating_status[data$
 
 The only significant difference present is in _S. scovelli_. For the other two species, even if there were a significant difference, it is likely that the sample size of the multiply mated females is too small to detect one.
 
-```{r}
+```{r, eval = FALSE}
 figB <- image_ggplot(image_read_pdf('figs/SM_boxplot.pdf'),interpolate = TRUE)
 figA <- image_ggplot(image_read_pdf('figs/fem_bateman.pdf'),interpolate = TRUE)
 
@@ -552,4 +554,199 @@ fig <- figA + figB + plot_annotation(tag_levels = "A")
 ggsave("figs/Fig_bateman_prop.pdf", fig, height=5, width=10)
 ggsave("figs/Fig_bateman_prop.png", fig, height=5, width=10) # also save as a png
 ```
+
+
+## Selection differentials and gradients across the species
+
+I am going to try running a multinomial logistic regression where I will use a trait of interest to predict mating success females in the three species. I will start with snout-vent-length as the trait of interest.
+
+```{r log-reg-model-svl, message=FALSE}
+##Convert mating success and run the model
+FL_fem_fitness$MatingSuccess <- factor(FL_fem_fitness$MatingSuccess)
+model_FL <- multinom(MatingSuccess ~ svl, data = FL_fem_fitness)
+summary(model_FL)
+
+FU_fem_fitness$MatingSuccess <- factor(FU_fem_fitness$MatingSuccess)
+model_FU <- multinom(MatingSuccess ~ svl, data = FU_fem_fitness)
+summary(model_FU)
+
+SS_fem_fitness$MatingSuccess <- factor(SS_fem_fitness$MatingSuccess)
+model_SS <- multinom(MatingSuccess ~ svl, data = SS_fem_fitness)
+summary(model_SS)
+
+```
+
+Now that we have the models, we can use them to predict the probability of having a mating success of X at each trait value.
+
+```{r log-reg-vis, echo=FALSE, fig.width=10, fig.height=5}
+par(mfrow = c(1,3))
+#S. floridae
+##Create prediction range
+svl_range_FL <- seq(min(FL_fem_fitness$svl), 
+                    max(FL_fem_fitness$svl), length.out = 100)
+predicted_probs_FL <- predict(model_FL, 
+                              newdata = data.frame(svl = svl_range_FL), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(svl_range_FL, predicted_probs_FL[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Snout-Vent Length (mm)",
+     ylab = "Predicted Probability",
+     main = "S. floridae")
+lines(svl_range_FL, predicted_probs_FL[,2], col = "#FAC748", lwd = 2)
+lines(svl_range_FL, predicted_probs_FL[,3], col = "#C05746", lwd = 2)
+lines(svl_range_FL, predicted_probs_FL[,4], col = "#7fc97f", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings", "3 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746", "#7fc97f"), 
+       lwd = 2, 
+       bty = "n")
+
+#S. fuscus
+##Create prediction range
+svl_range_FU <- seq(min(FU_fem_fitness$svl), 
+                    max(FU_fem_fitness$svl), length.out = 100)
+predicted_probs_FU <- predict(model_FU, 
+                              newdata = data.frame(svl = svl_range_FU), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(svl_range_FU, predicted_probs_FU[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Snout-Vent Length (mm)",
+     ylab = "Predicted Probability",
+     main = "S. fuscus")
+lines(svl_range_FU, predicted_probs_FU[,2], col = "#FAC748", lwd = 2)
+lines(svl_range_FU, predicted_probs_FU[,3], col = "#C05746", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746"), 
+       lwd = 2, 
+       bty = "n")
+
+#S. scovelli
+##Create prediction range
+svl_range_SS <- seq(min(SS_fem_fitness$svl), 
+                    max(SS_fem_fitness$svl), length.out = 100)
+predicted_probs_SS <- predict(model_SS, 
+                              newdata = data.frame(svl = svl_range_SS), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(svl_range_SS, predicted_probs_SS[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Snout-Vent Length (mm)",
+     ylab = "Predicted Probability",
+     main = "S. scovelli")
+lines(svl_range_SS, predicted_probs_SS[,2], col = "#FAC748", lwd = 2)
+lines(svl_range_SS, predicted_probs_SS[,3], col = "#C05746", lwd = 2)
+lines(svl_range_SS, predicted_probs_SS[,4], col = "#7fc97f", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings", "3 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746", "#7fc97f"), 
+       lwd = 2, 
+       bty = "n")
+
+```
+
+The only species we can see any clear patterns for is _S. scovelli_, when a female reaches a certain snout-vent length, her chances for securing a mate increase considerably.
+
+I will re-run the same thing now using torso depth as the trait of interest.
+
+```{r log-reg-model-depth}
+##Convert mating success and run the model
+FL_fem_fitness$MatingSuccess <- factor(FL_fem_fitness$MatingSuccess)
+model_FL <- multinom(MatingSuccess ~ depth, data = FL_fem_fitness)
+summary(model_FL)
+
+FU_fem_fitness$MatingSuccess <- factor(FU_fem_fitness$MatingSuccess)
+model_FU <- multinom(MatingSuccess ~ depth, data = FU_fem_fitness)
+summary(model_FU)
+
+SS_fem_fitness$MatingSuccess <- factor(SS_fem_fitness$MatingSuccess)
+model_SS <- multinom(MatingSuccess ~ depth, data = SS_fem_fitness)
+summary(model_SS)
+
+```
+
+```{r log-reg-vis-depth, echo=FALSE, fig.width=10, fig.height=5}
+par(mfrow = c(1,3))
+#S. floridae
+##Create prediction range
+depth_range_FL <- seq(min(FL_fem_fitness$depth), 
+                    max(FL_fem_fitness$depth), length.out = 100)
+predicted_probs_FL <- predict(model_FL, 
+                              newdata = data.frame(depth = depth_range_FL), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(depth_range_FL, predicted_probs_FL[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Torso Depth (mm)",
+     ylab = "Predicted Probability",
+     main = "S. floridae")
+lines(depth_range_FL, predicted_probs_FL[,2], col = "#FAC748", lwd = 2)
+lines(depth_range_FL, predicted_probs_FL[,3], col = "#C05746", lwd = 2)
+lines(depth_range_FL, predicted_probs_FL[,4], col = "#7fc97f", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings", "3 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746", "#7fc97f"), 
+       lwd = 2, 
+       bty = "n")
+
+#S. fuscus
+##Create prediction range
+depth_range_FU <- seq(min(FU_fem_fitness$depth), 
+                    max(FU_fem_fitness$depth), length.out = 100)
+predicted_probs_FU <- predict(model_FU, 
+                              newdata = data.frame(depth = depth_range_FU), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(depth_range_FU, predicted_probs_FU[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Torso Depth (mm)",
+     ylab = "Predicted Probability",
+     main = "S. fuscus")
+lines(depth_range_FU, predicted_probs_FU[,2], col = "#FAC748", lwd = 2)
+lines(depth_range_FU, predicted_probs_FU[,3], col = "#C05746", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746"), 
+       lwd = 2, 
+       bty = "n")
+
+#S. scovelli
+##Create prediction range
+depth_range_SS <- seq(min(SS_fem_fitness$depth), 
+                    max(SS_fem_fitness$depth), length.out = 100)
+predicted_probs_SS <- predict(model_SS, 
+                              newdata = data.frame(depth = depth_range_SS), 
+                              type = "probs")
+
+##Plot the predicted probabilities for each category
+plot(depth_range_SS, predicted_probs_SS[,1], type = "l", col = "#2F97C1", lwd = 2,
+     ylim = c(0, 1),
+     xlab = "Torso Depth (mm)",
+     ylab = "Predicted Probability",
+     main = "S. scovelli")
+lines(depth_range_SS, predicted_probs_SS[,2], col = "#FAC748", lwd = 2)
+lines(depth_range_SS, predicted_probs_SS[,3], col = "#C05746", lwd = 2)
+lines(depth_range_SS, predicted_probs_SS[,4], col = "#7fc97f", lwd = 2)
+
+legend("topright", 
+       legend = c("0 matings", "1 mating", "2 matings", "3 matings"),
+       col = c("#2F97C1", "#FAC748", "#C05746", "#7fc97f"), 
+       lwd = 2, 
+       bty = "n")
+
+```
+
+For torso depth, we can start to see some interesting patterns forming for all three species, there is a higher probability that at least one mating will be secured if you have a deeper torso.
 
