@@ -1,5 +1,6 @@
 Selection pressures in *Syngnathus floridae*
 ================
+Coley Tosto
 
 
 
@@ -27,6 +28,8 @@ Selection pressures in *Syngnathus floridae*
   - [Females](#females-1)
     - [Visual Comparison](#visual-comparison-1)
     - [Testing the difference](#testing-the-difference-1)
+    - [Relationships with latency to
+      mate](#relationships-with-latency-to-mate-1)
 - [Looking into the Opportunity for Selection in Males and
   Females](#looking-into-the-opportunity-for-selection-in-males-and-females)
   - [Generating the total opportunity for selection ($I$) and the
@@ -53,14 +56,18 @@ Selection pressures in *Syngnathus floridae*
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
-library(ggplot2)
-library(cowplot)
-library(fBasics)
-library(pwr)
-#library(lme4)
-library(dplyr)
-library(tidyr)
-library(knitr)
+library(fBasics) #v4041.97
+library(pwr) #v1.3.0
+
+library(ggplot2) #v4.0.2
+library(cowplot) #v1.1.3
+
+library(lme4) #v1.1.35.5
+library(lmerTest) #v3.2.1
+
+library(dplyr) #v1.1.4
+library(tidyr) #v1.3.1
+library(knitr) #v1.49
 ```
 
 ``` r
@@ -115,7 +122,7 @@ of the pipefish prior to running any analyses. Snout-vent length was
 chosen over standard length as it is more representative of the size of
 the pipefish. It is possible for a pipefish to loose a part of its tail
 and remain alive, which would impact the standard length, but not the
-snout-vent length
+snout-vent length.
 
 ``` r
 #Adjust the torso depth
@@ -349,11 +356,10 @@ t.test(fem_mesoFL$svl, mal_mesoFL$svl, var.equal = FALSE)
     ##  80.01955  73.97576
 
 From these results we can see that there are no significant differences
-between male and female pipefish in terms of standard length. However,
-female dusky pipefish are significantly deeper that males and possess a
-significantly longer snout-vent length. For those two morphometrics I am
-going to run a power test to ensure that we are confident in our
-results.
+between male and female pipefish in terms of standard length or torso
+depth. However, female dusky pipefish possess a significantly longer
+snout-vent length. For that measurement I am going to run a power test
+to ensure that we are confident in our results.
 
 ``` r
 #Checking the power - SVL
@@ -381,33 +387,8 @@ pwr.t.test(n = nrow(fem_mesoFL),
     ## 
     ## NOTE: n is number in *each* group
 
-``` r
-#Checking the power - Depth
-d_mean_depth <- abs(mean(fem_mesoFL$depth_adj, na.rm = TRUE) - 
-                      mean(mal_mesoFL$depth_adj, na.rm = TRUE))
-pool_sd_depth <- sqrt((var(fem_mesoFL$depth_adj, na.rm = TRUE) + 
-                         var(mal_mesoFL$depth_adj, na.rm = TRUE))/ 2)
-d_depth <- d_mean_depth/pool_sd_depth
-pwr.t.test(n = nrow(fem_mesoFL), 
-           d = d_depth,
-           sig.level = 0.05,
-           type = 'two.sample',
-           alternative = 'two.sided')
-```
-
-    ## 
-    ##      Two-sample t test power calculation 
-    ## 
-    ##               n = 86
-    ##               d = 0.20916
-    ##       sig.level = 0.05
-    ##           power = 0.2759803
-    ##     alternative = two.sided
-    ## 
-    ## NOTE: n is number in *each* group
-
-For both variables we have a power of over 0.9 or over 90% so we can be
-confident in our interpretation.
+We have a power of over 0.9 or over 90% so we can be confident in our
+interpretation.
 
 # Calculating mating and reproductive success for individuals who mated
 
@@ -426,65 +407,64 @@ male and female who mated based on the assigned mom for each genotyped
 embryo.
 
 ``` r
-#Row-by-Row analysis of parentage data by male brood pouch section
+####################################################################################
+####### Row-by-Row analysis of parentage data by male brood pouch section ##########
+####################################################################################
 
-#Read in the data
-#em_dat <- read.csv("~/EmbryoParentage.csv")
-
-#For each row in the dataset(each section of the pouch) apply this function
-mom_counts <- do.call(rbind,apply(em_dat, 1, function(one_section){
+#For each row in the dataset(each section of the pouch) apply this function:
+#Count the number of eggs in each male's brood pouch which belong to the
+#contributing females
+mom_counts <- do.call(rbind, apply(em_dat, 1, function(one_section){
   
   #Save all of the momIDs into an object
-  mom_ids<-c(one_section[grep("momID",names(one_section))])  
+  mom_ids <- c(one_section[grep("momID",names(one_section))])  
   
   #Calculate the number of eggs that belongs to each potential mom based on
   #the proportions and total number of developed and undeveloped embryos
-  mom_props<-c(as.numeric(one_section[grep("prop",names(one_section))]))
-  mom_counts_dev<-mom_props*as.numeric(one_section["num_embryos_dev"])
-  mom_counts_und<-mom_props*as.numeric(one_section["num_embryos_non_dev"])
+  mom_props <- c(as.numeric(one_section[grep("prop",names(one_section))]))
+  mom_counts_dev <- mom_props*as.numeric(one_section["num_embryos_dev"])
+  mom_counts_und <- mom_props*as.numeric(one_section["num_embryos_non_dev"])
   
   #Create a dataframe that contains the maleID, pouch section number and the
   #number of eggs that belongs to each momID
-  this_section<-data.frame(
-    maleID=one_section["maleID"],
-    section_num=one_section["section_num"],
-    mom_ids[which((mom_counts_dev + mom_counts_und) > 0)],
-    mom_counts_dev[which((mom_counts_dev + mom_counts_und)>0)],
-    mom_counts_und[which((mom_counts_dev + mom_counts_und)>0)]
-  )
+  this_section <- data.frame(maleID = one_section["maleID"],
+                             section_num = one_section["section_num"],
+                             mom_ids[which((mom_counts_dev + mom_counts_und) > 0)],
+                             mom_counts_dev[which((mom_counts_dev + mom_counts_und)>0)],
+                             mom_counts_und[which((mom_counts_dev + mom_counts_und)>0)])
   
   #Rename the columns
   colnames(this_section)[3:5]<-c("momID","num_dev","num_und")
   
   return(this_section)
   
-}))
+  }))
 
 #Calculate female fitness
-fem_fitness<-do.call(rbind,by(mom_counts, mom_counts$momID,function(dat){
+fem_fitness<-do.call(rbind, by(mom_counts, mom_counts$momID, function(dat){
   
-  mom_fitness<-data.frame(
-    momID=unique(dat$momID),
-    MatingSuccess=length(unique(dat$maleID)),
-    NumDeveloped=round(sum(dat$num_dev)),
-    NumUndeveloped=round(sum(dat$num_und))
-  )
+  mom_fitness <- data.frame(momID = unique(dat$momID),
+                            MatingSuccess = length(unique(dat$maleID)),
+                            NumDeveloped = round(sum(dat$num_dev)),
+                            NumUndeveloped = round(sum(dat$num_und)))
+  
   return(mom_fitness)
-}))
+  
+  }))
 
 fem_fitness$totalEggs <- fem_fitness$NumDeveloped + fem_fitness$NumUndeveloped
 
 #Calculate Male Fitness 
-mal_fitness<-do.call(rbind,by(mom_counts, mom_counts$maleID,function(dat){
+mal_fitness<-do.call(rbind, by(mom_counts, mom_counts$maleID, function(dat){
  
-  dad_fitness<-data.frame(
-    maleID=unique(dat$maleID),
-    MatingSuccess=length(unique(dat$momID)),
-    NumDeveloped_Calc=round(sum(dat$num_dev)),
-    NumUndeveloped_Calc=round(sum(dat$num_und))
-  )
+  dad_fitness<-data.frame(maleID = unique(dat$maleID),
+                          MatingSuccess = length(unique(dat$momID)),
+                          NumDeveloped_Calc = round(sum(dat$num_dev)),
+                          NumUndeveloped_Calc = round(sum(dat$num_und)))
+  
   return(dad_fitness)
-}))
+  
+  }))
 
 mal_fitness$totalEggs <- mal_fitness$NumDeveloped_Calc + mal_fitness$NumUndeveloped_Calc
 ```
@@ -553,8 +533,8 @@ fem_succFL$mated <- ifelse(fem_succFL$MatingSuccess > 0, 1, 0)
 ```
 
 ``` r
-write.csv(fem_succFL, "floridae_fem_succ.csv",quote=FALSE, row.names = FALSE)
-write.csv(fem_succFL, "floridae_mal_succ.csv",quote=FALSE, row.names = FALSE)
+write.csv(fem_succFL, "data/floridae_fem_succ.csv",quote=FALSE, row.names = FALSE)
+write.csv(mal_succFL, "data/floridae_mal_succ.csv",quote=FALSE, row.names = FALSE)
 ```
 
 # Summary statistics for successfully mated individuals
@@ -599,7 +579,8 @@ had.</em></figcaption>
 
 There may be some correlation happening here, but it doesn’t look
 particularly strong. Let’s run some correlations tests to see what they
-say.
+say. As these data are normally distributed I will use the standard
+Pearson’s correlation test.
 
     ## 
     ##  Pearson's product-moment correlation
@@ -1047,15 +1028,58 @@ between the latency to trials and various components of fitness.
 #Mating success
 ##Create the model
 mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
-                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date))
+                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date),
+                    REML = TRUE)
 
 summary(mate_succlm)
+```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: 
+    ## mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_location) +  
+    ##     (1 | mal_succFL$col_date)
+    ## 
+    ## REML criterion at convergence: 122.7
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.0664 -0.9121 -0.3876  0.5572  2.2580 
+    ## 
+    ## Random effects:
+    ##  Groups                  Name        Variance Std.Dev.
+    ##  mal_succFL$col_date     (Intercept) 0.02109  0.1452  
+    ##  mal_succFL$col_location (Intercept) 0.00000  0.0000  
+    ##  Residual                            0.44891  0.6700  
+    ## Number of obs: 56, groups:  mal_succFL$col_date, 3; mal_succFL$col_location, 2
+    ## 
+    ## Fixed effects:
+    ##                         Estimate Std. Error       df t value Pr(>|t|)  
+    ## (Intercept)              0.80188    0.24599  5.25557   3.260   0.0209 *
+    ## mal_succFL$lat_to_trial -0.02067    0.01274 49.26354  -1.622   0.1112  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## ml_sccFL$__ -0.827
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
 ##Create model with fewer parameters
 lm_no_location <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
                          (1 | mal_succFL$col_date))
 anova(mate_succlm, lm_no_location)  # Compare models with and without col_location
 ```
+
+    ## Data: NULL
+    ## Models:
+    ## lm_no_location: mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_date)
+    ## mate_succlm: mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date)
+    ##                npar    AIC    BIC logLik deviance Chisq Df Pr(>Chisq)
+    ## lm_no_location    4 121.02 129.12 -56.51   113.02                    
+    ## mate_succlm       5 123.02 133.15 -56.51   113.02     0  1          1
 
 I ran a linear mixed effects model comparing Mating Success to the
 Latency to trial including both the collection date and collection
@@ -1087,15 +1111,59 @@ that were successfully able to obtain a mate.
 ##Create the model
 tot_eggslm <- lmer(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + 
                       (1 | mated_malFL$col_location) + 
-                     (1 | mated_malFL$col_date))
+                     (1 | mated_malFL$col_date),
+                    REML = TRUE)
 
 summary(tot_eggslm)
+```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: 
+    ## mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + (1 | mated_malFL$col_location) +  
+    ##     (1 | mated_malFL$col_date)
+    ## 
+    ## REML criterion at convergence: 286.4
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.8902 -0.6907 -0.1027  0.6349  1.7355 
+    ## 
+    ## Random effects:
+    ##  Groups                   Name        Variance Std.Dev.
+    ##  mated_malFL$col_date     (Intercept)     0      0.00  
+    ##  mated_malFL$col_location (Intercept)  1508     38.83  
+    ##  Residual                             16627    128.95  
+    ## Number of obs: 24, groups:  
+    ## mated_malFL$col_date, 3; mated_malFL$col_location, 2
+    ## 
+    ## Fixed effects:
+    ##                          Estimate Std. Error      df t value Pr(>|t|)    
+    ## (Intercept)               392.954     78.447   8.508   5.009 0.000865 ***
+    ## mated_malFL$lat_to_trial  -11.172      5.200  21.990  -2.148 0.042949 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## mtd_mlFL$__ -0.861
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
 ##Create model with fewer parameters
 lm_no_date <- lmer(mated_malFL$MatingSuccess ~ mated_malFL$lat_to_trial + 
                          (1 | mated_malFL$col_location))
 anova(tot_eggslm, lm_no_date)  # Compare models with and without col_location
 ```
+
+    ## Data: NULL
+    ## Models:
+    ## lm_no_date: mated_malFL$MatingSuccess ~ mated_malFL$lat_to_trial + (1 | mated_malFL$col_location)
+    ## tot_eggslm: mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + (1 | mated_malFL$col_location) + (1 | mated_malFL$col_date)
+    ##            npar     AIC     BIC   logLik deviance Chisq Df Pr(>Chisq)
+    ## lm_no_date    4  35.831  40.543  -13.915   27.831                    
+    ## tot_eggslm    5 309.982 315.873 -149.991  299.982     0  1          1
 
 In this new model now we can see that there is only non-zero variance
 for the random effect of Collection location and there does appear to be
@@ -1478,6 +1546,133 @@ alt="Overlay of the torso depth of females who mated on top of the size range of
 who mated on top of the size range of all females.</em></figcaption>
 </figure>
 
+### Relationships with latency to mate
+
+Similar to what was done with the males, we can look to see if the time
+spent in same-sex tanks in the lab impacted various components of female
+fitness.
+
+``` r
+#Mating success
+##Create the model
+fem_succlm <- lmer(fem_succFL$MatingSuccess ~ fem_succFL$lat_to_trial + 
+                      (1 | fem_succFL$col_location) + (1 | fem_succFL$col_month),
+                    REML = TRUE)
+
+summary(fem_succlm)
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: 
+    ## fem_succFL$MatingSuccess ~ fem_succFL$lat_to_trial + (1 | fem_succFL$col_location) +  
+    ##     (1 | fem_succFL$col_month)
+    ## 
+    ## REML criterion at convergence: 139.8
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.0775 -0.7662 -0.4938  0.4967  2.9834 
+    ## 
+    ## Random effects:
+    ##  Groups                  Name        Variance Std.Dev.
+    ##  fem_succFL$col_location (Intercept) 0.0000   0.0000  
+    ##  fem_succFL$col_month    (Intercept) 0.0000   0.0000  
+    ##  Residual                            0.6271   0.7919  
+    ## Number of obs: 56, groups:  fem_succFL$col_location, 3; fem_succFL$col_month, 3
+    ## 
+    ## Fixed effects:
+    ##                         Estimate Std. Error       df t value Pr(>|t|)    
+    ## (Intercept)              1.00727    0.28041 54.00000   3.592 0.000709 ***
+    ## fem_succFL$lat_to_trial -0.03081    0.01697 54.00000  -1.816 0.074931 .  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## fm_sccFL$__ -0.926
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+Similar to the males, there is little impact of the random effects for
+both collecting location and collecting month, but we can see that
+latency to trial has a negative but non-significant effect on mating
+success.
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/lat-to-mate-matesucc-fem-plot-1.png"
+alt="Scatterplot of the relationship between the number of mates achieved by a female and how long the female was in the lab prior to entering a trial.." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between the number of mates achieved by a female and how long the female
+was in the lab prior to entering a trial..</em></figcaption>
+</figure>
+
+Now let’s see if there is any relationship when we look at reproductive
+success (in terms of total eggs received) and the latency to the trial.
+Because we already accounted for the females who didn’t mate in terms of
+mating success, I am going to remove them from this model. Therefore we
+will be looking at the impact on reproductive success on the individuals
+that were successfully able to obtain a mate.
+
+``` r
+#Mating success
+##Create the model
+tot_eggslm <- lmer(mated_femFL$totalEggs ~ mated_femFL$lat_to_trial + 
+                      (1 | mated_femFL$col_location) + 
+                     (1 | mated_femFL$col_month),
+                    REML = TRUE)
+
+summary(tot_eggslm)
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: 
+    ## mated_femFL$totalEggs ~ mated_femFL$lat_to_trial + (1 | mated_femFL$col_location) +  
+    ##     (1 | mated_femFL$col_month)
+    ## 
+    ## REML criterion at convergence: 264.5
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -1.5729 -0.5722 -0.2375  0.5148  2.3293 
+    ## 
+    ## Random effects:
+    ##  Groups                   Name        Variance Std.Dev.
+    ##  mated_femFL$col_month    (Intercept)     0      0.0   
+    ##  mated_femFL$col_location (Intercept)     0      0.0   
+    ##  Residual                             39160    197.9   
+    ## Number of obs: 21, groups:  
+    ## mated_femFL$col_month, 3; mated_femFL$col_location, 2
+    ## 
+    ## Fixed effects:
+    ##                          Estimate Std. Error     df t value Pr(>|t|)    
+    ## (Intercept)                545.70     109.56  19.00   4.981  8.3e-05 ***
+    ## mated_femFL$lat_to_trial   -18.13       7.12  19.00  -2.547   0.0197 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## mtd_fmFL$__ -0.919
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+Again the random effects do not appear to be explaining any of the
+variance, however, there does appear to be a significant negative impact
+of latency to trial on the total number of eggs transferred by a female,
+similar to what we saw in the males.
+
+<figure>
+<img
+src="selection_analysis_floridae_files/figure-gfm/lat-to-mate-toteggs-fem-plot-1.png"
+alt="Scatterplot of the relationship between the total eggs transferred by a female and how long the female was in the lab prior to entering a trial." />
+<figcaption aria-hidden="true"><em>Scatterplot of the relationship
+between the total eggs transferred by a female and how long the female
+was in the lab prior to entering a trial.</em></figcaption>
+</figure>
+
 # Looking into the Opportunity for Selection in Males and Females
 
 One of the benefits of using genetic parentage analysis is that we can
@@ -1495,16 +1690,14 @@ Because each trial provides an independent “population” (i.e., pipefish
 from one trial **cannot mate** with pipefish from another trial), I am
 going to calculate these metrics for each trial individually and then I
 will average it. With these I can then also generate 95% confidence
-intervals which I will investigate for indications of significance in
-two ways:
+intervals which I will investigate for indications of significance as
+such:
 
-- If the confidence intervals **DO NOT** cross 0 -\> significant
-  selection.
 - If the confidence intervals between the sexes **DO NOT** cross -\>
   significantly different selection between the two sexes.
 
 ``` r
-##FEMALES
+################################### FEMALES ####################################
 #Create a dataframe to store the calculations of I and I_S in
 fem_opp_selection <- data.frame(matrix(ncol = 3,
                                        nrow = 0))
@@ -1531,7 +1724,7 @@ for (trial in unique(fem_succFL$trial_num)) {
 }
 
 
-##MALES
+#################################### MALES ####################################
 #Create a dataframe to store the calculations of I and I_S in
 mal_opp_selection <- data.frame(matrix(ncol = 3,
                                        nrow = 0))
@@ -1632,11 +1825,11 @@ floridae. Errorbars represent the 95% confidence intervals around the
 mean</em></figcaption>
 </figure>
 
-We can see that for male and female *S. floridae* there is a significant
-opportunity for selection and opportunity for sexual selection, however,
-we don’t see significant differences between the sexes for either one.
-In both cases, there is a greater opportunity for selection compared to
-an opportunity for sexual selection.
+We can see that for male and female *S. floridae* we don’t see
+significant differences between the sexes for either the opportunity for
+selection or the opportunity for sexual selection. In both cases, there
+is a greater opportunity for selection compared to an opportunity for
+sexual selection.
 
 ## Partitioning the Total Opportunity for Selection ($I$)
 
@@ -1656,7 +1849,7 @@ Once again, I am going to calculate selection for the trials
 individually in males and females and then average across all trials to
 get the final values and the 95% CIs. For pre-mating processes I am
 focusing on mating success and then for post-mating processes I am
-looking at the total number of eggs transferred/received and the
+looking at the total number of eggs transferred/stored and the
 proportion of those eggs which developed (showing fertilization
 success).
 
@@ -1890,9 +2083,9 @@ columns <- c("I_1", "I_2", "coi1_2", "coi1_2given1", "coi12_2", "coi12_2given1",
              "diff_123", "I")
 
 #Create a dataframe to store the final values in
-opp_episodes_average <- data.frame(matrix(ncol = 4,
+opp_episodes_average <- data.frame(matrix(ncol = 5,
                                     nrow = 0))
-colnames(opp_episodes_average) <- c("Average", "Interval", 
+colnames(opp_episodes_average) <- c("Average", "Variance", "Interval", 
                                     "Episode_sel", "Sex")
 
 #Calculate the critical value
@@ -1908,6 +2101,12 @@ for (j in 1:length(columns)) {
                        opp_selection_episodes_all$Sex, 
                        mean)))
     
+    #Calculate the variance
+    var <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                  == col_name], 
+                       opp_selection_episodes_all$Sex, 
+                       var)))
+    
     #Calculate standard error
     se <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
                                                 == col_name], 
@@ -1920,8 +2119,8 @@ for (j in 1:length(columns)) {
     int <- se*crit
     
     #Combine the data together
-    episode <- as.data.frame(cbind(mean, int))
-    colnames(episode) <- c("Average", "Interval")
+    episode <- as.data.frame(cbind(mean, var, int))
+    colnames(episode) <- c("Average", "Variance", "Interval")
     
     episode$Episode_sel <- col_name
     episode$Sex <- rownames(episode)
@@ -1967,9 +2166,6 @@ mean</em></figcaption>
 
 From the table and the plot we can see that once again there are no
 significant differences in the selection between males and females.
-Additionally, the two post-mating episodes of selection ($I_2$ and
-$I_3$) are non-significant for both males and females (i.e., the 95% CI
-cross zero).
 
 Let’s now look more into the percentage of the overall opportunity for
 selection made up for by each individual episode of selection:
@@ -2027,9 +2223,12 @@ mating success ($I_1$) rather than variance in eggs transferred/received
 
 I now want to look at any relationship that may exist between mating
 success and reproductive success for males and females. The Bateman
-gradient ($\beta_{SS}$) will be calculated, which is the slope of the
-weighted least-squares regression of relative reproductive success
-(number of offspring divided by the mean) on mating success.
+gradient ($\beta_{SS}$) will be calculated. Historically, $\beta_{SS}$
+is the slope of the weighted least-squares regression of relative
+reproductive success (number of offspring divided by the mean) on mating
+success. Here, I will be using a linear mixed effects model with the
+trial number included as a random effect rather than a least-squares
+regression.
 
 A shallow slope in the Bateman gradient implies a low fitness gain with
 each additional mating event, and correspondingly weak or no selection
@@ -2098,76 +2297,89 @@ for (trial in unique(mal_succFL$trial_num)) {
 ```
 
 Once we have the measures of relative fitness we can use them to run the
-weighted least-squares regression for males and females separately.
+linear mixed effects model for males and females separately.
 
 ``` r
 #Generating Bateman's gradient
-#Define the model
-fem_model <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess)
-mal_model <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess)
-
-#define weights to use
-wt_fem <- 1 / lm(abs(fem_model$residuals) ~ fem_model$fitted.values)$fitted.values^2
-wt_mal <- 1 / lm(abs(mal_model$residuals) ~ mal_model$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess,
-                    weights=wt_fem)
-wls_model_mal <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess,
-                    weights=wt_mal)
+##Define the model
+fem_mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = fem_bateman,
+                REML = TRUE)
+mal_mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = mal_bateman,
+                REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem) #significant
+summary(fem_mod) #significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: fem_bateman
     ## 
-    ## Call:
-    ## lm(formula = fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess, 
-    ##     weights = wt_fem)
+    ## REML criterion at convergence: 115.5
     ## 
-    ## Weighted Residuals:
+    ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.5721 -0.0155 -0.0155 -0.0155  8.1361 
+    ## -2.2158 -0.0598 -0.0598 -0.0598  4.9215 
     ## 
-    ## Coefficients:
-    ##                           Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)               0.001705   0.024911   0.068    0.946    
-    ## fem_bateman$MatingSuccess 1.023781   0.076162  13.442   <2e-16 ***
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 3.091e-34 1.758e-17
+    ##  Residual             4.223e-01 6.498e-01
+    ## Number of obs: 56, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error       df t value Pr(>|t|)    
+    ## (Intercept)    0.03887    0.10501 54.00000    0.37    0.713    
+    ## MatingSuccess  0.96113    0.05904 54.00000   16.28   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.346 on 54 degrees of freedom
-    ## Multiple R-squared:  0.7699, Adjusted R-squared:  0.7656 
-    ## F-statistic: 180.7 on 1 and 54 DF,  p-value: < 2.2e-16
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.562
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
-summary(wls_model_mal) #significant
+summary(mal_mod) #significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: mal_bateman
     ## 
-    ## Call:
-    ## lm(formula = mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess, 
-    ##     weights = wt_mal)
+    ## REML criterion at convergence: 131.9
     ## 
-    ## Weighted Residuals:
+    ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.2297 -0.0261 -0.0261 -0.0261  6.8522 
+    ## -3.3437 -0.0325 -0.0325 -0.0083  4.2196 
     ## 
-    ## Coefficients:
-    ##                           Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)               0.002509   0.021039   0.119    0.906    
-    ## mal_bateman$MatingSuccess 1.029675   0.082827  12.432   <2e-16 ***
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 4.224e-34 2.055e-17
+    ##  Residual             5.727e-01 7.568e-01
+    ## Number of obs: 56, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error       df t value Pr(>|t|)    
+    ## (Intercept)    0.02457    0.12462 54.00000   0.197    0.844    
+    ## MatingSuccess  0.97543    0.07282 54.00000  13.396   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.244 on 54 degrees of freedom
-    ## Multiple R-squared:  0.7411, Adjusted R-squared:  0.7363 
-    ## F-statistic: 154.5 on 1 and 54 DF,  p-value: < 2.2e-16
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.584
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 For both males and females there is a significant slope, meaning both
 sexes see increases in fitness with each additional mating. I am
 interested to run the model with the two datasets combined to see if
-there is an interaction of sex.
+there is an interaction of sex (i.e., are there differences between the
+Bateman gradient for males and females).
 
 ``` r
 #Combine the two datasets
@@ -2177,44 +2389,46 @@ mal_bateman$Sex <- "M"
 all_bateman <- rbind(fem_bateman, mal_bateman)
 
 #Running a weighted least squares regression between MS and Sex
-MS_sex_model <- lm(all_bateman$rel_repo_fitness ~
-                     all_bateman$MatingSuccess*all_bateman$Sex)
+all_mod <- lmer(rel_repo_fitness ~ MatingSuccess*Sex + (1 | trial), 
+                data = all_bateman,
+                REML = TRUE)
 
-wt_all <- 1 / lm(abs(MS_sex_model$residuals) ~
-                   MS_sex_model$fitted.values)$fitted.values^2
-
-wls_MS_sex_model <- lm(all_bateman$rel_repo_fitness ~ 
-                         all_bateman$MatingSuccess*all_bateman$Sex, weights = wt_all)
-
-summary(wls_MS_sex_model)
+summary(all_mod)
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess * Sex + (1 | trial)
+    ##    Data: all_bateman
     ## 
-    ## Call:
-    ## lm(formula = all_bateman$rel_repo_fitness ~ all_bateman$MatingSuccess * 
-    ##     all_bateman$Sex, weights = wt_all)
+    ## REML criterion at convergence: 248.6
     ## 
-    ## Weighted Residuals:
+    ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.5546 -0.0327 -0.0224 -0.0120  7.4643 
+    ## -3.5876 -0.0551 -0.0348 -0.0348  4.5342 
     ## 
-    ## Coefficients:
-    ##                                              Estimate Std. Error t value
-    ## (Intercept)                                 0.0012765  0.0231776   0.055
-    ## all_bateman$MatingSuccess                   1.0257671  0.0809607  12.670
-    ## all_bateman$SexM                            0.0020852  0.0329369   0.063
-    ## all_bateman$MatingSuccess:all_bateman$SexM -0.0001004  0.1129412  -0.001
-    ##                                            Pr(>|t|)    
-    ## (Intercept)                                   0.956    
-    ## all_bateman$MatingSuccess                    <2e-16 ***
-    ## all_bateman$SexM                              0.950    
-    ## all_bateman$MatingSuccess:all_bateman$SexM    0.999    
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 3.655e-34 1.912e-17
+    ##  Residual             4.975e-01 7.053e-01
+    ## Number of obs: 112, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##                     Estimate Std. Error        df t value Pr(>|t|)    
+    ## (Intercept)          0.03887    0.11398 108.00000   0.341    0.734    
+    ## MatingSuccess        0.96113    0.06409 108.00000  14.998   <2e-16 ***
+    ## SexM                -0.01429    0.16273 108.00000  -0.088    0.930    
+    ## MatingSuccess:SexM   0.01429    0.09334 108.00000   0.153    0.879    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.295 on 108 degrees of freedom
-    ## Multiple R-squared:  0.7536, Adjusted R-squared:  0.7468 
-    ## F-statistic: 110.1 on 3 and 108 DF,  p-value: < 2.2e-16
+    ## Correlation of Fixed Effects:
+    ##             (Intr) MtngSc SexM  
+    ## MatingSccss -0.562              
+    ## SexM        -0.700  0.394       
+    ## MtngSccs:SM  0.386 -0.687 -0.574
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 When we combine all of the data together we can see two additional
 things:
@@ -2229,13 +2443,13 @@ Let’s visually look at this pattern now:
 <figure>
 <img
 src="selection_analysis_floridae_files/figure-gfm/plot-bateman-1.png"
-alt="Relationship between reproductive success and mating success for male (purple) and female (green) Syngnathus floridae. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed) for males and females." />
+alt="Relationship between reproductive success and mating success for male (purple) and female (green) Syngnathus floridae. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the slope of a linear mixed effects model (dashed) for males and females." />
 <figcaption aria-hidden="true"><em>Relationship between reproductive
 success and mating success for male (purple) and female (green)
 <em>Syngnathus floridae</em>. Reproductive success is shown as relative
 fitness (i.e. number of offspring produced divided by the mean number of
-offspring produced). Bateman’s gradient is shown as the weighted
-least-squares regression line (dashed) for males and
+offspring produced). Bateman’s gradient is shown as the slope of a
+linear mixed effects model (dashed) for males and
 females.</em></figcaption>
 </figure>
 
@@ -2251,29 +2465,35 @@ with those points omitted.
 
 ![](selection_analysis_floridae_files/figure-gfm/bateman-no3-1.png)<!-- -->
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: fem_bateman[fem_bateman$MatingSuccess < 3, ]
     ## 
-    ## Call:
-    ## lm(formula = fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 
-    ##     3] ~ fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 
-    ##     3], weights = wt_fem2)
+    ## REML criterion at convergence: 88.8
     ## 
-    ## Weighted Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2.0271 -0.0006 -0.0006 -0.0006  5.7909 
+    ## Scaled residuals: 
+    ##    Min     1Q Median     3Q    Max 
+    ## -2.314 -0.049 -0.049 -0.049  5.394 
     ## 
-    ## Coefficients:
-    ##                                                           Estimate Std. Error
-    ## (Intercept)                                              3.491e-05  1.025e-02
-    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3] 1.084e+00  1.092e-01
-    ##                                                          t value Pr(>|t|)    
-    ## (Intercept)                                                0.003    0.997    
-    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3]   9.926 5.15e-13 ***
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  trial    (Intercept) 0.0000   0.0000  
+    ##  Residual             0.3432   0.5858  
+    ## Number of obs: 48, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error       df t value Pr(>|t|)    
+    ## (Intercept)    0.02870    0.09726 46.00000   0.295    0.769    
+    ## MatingSuccess  0.99759    0.09613 46.00000  10.378 1.23e-13 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.009 on 46 degrees of freedom
-    ## Multiple R-squared:  0.6817, Adjusted R-squared:  0.6748 
-    ## F-statistic: 98.53 on 1 and 46 DF,  p-value: 5.15e-13
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.494
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 It doesn’t look like omitting those few individuals has any effect on
 the results of the Bateman gradient.
@@ -2310,92 +2530,92 @@ before and just excluding the 0’s from the plot and the model:
 ``` r
 #Generating Bateman's gradient
 #Define the model
-fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
-                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0])
-mal_model2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
-                   mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0])
-
-#define weights to use
-wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
-                    fem_model2$fitted.values)$fitted.values^2
-wt_mal2 <- 1 / lm(abs(mal_model2$residuals) ~
-                    mal_model2$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
-                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
-                    weights=wt_fem2)
-wls_model_mal2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
-                       mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
-                    weights=wt_mal2)
+fem_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = fem_bateman[fem_bateman$MatingSuccess != 0,],
+                 REML = TRUE)
+mal_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = mal_bateman[mal_bateman$MatingSuccess != 0,],
+                 REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem2) #significant
+summary(fem_mod2) #significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: fem_bateman[fem_bateman$MatingSuccess != 0, ]
     ## 
-    ## Call:
-    ## lm(formula = fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 
-    ##     0] ~ fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 
-    ##     0], weights = wt_fem2)
+    ## REML criterion at convergence: 63.2
     ## 
-    ## Weighted Residuals:
+    ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -1.8479 -0.9214 -0.1881  0.5336  3.4420 
+    ## -1.2338 -0.6591 -0.1442  0.4060  2.7385 
     ## 
-    ## Coefficients:
-    ##                                                           Estimate Std. Error
-    ## (Intercept)                                                 0.4431     0.6214
-    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]   0.8338     0.2030
-    ##                                                           t value Pr(>|t|)    
-    ## (Intercept)                                                 0.713 0.484449    
-    ## fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0]   4.106 0.000601 ***
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  trial    (Intercept) 0.000    0.000   
+    ##  Residual             1.168    1.081   
+    ## Number of obs: 21, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error      df t value Pr(>|t|)    
+    ## (Intercept)     0.4516     0.5952 19.0000   0.759 0.457381    
+    ## MatingSuccess   0.8307     0.2049 19.0000   4.053 0.000679 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.351 on 19 degrees of freedom
-    ## Multiple R-squared:  0.4702, Adjusted R-squared:  0.4423 
-    ## F-statistic: 16.86 on 1 and 19 DF,  p-value: 0.000601
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.918
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
-summary(wls_model_mal2) #significant
+summary(mal_mod2) #significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: mal_bateman[mal_bateman$MatingSuccess != 0, ]
     ## 
-    ## Call:
-    ## lm(formula = mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 
-    ##     0] ~ mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 
-    ##     0], weights = wt_mal2)
+    ## REML criterion at convergence: 76.5
     ## 
-    ## Weighted Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2.9006 -0.8353  0.0394  0.4617  4.4344 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.15148 -0.54191  0.05406  0.31718  2.62551 
     ## 
-    ## Coefficients:
-    ##                                                           Estimate Std. Error
-    ## (Intercept)                                                 0.3523     0.4818
-    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   0.8456     0.2201
-    ##                                                           t value Pr(>|t|)    
-    ## (Intercept)                                                 0.731 0.472319    
-    ## mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0]   3.842 0.000887 ***
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  trial    (Intercept) 0.000    0.000   
+    ##  Residual             1.399    1.183   
+    ## Number of obs: 24, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error      df t value Pr(>|t|)    
+    ## (Intercept)     0.1857     0.5354 22.0000   0.347 0.732038    
+    ## MatingSuccess   0.9204     0.2048 22.0000   4.494 0.000181 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.47 on 22 degrees of freedom
-    ## Multiple R-squared:  0.4015, Adjusted R-squared:  0.3743 
-    ## F-statistic: 14.76 on 1 and 22 DF,  p-value: 0.000887
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.893
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 <figure>
 <img
 src="selection_analysis_floridae_files/figure-gfm/plot-bateman-nozero1-1.png"
-alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman’s gradient is shown as the slope of a linear mixed effects model." />
 <figcaption aria-hidden="true"><em>Relationship between reproductive
 success and mating success for female (green) and male (purple)
 <em>Syngnathus floridae</em> who achieved at least one mate.
 Reproductive success is shown as relative fitness (i.e. number of
 offspring produced divided by the mean number of offspring produced).
-Bateman’s gradient is shown as the weighted least-squares regression
-line (dashed).</em></figcaption>
+Bateman’s gradient is shown as the slope of a linear mixed effects
+model.</em></figcaption>
 </figure>
 
 When we exclude the non-mated individuals from the plot and the model,
@@ -2467,96 +2687,153 @@ for (trial in unique(mal_succFL$trial_num)) {
 ```
 
 Once we have the measures of relative fitness we can use them to run the
-weighted least-squares regression for males and females separately.
+linear mixed effects model for males and females separately.
 
 ``` r
 #Generating Bateman's gradient
 #Define the model
-fem_model3 <- lm(fem_bateman_nozero$rel_repo_fitness ~ 
-                  fem_bateman_nozero$MatingSuccess)
-mal_model3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
-                  mal_bateman_nozero$MatingSuccess)
-
-#define weights to use
-wt_fem3 <- 1 / lm(abs(fem_model3$residuals) ~
-                    fem_model3$fitted.values)$fitted.values^2
-wt_mal3 <- 1 / lm(abs(mal_model3$residuals) ~
-                    mal_model3$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem3 <- lm(fem_bateman_nozero$rel_repo_fitness ~
-                      fem_bateman_nozero$MatingSuccess,
-                    weights=wt_fem3)
-wls_model_mal3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
-                      mal_bateman_nozero$MatingSuccess,
-                     weights = wt_mal3)
-
+fem_mod3 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = fem_bateman_nozero,
+                 REML = TRUE)
+mal_mod3 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = mal_bateman_nozero,
+                 REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem3) #significant
+summary(fem_mod3) #significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: fem_bateman_nozero
     ## 
-    ## Call:
-    ## lm(formula = fem_bateman_nozero$rel_repo_fitness ~ fem_bateman_nozero$MatingSuccess, 
-    ##     weights = wt_fem3)
+    ## REML criterion at convergence: 29
     ## 
-    ## Weighted Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2.1225 -0.8215 -0.0159  0.6389  4.0556 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.27200 -0.54227 -0.01345  0.42784  3.14473 
     ## 
-    ## Coefficients:
-    ##                                  Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)                        0.3061     0.3334   0.918   0.3702  
-    ## fem_bateman_nozero$MatingSuccess   0.6927     0.2880   2.405   0.0265 *
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 2.122e-33 4.606e-17
+    ##  Residual             2.205e-01 4.696e-01
+    ## Number of obs: 21, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##               Estimate Std. Error      df t value Pr(>|t|)  
+    ## (Intercept)     0.3475     0.3332 19.0000   1.043   0.3100  
+    ## MatingSuccess   0.6525     0.3170 19.0000   2.058   0.0535 .
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 1.431 on 19 degrees of freedom
-    ## Multiple R-squared:  0.2334, Adjusted R-squared:  0.193 
-    ## F-statistic: 5.784 on 1 and 19 DF,  p-value: 0.02652
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.952
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 ``` r
-summary(wls_model_mal3) #not significant
+summary(mal_mod3) #not significant
 ```
 
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess + (1 | trial)
+    ##    Data: mal_bateman_nozero
     ## 
-    ## Call:
-    ## lm(formula = mal_bateman_nozero$rel_repo_fitness ~ mal_bateman_nozero$MatingSuccess, 
-    ##     weights = wt_mal3)
+    ## REML criterion at convergence: 36.8
     ## 
-    ## Weighted Residuals:
-    ##     Min      1Q  Median      3Q     Max 
-    ## -2.7478 -0.6503 -0.0604  0.6255  4.1553 
+    ## Scaled residuals: 
+    ##      Min       1Q   Median       3Q      Max 
+    ## -2.06969 -0.46542 -0.02822  0.43029  2.66774 
     ## 
-    ## Coefficients:
-    ##                                  Estimate Std. Error t value Pr(>|t|)  
-    ## (Intercept)                        0.7192     0.4135    1.74   0.0959 .
-    ## mal_bateman_nozero$MatingSuccess   0.2804     0.4126    0.68   0.5039  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 2.174e-33 4.662e-17
+    ##  Residual             2.633e-01 5.131e-01
+    ## Number of obs: 24, groups:  trial, 7
     ## 
-    ## Residual standard error: 1.473 on 22 degrees of freedom
-    ## Multiple R-squared:  0.02056,    Adjusted R-squared:  -0.02396 
-    ## F-statistic: 0.4618 on 1 and 22 DF,  p-value: 0.5039
+    ## Fixed effects:
+    ##               Estimate Std. Error      df t value Pr(>|t|)
+    ## (Intercept)     0.6711     0.4119 22.0000   1.629    0.117
+    ## MatingSuccess   0.3289     0.3983 22.0000   0.826    0.418
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr)
+    ## MatingSccss -0.967
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 <figure>
 <img
 src="selection_analysis_floridae_files/figure-gfm/plot-bateman-nozero2-1.png"
-alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the weighted least-squares regression line (dashed)." />
+alt="Relationship between reproductive success and mating success for female (green) and male (purple) Syngnathus floridae who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman’s gradient is shown as the slope of a linear mixed effects model (dashed)." />
 <figcaption aria-hidden="true"><em>Relationship between reproductive
 success and mating success for female (green) and male (purple)
 <em>Syngnathus floridae</em> who achieved at least one mate.
 Reproductive success is shown as relative fitness (i.e. number of
 offspring produced divided by the mean number of offspring produced).
 Relative fitness is calculated without the individuals who did not mate.
-Bateman’s gradient is shown as the weighted least-squares regression
-line (dashed).</em></figcaption>
+Bateman’s gradient is shown as the slope of a linear mixed effects model
+(dashed).</em></figcaption>
 </figure>
 
 With this way of excluding the individuals who did not mate, there is
 still a significant increase in relative fitness with each additional
 mating for females, however, not for males anymore.
+
+We can do the same combination of datasets that we did earlier to see if
+there is a difference in the gradient between males and females.
+
+``` r
+#Combine the two datasets
+fem_bateman_nozero$Sex <- "F"
+mal_bateman_nozero$Sex <- "M"
+
+all_bateman_nozero <- rbind(fem_bateman_nozero, mal_bateman_nozero)
+
+#Running a weighted least squares regression between MS and Sex
+all_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess*Sex + (1 | trial), 
+                data = all_bateman_nozero,
+                REML = TRUE)
+
+summary(all_mod2)
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: rel_repo_fitness ~ MatingSuccess * Sex + (1 | trial)
+    ##    Data: all_bateman_nozero
+    ## 
+    ## REML criterion at convergence: 65.9
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.1523 -0.5161 -0.0128  0.4455  2.9928 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. 
+    ##  trial    (Intercept) 2.164e-33 4.652e-17
+    ##  Residual             2.435e-01 4.934e-01
+    ## Number of obs: 45, groups:  trial, 7
+    ## 
+    ## Fixed effects:
+    ##                    Estimate Std. Error      df t value Pr(>|t|)  
+    ## (Intercept)          0.3475     0.3501 41.0000   0.993    0.327  
+    ## MatingSuccess        0.6525     0.3331 41.0000   1.959    0.057 .
+    ## SexM                 0.3236     0.5286 41.0000   0.612    0.544  
+    ## MatingSuccess:SexM  -0.3236     0.5076 41.0000  -0.637    0.527  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) MtngSc SexM  
+    ## MatingSccss -0.952              
+    ## SexM        -0.662  0.630       
+    ## MtngSccs:SM  0.624 -0.656 -0.960
+    ## optimizer (nloptwrap) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
 
 # Investing selection differentials on snout-vent-length ($s$ and $s'$)
 
@@ -2588,8 +2865,8 @@ there were no significant differences in standard length. For the
 various relative fitness components I will be using:
 
 1.  Mating success (pre-mating selection)
-2.  Number of eggs transferred (post-mating)
-3.  Proportion of transferred eggs developed (post-mating)
+2.  Number of eggs stored (post-mating)
+3.  Proportion of stored eggs developed (post-mating)
 
 ``` r
 #Create a dataframe to store all of the intermediate values of fitness in
@@ -2656,7 +2933,7 @@ for (trial in unique(fem_succFL$trial_num)) {
 }
 
 #Exporting the data
-write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
+#write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
 ```
 
 ``` r
@@ -2722,7 +2999,7 @@ for (trial in unique(mal_succFL$trial_num)) {
 }
 
 #Exporting the data
-write.csv(mal_succ_select_diff, "data/floridae_int_diff_mal.csv", row.names = FALSE)
+#write.csv(mal_succ_select_diff, "data/floridae_int_diff_mal.csv", row.names = FALSE)
 ```
 
 ``` r
@@ -2732,16 +3009,16 @@ select_diff_mal$Sex <- "M"
 
 select_diff_all <- rbind(select_diff_fem, select_diff_mal)
 
-write.csv(select_diff_all, "data/floridae_select_diff.csv", row.names = FALSE)
+#write.csv(select_diff_all, "data/floridae_select_diff.csv", row.names = FALSE)
 
 #List the columns of interest
 columns <- c("s1", "s2", "s3", "s123",
              "s1_prime", "s2_prime", "s3_prime", "s123_prime")
 
 #Create a dataframe to store the final values in
-sd_average <- data.frame(matrix(ncol = 4,
+sd_average <- data.frame(matrix(ncol = 5,
                                 nrow = 0))
-colnames(sd_average) <- c("Average", "Interval", "Select_diff", "Sex")
+colnames(sd_average) <- c("Average", "Interval", "Variance", "Select_diff", "Sex")
 
 #Calculate the critical value
 crit <- qt(p = 0.975, df = (nrow(select_diff_fem) - 1))
@@ -2756,6 +3033,11 @@ for (j in 1:length(columns)) {
     mean <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
                        select_diff_all$Sex, mean)))
     
+    #Calculate the variance
+    var <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                       select_diff_all$Sex, 
+                       var)))
+    
     #Calculate standard error
     se <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
                      select_diff_all$Sex, 
@@ -2769,8 +3051,8 @@ for (j in 1:length(columns)) {
     int <- se*crit
     
     #Combine the data together
-    episode <- as.data.frame(cbind(mean, int))
-    colnames(episode) <- c("Average", "Interval")
+    episode <- as.data.frame(cbind(mean, var, int))
+    colnames(episode) <- c("Average", "Variance", "Interval")
     
     episode$Select_diff <- col_name
     episode$Sex <- rownames(episode)
@@ -2821,9 +3103,9 @@ pre-mating selection and in the overall selection differential.
 ## Looking into the Maximum Sexual Selection Differential
 
 Because $s'$ is the covariance between a standardized trait, which has a
-s.d. of 1, and relative fitness, meaning $s'$ cannot be larger than the
-standard deviation in the relative fitness. If we are talking about
-mating success as our relative fitness metric, the standard deviation of
+s.d. of 1, and relative fitness, $s'$ cannot be larger than the standard
+deviation in the relative fitness. If we are talking about mating
+success as our relative fitness metric, the standard deviation of
 relative mating success is the square root of $I_S$ so to calculate
 $s'_{max}$:
 
@@ -2838,8 +3120,8 @@ Let’s now generate $s'_{max}$ for male and female *S. floridae*.
 
 ``` r
 #Pull out the Bateman gradient (slopes of the models)
-bateman_fem <- coefficients(wls_model_fem)[2]
-bateman_mal <- coefficients(wls_model_mal)[2]
+bateman_fem <- fixef(fem_mod)["MatingSuccess"]
+bateman_mal <- fixef(mal_mod)["MatingSuccess"]
 
 #Pull out the Average opp sexual selection for males and females
 opp_ss_fem <- opp_average$Average[opp_average$Sex == "F" & 
@@ -2848,13 +3130,15 @@ opp_ss_mal <- opp_average$Average[opp_average$Sex == "M" &
                                     opp_average$Episode_sel == "I_s"]
 
 #Calculate select diff max
-select_diff_max_fem <- bateman_fem * sqrt(opp_ss_fem)
-select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
+#####AVERAGES FOR I_S OR I_1 USED HERE WERE GENERATED IN THE BOOTSTRAPPING_SELECTION_
+#####ANALYSIS.RMD DOCUMENT RATHER THAN THE AVERAGE FROM THE RAW DATA IN THIS .RMD
+select_diff_max_fem <- bateman_fem * sqrt(2.76)
+select_diff_max_mal <- bateman_mal * sqrt(2.46)
 ```
 
-For females, the $s'_{max}$ is 1.6097147, while $s'$ is 0.0639505, which
+For females, the $s'_{max}$ is 1.5967549, while $s'$ is 0.0639505, which
 is about 1/25 of the max selection that could be experiences. For males,
-$s'_{max}$ is 1.5287962 and $s'$ is -0.1924964.
+$s'_{max}$ is 1.5298997 and $s'$ is -0.1924964.
 
 # Visualizing post-copulatory selection
 
@@ -2880,46 +3164,51 @@ individuals that did not mate (left) and including those individuals
 
 We can see that when the non-mated individuals are included there is a
 steep slope (due to the zeros). Because I am interested in the
-pose-mating processes, I am going to move forward without including the
+post-mating processes, I am going to move forward without including the
 non-mated individuals (as they are accounted for in the Bateman
 gradient).
 
+I will use a Spearman Rank correlation here as the data is not normally
+distributed (proportion and count data).
+
 ``` r
 cor.test(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
-         fem_succFL$prop_surviving[fem_succFL$totalEggs != 0])
+         fem_succFL$prop_surviving[fem_succFL$totalEggs != 0], method = "spearman")
 ```
 
+    ## Warning in cor.test.default(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess
+    ## != : Cannot compute exact p-value with ties
+
     ## 
-    ##  Pearson's product-moment correlation
+    ##  Spearman's rank correlation rho
     ## 
     ## data:  fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0] and fem_succFL$prop_surviving[fem_succFL$totalEggs != 0]
-    ## t = -0.46952, df = 19, p-value = 0.644
-    ## alternative hypothesis: true correlation is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.5149740  0.3403253
+    ## S = 1576.2, p-value = 0.9194
+    ## alternative hypothesis: true rho is not equal to 0
     ## sample estimates:
-    ##        cor 
-    ## -0.1070953
+    ##         rho 
+    ## -0.02351743
 
 ``` r
 cor.test(mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
-         mal_succFL$prop_surviving[mal_succFL$totalEggs != 0])
+         mal_succFL$prop_surviving[mal_succFL$totalEggs != 0], method = "spearman")
 ```
 
+    ## Warning in cor.test.default(mal_bateman$MatingSuccess[mal_bateman$MatingSuccess
+    ## != : Cannot compute exact p-value with ties
+
     ## 
-    ##  Pearson's product-moment correlation
+    ##  Spearman's rank correlation rho
     ## 
     ## data:  mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0] and mal_succFL$prop_surviving[mal_succFL$totalEggs != 0]
-    ## t = -1.2783, df = 22, p-value = 0.2145
-    ## alternative hypothesis: true correlation is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.6024357  0.1571242
+    ## S = 2546.9, p-value = 0.6176
+    ## alternative hypothesis: true rho is not equal to 0
     ## sample estimates:
-    ##        cor 
-    ## -0.2629384
+    ##        rho 
+    ## -0.1073308
 
 For both males and females there is no significant correlation between
 the number of mates and the proportion of the offspring which survive.
 However, both of the non-significant correlations are negative, meaning
-potenitally if our sample size was higher we would be able to detect an
+potentially if our sample size was higher we would be able to detect an
 effect.

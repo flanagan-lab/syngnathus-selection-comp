@@ -1,5 +1,6 @@
 ---
 title: "Selection pressures in _Syngnathus floridae_"
+author: Coley Tosto
 output: 
   github_document:
     toc: true
@@ -19,14 +20,18 @@ knitr::opts_knit$set(root.dir='../',
 
 ``` {r library, message = FALSE, warning = FALSE}
 #This is a cohesive list of all the libraries used in this document
-library(ggplot2)
-library(cowplot)
-library(fBasics)
-library(pwr)
-#library(lme4)
-library(dplyr)
-library(tidyr)
-library(knitr)
+library(fBasics) #v4041.97
+library(pwr) #v1.3.0
+
+library(ggplot2) #v4.0.2
+library(cowplot) #v1.1.3
+
+library(lme4) #v1.1.35.5
+library(lmerTest) #v3.2.1
+
+library(dplyr) #v1.1.4
+library(tidyr) #v1.3.1
+library(knitr) #v1.49
 
 ```
 
@@ -64,9 +69,9 @@ Before comparing male size to female size I want to ensure the data meets the as
 
 The null hypotheses for these two tests are that the variances are equal and the data is normally distributed.
 
-To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the snout-vent length of the pipefish prior to running any analyses. Snout-vent length was chosen over standard length as it is more representative of the size of the pipefish. It is possible for a pipefish to loose a part of its tail and remain alive, which would impact the standard length, but not the snout-vent length
+To account for the fact that fish who are longer may just inherently be deeper as well, I am going to adjust the depth by the snout-vent length of the pipefish prior to running any analyses. Snout-vent length was chosen over standard length as it is more representative of the size of the pipefish. It is possible for a pipefish to loose a part of its tail and remain alive, which would impact the standard length, but not the snout-vent length.
 
-```{r assump-test}
+```{r assump-test-morph}
 #Adjust the torso depth
 fem_mesoFL$depth_adj <- fem_mesoFL$depth/fem_mesoFL$svl
 mal_mesoFL$depth_adj <- mal_mesoFL$depth/mal_mesoFL$svl
@@ -145,7 +150,7 @@ t.test(fem_mesoFL$depth_adj, mal_mesoFL$depth_adj, var.equal = TRUE)
 t.test(fem_mesoFL$svl, mal_mesoFL$svl, var.equal = FALSE)
 ```
 
-From these results we can see that there are no significant differences between male and female pipefish in terms of standard length. However, female dusky pipefish are significantly deeper that males and possess a significantly longer snout-vent length. For those two morphometrics I am going to run a power test to ensure that we are confident in our results.
+From these results we can see that there are no significant differences between male and female pipefish in terms of standard length or torso depth. However, female dusky pipefish possess a significantly longer snout-vent length. For that measurement I am going to run a power test to ensure that we are confident in our results.
 
 ```{r power-test}
 
@@ -162,21 +167,9 @@ pwr.t.test(n = nrow(fem_mesoFL),
            type = 'two.sample',
            alternative = 'two.sided')
 
-#Checking the power - Depth
-d_mean_depth <- abs(mean(fem_mesoFL$depth_adj, na.rm = TRUE) - 
-                      mean(mal_mesoFL$depth_adj, na.rm = TRUE))
-pool_sd_depth <- sqrt((var(fem_mesoFL$depth_adj, na.rm = TRUE) + 
-                         var(mal_mesoFL$depth_adj, na.rm = TRUE))/ 2)
-d_depth <- d_mean_depth/pool_sd_depth
-pwr.t.test(n = nrow(fem_mesoFL), 
-           d = d_depth,
-           sig.level = 0.05,
-           type = 'two.sample',
-           alternative = 'two.sided')
-
 ```
 
-For both variables we have a power of over 0.9 or over 90% so we can be confident in our interpretation.
+We have a power of over 0.9 or over 90% so we can be confident in our interpretation.
 
 # Calculating mating and reproductive success for individuals who mated
 _Syngnathus floridae_ (dusky pipefish) were sampled from three distinct seagrass beds around Tampa Bay in Tampa, Florida. Sexually mature females (standard length $\ge$ 120mm) and pregnant males were collected and brought back to the University of Tampa and put into experimental breeding populations. In these trials, 8 males and 8 females were housed together in a 140L tank for a period of 14-days and allowed to mate freely. Parentage analysis was done with all of the pregnant males from the trials to figure out how many times each male and female mated, and the number of eggs that were transferred. The results of that are here.
@@ -236,9 +229,9 @@ fem_succFL[, c("MatingSuccess", "NumDeveloped",
 fem_succFL$mated <- ifelse(fem_succFL$MatingSuccess > 0, 1, 0)
 
 ```
-```{r save-to-file, eval=FALSE}
+```{r save-to-file-fitness, eval=FALSE}
 write.csv(fem_succFL, "data/floridae_fem_succ.csv",quote=FALSE, row.names = FALSE)
-write.csv(fem_succFL, "data/floridae_mal_succ.csv",quote=FALSE, row.names = FALSE)
+write.csv(mal_succFL, "data/floridae_mal_succ.csv",quote=FALSE, row.names = FALSE)
 ```
 
 # Summary statistics for successfully mated individuals
@@ -285,7 +278,7 @@ plot(mated_malFL$bp_length,
 abline(lm(mated_malFL$totalEggs ~ as.numeric(mated_malFL$bp_length)), lwd = 3, lty = 2)
 ```
 
-There may be some correlation happening here, but it doesn't look particularly strong. Let's run some correlations tests to see what they say.
+There may be some correlation happening here, but it doesn't look particularly strong. Let's run some correlations tests to see what they say. As these data are normally distributed I will use the standard Pearson's correlation test.
 
 ```{r eggs-bp-cor, echo=FALSE}
 cor.test(as.numeric(mated_malFL$bp_area), mated_malFL$totalEggs)
@@ -303,8 +296,8 @@ plot(mated_malFL$length,
      ylab = "Brood Size (# embryos)",
      col = "#CD5C5C75",
      pch = 19,
-     cex = 1.5
-)
+     cex = 1.5)
+
 abline(lm(mated_malFL$totalEggs ~ as.numeric(mated_malFL$length)), lwd = 3, lty = 2)
 ```
 
@@ -340,7 +333,6 @@ eggs_per_mate <- fem_succFL$totalEggs/fem_succFL$MatingSuccess
 mean(eggs_per_mate, na.rm = TRUE)
 sd(eggs_per_mate, na.rm = TRUE)/sqrt(length(eggs_per_mate))
 ```
-
 
 ```{r em-v-fem-size, echo=FALSE, fig.cap="_Scatterplot of the relationship between female size metrics and the number of eggs transferred._", fig.width=15, fig.height=8}
 #create a subset of only the females who mated
@@ -494,11 +486,12 @@ Even though mated males were significantly smaller, some of the larger males wer
 ### Relationships with latency to mate
 There was some variety in the length of time that males were house in the same-sex tanks before being placed in the experimental breeding populations. I am now curious to see if there is any relationship between the latency to trials and various components of fitness.
 
-```{r lat-to-mate-matesucc, message=FALSE, eval= FALSE}
+```{r lat-to-mate-matesucc, message=FALSE}
 #Mating success
 ##Create the model
 mate_succlm <- lmer(mal_succFL$MatingSuccess ~ mal_succFL$lat_to_trial + 
-                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date))
+                      (1 | mal_succFL$col_location) + (1 | mal_succFL$col_date),
+                    REML = TRUE)
 
 summary(mate_succlm)
 
@@ -530,12 +523,13 @@ legend("topright",
 
 Now let's see if there is any relationship when we look at reproductive success (in terms of total eggs received) and the latency to the trial. Because we already accounted for the males who didn't mate in terms of mating success, I am going to remove them from this model. Therefore we will be looking at the impact on reproductive success on the individuals that were successfully able to obtain a mate.
 
-```{r lat-to-mate-reposucc, message=FALSE, eval= FALSE}
+```{r lat-to-mate-reposucc, message=FALSE}
 #Mating success
 ##Create the model
 tot_eggslm <- lmer(mated_malFL$totalEggs ~ mated_malFL$lat_to_trial + 
                       (1 | mated_malFL$col_location) + 
-                     (1 | mated_malFL$col_date))
+                     (1 | mated_malFL$col_date),
+                    REML = TRUE)
 
 summary(tot_eggslm)
 
@@ -684,6 +678,64 @@ legend("topright",
        pch = 15)
 ```
 
+### Relationships with latency to mate
+Similar to what was done with the males, we can look to see if the time spent in same-sex tanks in the lab impacted various components of female fitness.
+
+```{r lat-to-mate-matesucc-fem, message=FALSE}
+#Mating success
+##Create the model
+fem_succlm <- lmer(fem_succFL$MatingSuccess ~ fem_succFL$lat_to_trial + 
+                      (1 | fem_succFL$col_location) + (1 | fem_succFL$col_month),
+                    REML = TRUE)
+
+summary(fem_succlm)
+
+```
+
+Similar to the males, there is little impact of the random effects for both collecting location and collecting month, but we can see that latency to trial has a negative but non-significant effect on mating success. 
+
+```{r lat-to-mate-matesucc-fem-plot, fig.cap="_Scatterplot of the relationship between the number of mates achieved by a female and how long the female was in the lab prior to entering a trial.._", echo=FALSE}
+
+plot(jitter(fem_succFL$lat_to_trial),
+     jitter(fem_succFL$MatingSuccess),
+     xlab = "Latency to Trial (Days)",
+     ylab = "Mating Success",
+     pch = 19,
+     col = "#F1AE8B75",
+     cex = 1.5)
+abline(lm(fem_succFL$MatingSuccess ~ fem_succFL$lat_to_trial), lwd = 3, lty =2)
+
+```
+
+Now let's see if there is any relationship when we look at reproductive success (in terms of total eggs received) and the latency to the trial. Because we already accounted for the females who didn't mate in terms of mating success, I am going to remove them from this model. Therefore we will be looking at the impact on reproductive success on the individuals that were successfully able to obtain a mate.
+
+```{r lat-to-mate-reposucc-fem, message=FALSE}
+#Mating success
+##Create the model
+tot_eggslm <- lmer(mated_femFL$totalEggs ~ mated_femFL$lat_to_trial + 
+                      (1 | mated_femFL$col_location) + 
+                     (1 | mated_femFL$col_month),
+                    REML = TRUE)
+
+summary(tot_eggslm)
+
+```
+
+Again the random effects do not appear to be explaining any of the variance, however, there does appear to be a significant negative impact of latency to trial on the total number of eggs transferred by a female, similar to what we saw in the males.
+
+```{r lat-to-mate-toteggs-fem-plot, fig.cap="_Scatterplot of the relationship between the total eggs transferred by a female and how long the female was in the lab prior to entering a trial._", echo=FALSE}
+
+plot(jitter(mated_femFL$lat_to_trial),
+     jitter(mated_femFL$totalEggs),
+     xlab = "Latency to Trial (Days)",
+     ylab = "Total Eggs Recieved",
+     pch = 19,
+     col = "#F1AE8B75",
+     cex = 1.5)
+abline(lm(mated_femFL$totalEggs ~ mated_femFL$lat_to_trial), lwd = 3, lty =2)
+
+```
+
 
 # Looking into the Opportunity for Selection in Males and Females
 One of the benefits of using genetic parentage analysis is that we can now calculate the opportunity for selection and the opportunity for sexual selection in male and female pipefish. 
@@ -691,13 +743,12 @@ One of the benefits of using genetic parentage analysis is that we can now calcu
 ## Generating the total opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$)
 The opportunity for selection ($I$) and the opportunity for sexual selection ($I_S$) are defined as the variance in reproductive success (defined here as the total number of offspring produced by an individual) and the variance in mating success respectively. 
 
-Because each trial provides an independent "population" (i.e., pipefish from one trial **cannot mate** with pipefish from another trial), I am going to calculate these metrics for each trial individually and then I will average it. With these I can then also generate 95% confidence intervals which I will investigate for indications of significance in two ways:
+Because each trial provides an independent "population" (i.e., pipefish from one trial **cannot mate** with pipefish from another trial), I am going to calculate these metrics for each trial individually and then I will average it. With these I can then also generate 95% confidence intervals which I will investigate for indications of significance as such:
 
-  - If the confidence intervals **DO NOT** cross 0 -> significant selection.
   - If the confidence intervals between the sexes **DO NOT** cross -> significantly different selection between the two sexes.
 
 ```{r opp-selection}
-##FEMALES
+################################### FEMALES ####################################
 #Create a dataframe to store the calculations of I and I_S in
 fem_opp_selection <- data.frame(matrix(ncol = 3,
                                        nrow = 0))
@@ -724,7 +775,7 @@ for (trial in unique(fem_succFL$trial_num)) {
 }
 
 
-##MALES
+#################################### MALES ####################################
 #Create a dataframe to store the calculations of I and I_S in
 mal_opp_selection <- data.frame(matrix(ncol = 3,
                                        nrow = 0))
@@ -826,8 +877,6 @@ kable(sum_opp, caption = "Average Opportunity of Selection (95% CI) for Males an
 
 ```
 
-
-
 ```{r opp-selection-figure, echo=FALSE, fig.cap="_Average opportunity for selection and opportunity for sexual selection for male (purple) and female (green) S. floridae. Errorbars represent the 95% confidence intervals around the mean_", fig.width=8, fig.height=6, warning=FALSE}
 
 #Set parameters
@@ -868,12 +917,12 @@ ggplot(opp_average,
 
 ```
 
-We can see that for male and female _S. floridae_ there is a significant opportunity for selection and opportunity for sexual selection, however, we don't see significant differences between the sexes for either one. In both cases, there is a greater opportunity for selection compared to an opportunity for sexual selection.
+We can see that for male and female _S. floridae_ we don't see significant differences between the sexes for either the opportunity for selection or the opportunity for sexual selection. In both cases, there is a greater opportunity for selection compared to an opportunity for sexual selection.
 
 ## Partitioning the Total Opportunity for Selection ($I$)
 One of the downsides associated with the opportunity for selection and the opportunity for sexual selection is that it largely focuses on **pre-copulatory** sexual selection. While this is a major force for many organisms, as it is related to one's ability to successfully achieve a mate, it is not the only type of selection they experience. Obtaining a mate is only half the battle, you must also obtain successful fertilization for your genes to be passed to the next generation, meaning **post-copulatory** sexual selection is just as important to consider. To investigate this, we can parse or decompose the overall opportunity for selection into various episodes to represent various pre- and post-mating processes. 
 
-Once again, I am going to calculate selection for the trials individually in males and females and then average across all trials to get the final values and the 95% CIs. For pre-mating processes I am focusing on mating success and then for post-mating processes I am looking at the total number of eggs transferred/received and the proportion of those eggs which developed (showing fertilization success).
+Once again, I am going to calculate selection for the trials individually in males and females and then average across all trials to get the final values and the 95% CIs. For pre-mating processes I am focusing on mating success and then for post-mating processes I am looking at the total number of eggs transferred/stored and the proportion of those eggs which developed (showing fertilization success).
 
 I also want to calculate the percentage of the overall opportunity for selection that is represented by each episode of selection.
 
@@ -1100,9 +1149,9 @@ columns <- c("I_1", "I_2", "coi1_2", "coi1_2given1", "coi12_2", "coi12_2given1",
              "diff_123", "I")
 
 #Create a dataframe to store the final values in
-opp_episodes_average <- data.frame(matrix(ncol = 4,
+opp_episodes_average <- data.frame(matrix(ncol = 5,
                                     nrow = 0))
-colnames(opp_episodes_average) <- c("Average", "Interval", 
+colnames(opp_episodes_average) <- c("Average", "Variance", "Interval", 
                                     "Episode_sel", "Sex")
 
 #Calculate the critical value
@@ -1118,6 +1167,12 @@ for (j in 1:length(columns)) {
                        opp_selection_episodes_all$Sex, 
                        mean)))
     
+    #Calculate the variance
+    var <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
+                                                  == col_name], 
+                       opp_selection_episodes_all$Sex, 
+                       var)))
+    
     #Calculate standard error
     se <- t(t(tapply(opp_selection_episodes_all[, colnames(opp_selection_episodes_all) 
                                                 == col_name], 
@@ -1130,8 +1185,8 @@ for (j in 1:length(columns)) {
     int <- se*crit
     
     #Combine the data together
-    episode <- as.data.frame(cbind(mean, int))
-    colnames(episode) <- c("Average", "Interval")
+    episode <- as.data.frame(cbind(mean, var, int))
+    colnames(episode) <- c("Average", "Variance", "Interval")
     
     episode$Episode_sel <- col_name
     episode$Sex <- rownames(episode)
@@ -1165,46 +1220,118 @@ kable(sum_table, caption = "Average Episode of Selection (95% CI) for Males and 
 
 ```
 
+```{r opp-select-episodes-figure, echo=FALSE, fig.cap="_Average opportunity for selection for the different episodes for male (purple) and female (green) S. floridae. Errorbars represent the 95% confidence intervals around the mean_", fig.width=10, fig.height=8, warning=FALSE}
 
-```{r opp-select-episodes-figure, echo=FALSE, fig.cap="_Average opportunity for selection for the different episodes for male (purple) and female (green) S. floridae. Errorbars represent the 95% confidence intervals around the mean_", fig.width=8, fig.height=6, warning=FALSE}
+#Set colors used for the two sexes
+sex_cols <- c("F" = "#7fc97f", "M" = "#beaed4" )
 
-#Set parameters
+#Set up the plotting parameters
+par(oma = c(6, 4, 0, 2),  
+    mar = c(1, 1, 1, 1))
 
-ggplot(opp_episodes_average,
-       aes(x = Episode_sel,
-           y = Average,
-           color = Sex,
-           group = Sex)) +
-  geom_errorbar(aes(ymin = Average - Interval,
-                    ymax = Average + Interval),
-                color = "black",
-                width = 0.2,
-                position = pd,
-                linewidth = 1) +
-  geom_point(position = pd,
-             size = 4) +
-  xlab("Episode of Selection") +
-  ylab("Average Fitness Value") +
-  scale_color_manual(values = sex_cols) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), 
-        panel.background = element_blank(), 
-        axis.line = element_line(colour = "black")) +
-  theme(legend.position = "bottom",
-        legend.key=element_blank(),
-        axis.title.x = element_text(size = 16,
-                                    vjust = -0.5),
-        axis.text.x = element_text(size = 16, family = "serif"),
-        axis.title.y = element_text(size = 16,
-                                    vjust = 2.5),
-        axis.text.y = element_text(size = 16),
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)) +
-  geom_hline(yintercept = 0, linetype = "dashed", size = 1)
+#Set positioning for between m and f points
+dodge_amount <- 0.4
 
+#Create subscripted labels to use for the plots
+x_labels_orig <- unique(opp_episodes_average$Episode_sel)
+x_labels_display <- sapply(x_labels_orig, function(x) {
+  
+  ##COI with "given": e.g. "coi1_2given1" -> COI(1, 2|1)
+  if (grepl("^coi(\\d+)_(\\d+)given(\\d+)$", x)) {
+    m <- regmatches(x, regexec("^coi(\\d+)_(\\d+)given(\\d+)$", x))[[1]]
+    return(bquote(COI(.(m[2])*","~.(m[3])*"|"*.(m[4]))))
+  }
+  
+  ##COI without "given": e.g. "coi12_2" -> COI(12, 2)
+  if (grepl("^coi(\\d+)_(\\d+)$", x)) {
+    m <- regmatches(x, regexec("^coi(\\d+)_(\\d+)$", x))[[1]]
+    return(bquote(COI(.(m[2])*","~.(m[3]))))
+  }
+  
+  ##Diff: e.g. "diff_12" -> Diff(12)
+  if (grepl("^diff_(\\d+)$", x)) {
+    m <- regmatches(x, regexec("^diff_(\\d+)$", x))[[1]]
+    return(bquote(Diff(.(m[2]))))
+  }
+  
+  ##Subscript for "I_1", "I_2", etc.
+  if (grepl("_", x)) {
+    parts <- strsplit(x, "_")[[1]]
+    return(bquote(.(parts[1])[.(parts[2])]))
+  }
+  
+  ##Plain label, no transformation
+  return(x)
+  
+})
+  
+#Set up empty plot with no axes
+plot(NULL, xlim = c(0, 15),
+     ylim = c(-2, 5),
+     xlab = "", ylab = "",
+     xaxt = "n", yaxt = "n",
+     bty = "n")
+  
+#Add the x-axis, adjusting for the subscripted labels with mtext()
+axis(1, at = 1:15, labels = FALSE, lwd = 2)
+for (j in 1:15) {
+  
+  mtext(x_labels_display[[j]], side = 1, 
+        at = j, line = 1.5, family = "serif", 
+        cex = 1, las =2)
+  
+  }
+
+##Add the y-axis
+axis(2, cex.axis = 1.25, lwd = 2)
+box(bty = "l", lwd = 2)  
+  
+#Plot points and error bars for each sex
+for (j in 1:length(unique(opp_episodes_average$Sex))) {
+    
+  #Subset for the sex of interest
+  sex_data <- opp_episodes_average[opp_episodes_average$Sex == unique(opp_episodes_average$Sex)[j], ]
+    
+  #Match x positions to categorical positions
+  x_positions <- match(sex_data$Episode_sel, x_labels_orig)
+    
+  #Apply position adjustment to the points
+  x_pos <- x_positions + (j - (length(unique(opp_episodes_average$Sex)) + 1)/2) * dodge_amount
+    
+  #Add the error bars
+  arrows(x_pos, 
+         sex_data$Average - sex_data$Interval,
+         x_pos,
+         sex_data$Average + sex_data$Interval,
+         angle = 90, code = 3, length = 0.1, lwd = 2, col = "black")
+    
+  #Add the points
+  points(x_pos, sex_data$Average,
+         pch = 16,  
+         col = sex_cols[unique(opp_episodes_average$Sex)[j]],
+         cex = 1.5)
+  }
+  
+abline(h = 0, lty = 2, lwd = 2)
+
+#Add overall axis labels
+mtext("Average Fitness Value", side = 2, outer = TRUE, line = 2, cex = 1.3)
+
+#Add a legend
+par(fig = c(0, 1, 0, 1), oma = c(5, 5, 0, 0),
+    mar = c(3, 1, 0, 1), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+
+legend("top",
+       c("Male", "Female"),
+       col = c("#beaed4", "#7fc97f"),
+       bty = 'n',
+       cex = 1.5,
+       pch = 16,
+       ncol = 2)
 ```
 
-From the table and the plot we can see that once again there are no significant differences in the selection between males and females. Additionally, the two post-mating episodes of selection ($I_2$ and $I_3$) are non-significant for both males and females (i.e., the 95% CI cross zero).
+From the table and the plot we can see that once again there are no significant differences in the selection between males and females.
 
 Let's now look more into the percentage of the overall opportunity for selection made up for by each individual episode of selection:
 
@@ -1247,9 +1374,9 @@ for (sex in sexes) {
 
 ```{r generate-figa-opp-selection, echo=FALSE, warning=FALSE, fig.cap="_The proportion of the total opportunity for selection that is represented by each episode of selection for males and females._"}
 
-selection_colors <- c("I_1" = "#9FBCAA", "I_2" = "#F0B67F", "I_3" = "#CD96CD", "I_12" = "#6CA6CD")
+selection_colors <- c("I_1" = "#9FBCAA", "I_2" = "#F0B67F", "I_3" = "#CD96CD")
 
-ggplot(opp_percents[!(opp_percents$Episode_sel %in% c("I", "I_12")),], 
+ggplot(opp_percents[opp_percents$Episode_sel %in% c("I_1", "I_2", "I_3"),], 
        aes(x = Sex, 
            y = Percent, 
            fill = Episode_sel)) +
@@ -1275,7 +1402,7 @@ ggplot(opp_percents[!(opp_percents$Episode_sel %in% c("I", "I_12")),],
 Matching the previous plots, most of the opportunity for selection in _Syngnathus floridae_ males and females can be attributed to variance in mating success ($I_1$) rather than variance in eggs transferred/received ($I_2$) or variance in the proportion of eggs developed ($I_3$).
 
 # Mate success versus Reproductive success (Bateman Gradient, $\beta_{SS}$)
-I now want to look at any relationship that may exist between mating success and reproductive success for males and females. The Bateman gradient ($\beta_{SS}$) will be calculated, which is the slope of the weighted least-squares regression of relative reproductive success (number of offspring divided by the mean) on mating success. 
+I now want to look at any relationship that may exist between mating success and reproductive success for males and females. The Bateman gradient ($\beta_{SS}$) will be calculated. Historically, $\beta_{SS}$ is the slope of the weighted least-squares regression of relative reproductive success (number of offspring divided by the mean) on mating success. Here, I will be using a linear mixed effects model with the trial number included as a random effect rather than a least-squares regression. 
 
 A shallow slope in the Bateman gradient implies a low fitness gain with each additional mating event, and correspondingly weak or no selection acting on traits related to mating success, with a steeper Bateman gradient showing the reverse.
 
@@ -1341,34 +1468,26 @@ for (trial in unique(mal_succFL$trial_num)) {
 
 ```
 
-Once we have the measures of relative fitness we can use them to run the weighted least-squares regression for males and females separately.
+Once we have the measures of relative fitness we can use them to run the linear mixed effects model for males and females separately.
 
-```{r calc-bateman-gradient}
+```{r calc-bateman-gradient, message=FALSE}
 
 #Generating Bateman's gradient
-#Define the model
-fem_model <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess)
-mal_model <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess)
-
-#define weights to use
-wt_fem <- 1 / lm(abs(fem_model$residuals) ~ fem_model$fitted.values)$fitted.values^2
-wt_mal <- 1 / lm(abs(mal_model$residuals) ~ mal_model$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem <- lm(fem_bateman$rel_repo_fitness ~ fem_bateman$MatingSuccess,
-                    weights=wt_fem)
-wls_model_mal <- lm(mal_bateman$rel_repo_fitness ~ mal_bateman$MatingSuccess,
-                    weights=wt_mal)
+##Define the model
+fem_mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = fem_bateman,
+                REML = TRUE)
+mal_mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = mal_bateman,
+                REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem) #significant
-summary(wls_model_mal) #significant
+summary(fem_mod) #significant
+summary(mal_mod) #significant
 
 ```
 
-For both males and females there is a significant slope, meaning both sexes see increases in fitness with each additional mating. I am interested to run the model with the two datasets combined to see if there is an interaction of sex.
+For both males and females there is a significant slope, meaning both sexes see increases in fitness with each additional mating. I am interested to run the model with the two datasets combined to see if there is an interaction of sex (i.e., are there differences between the Bateman gradient for males and females).
 
-```{r calc-bateman-all}
+```{r calc-bateman-all, message=FALSE}
 
 #Combine the two datasets
 fem_bateman$Sex <- "F"
@@ -1377,16 +1496,11 @@ mal_bateman$Sex <- "M"
 all_bateman <- rbind(fem_bateman, mal_bateman)
 
 #Running a weighted least squares regression between MS and Sex
-MS_sex_model <- lm(all_bateman$rel_repo_fitness ~
-                     all_bateman$MatingSuccess*all_bateman$Sex)
+all_mod <- lmer(rel_repo_fitness ~ MatingSuccess*Sex + (1 | trial), 
+                data = all_bateman,
+                REML = TRUE)
 
-wt_all <- 1 / lm(abs(MS_sex_model$residuals) ~
-                   MS_sex_model$fitted.values)$fitted.values^2
-
-wls_MS_sex_model <- lm(all_bateman$rel_repo_fitness ~ 
-                         all_bateman$MatingSuccess*all_bateman$Sex, weights = wt_all)
-
-summary(wls_MS_sex_model)
+summary(all_mod)
 
 ```
 
@@ -1397,7 +1511,7 @@ When we combine all of the data together we can see two additional things:
   
 Let's visually look at this pattern now:
 
-```{r plot-bateman, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for male (purple) and female (green) _Syngnathus floridae_. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman's gradient is shown as the weighted least-squares regression line (dashed) for males and females._", fig.height=5}
+```{r plot-bateman, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for male (purple) and female (green) _Syngnathus floridae_. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman's gradient is shown as the slope of a linear mixed effects model (dashed) for males and females._", fig.height=8, fig.width=8}
 
 #Plotting the relationship between the mating and reproductive success
 plot(fem_bateman$MatingSuccess,
@@ -1405,15 +1519,35 @@ plot(fem_bateman$MatingSuccess,
      xlab = "Number of Mates (mating success)",
      ylab = "Relative Fitness (reproductive success)",
      pch = 19,
+     cex = 1.5,
      col = "#7fc97f75")
 points(mal_bateman$MatingSuccess,
        mal_bateman$rel_repo_fitness,
        xlab = "Number of Mates (mating success)",
        ylab = "Relative Fitness (reproductive success)",
        pch = 19,
+       cex = 1.5,
        col = "#beaed475")
-abline(wls_model_fem, col = "#7fc97f", lwd = 3, lty = 2)
-abline(wls_model_mal, col = "#beaed4", lwd = 3, lty = 2)
+
+fem_seq <- seq(0, 5, length.out = 100)
+new_dat_fem <- data.frame(MatingSuccess = fem_seq,
+                          trial = NA) 
+preds_fem <- predict(fem_mod, newdata = new_dat_fem, re.form = NA)
+lines(fem_seq, preds_fem,
+      col = "#7fc97f",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
+
+mal_seq <- seq(0, 5, length.out = 100)
+new_dat_mal <- data.frame(MatingSuccess = mal_seq,
+                          trial = NA) 
+preds_mal <- predict(mal_mod, newdata = new_dat_mal, re.form = NA)
+lines(mal_seq, preds_mal,
+      col = "#beaed4",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
 
 legend("topleft",
        legend = c("Male", "Female"),
@@ -1430,7 +1564,7 @@ The plot confirms the results from the two models. We can see that there is a st
 ## Omitting females with high mating
 To make sure the two females that mated 3 times are not significantly affect the Bateman gradient I am re-plotting and re-running the model with those points omitted.
 
-```{r bateman-no3, echo=FALSE}
+```{r bateman-no3, echo=FALSE, message=FALSE, fig.width=8, fig.height=8}
 #Plotting the relationship between the mating and reproductive success without the two females who mated 3 times
 par(mfrow=c(1,1))
 plot(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3],
@@ -1438,27 +1572,37 @@ plot(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3],
      xlab = "Number of Mates (mating success)",
      ylab = "Relative Fitness (reproductive success)",
      pch = 19,
+     cex = 1.5,
      col = "#7fc97f75")
 points(mal_bateman$MatingSuccess,
        mal_bateman$rel_repo_fitness,
        xlab = "Number of Mates (mating success)",
        ylab = "Relative Fitness (reproductive success)",
        pch = 19,
+       cex = 1.5,
        col = "#beaed475")
 
 #Redefine the female model
-fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 3] ~
-                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3])
-wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
-                    fem_model2$fitted.values)$fitted.values^2
-wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess < 3] ~
-                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess < 3],
-                     weights=wt_fem2)
+fem_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = fem_bateman[fem_bateman$MatingSuccess < 3,],
+                 REML = TRUE)
 
-abline(wls_model_fem2, col = "#7fc97f", lwd = 3, lty = 2)
-abline(wls_model_mal, col = "#beaed4", lwd = 3, lty = 2)
+new_dat_fem <- data.frame(MatingSuccess = fem_seq,
+                          trial = NA) 
+preds_fem2 <- predict(fem_mod2, newdata = new_dat_fem, re.form = NA)
+lines(fem_seq, preds_fem2,
+      col = "#7fc97f",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
 
-summary(wls_model_fem2)
+lines(mal_seq, preds_mal,
+      col = "#beaed4",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
+
+summary(fem_mod2)
 ```
 
 It doesn't look like omitting those few individuals has any effect on the results of the Bateman gradient.
@@ -1475,36 +1619,24 @@ Because both male and female _S. floridae_ both mate twice, I want to look at th
 ### Removing the zeros from the plot
 The first way I am addressing this is by using the same datasets as before and just excluding the 0's from the plot and the model:
 
-```{r calc-bateman-fem-nozero1}
+```{r calc-bateman-fem-nozero1, message=FALSE}
 
 #Generating Bateman's gradient
 #Define the model
-fem_model2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
-                   fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0])
-mal_model2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
-                   mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0])
-
-#define weights to use
-wt_fem2 <- 1 / lm(abs(fem_model2$residuals) ~
-                    fem_model2$fitted.values)$fitted.values^2
-wt_mal2 <- 1 / lm(abs(mal_model2$residuals) ~
-                    mal_model2$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem2 <- lm(fem_bateman$rel_repo_fitness[fem_bateman$MatingSuccess != 0] ~
-                       fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
-                    weights=wt_fem2)
-wls_model_mal2 <- lm(mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0] ~
-                       mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
-                    weights=wt_mal2)
+fem_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = fem_bateman[fem_bateman$MatingSuccess != 0,],
+                 REML = TRUE)
+mal_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = mal_bateman[mal_bateman$MatingSuccess != 0,],
+                 REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem2) #significant
-summary(wls_model_mal2) #significant
+summary(fem_mod2) #significant
+summary(mal_mod2) #significant
 
 ```
 
-```{r plot-bateman-nozero1, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for female (green) and male (purple) _Syngnathus floridae_ who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman's gradient is shown as the weighted least-squares regression line (dashed)._", fig.height=5}
+```{r plot-bateman-nozero1, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for female (green) and male (purple) _Syngnathus floridae_ who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Bateman's gradient is shown as the slope of a linear mixed effects model._", fig.height=8, fig.width=8}
 
 #Plotting the relationship between the mating and reproductive success
 plot(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
@@ -1512,16 +1644,35 @@ plot(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
      xlab = "Number of Mates (mating success)",
      ylab = "Relative Fitness (reproductive success)",
      pch = 19,
+     cex = 1.5,
      col = "#7fc97f75")
 points(mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
        mal_bateman$rel_repo_fitness[mal_bateman$MatingSuccess != 0],
        xlab = "Number of Mates (mating success)",
        ylab = "Relative Fitness (reproductive success)",
        pch = 19,
+       cex = 1.5,
        col = "#beaed475")
 
-abline(wls_model_fem2, col = "#7fc97f", lwd = 3, lty = 2)
-abline(wls_model_mal2, col = "#beaed4", lwd = 3, lty = 2)
+fem_seq <- seq(0, 5, length.out = 100)
+new_dat_fem <- data.frame(MatingSuccess = fem_seq,
+                          trial = NA) 
+preds_fem <- predict(fem_mod2, newdata = new_dat_fem, re.form = NA)
+lines(fem_seq, preds_fem,
+      col = "#7fc97f",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
+
+mal_seq <- seq(0, 5, length.out = 100)
+new_dat_mal <- data.frame(MatingSuccess = mal_seq,
+                          trial = NA) 
+preds_mal <- predict(mal_mod2, newdata = new_dat_mal, re.form = NA)
+lines(mal_seq, preds_mal,
+      col = "#beaed4",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
 
 legend("bottomright",
        legend = c("Male", "Female"),
@@ -1597,39 +1748,26 @@ for (trial in unique(mal_succFL$trial_num)) {
 
 ```
 
-Once we have the measures of relative fitness we can use them to run the weighted least-squares regression for males and females separately.
+Once we have the measures of relative fitness we can use them to run the linear mixed effects model for males and females separately.
 
-```{r calc-bateman-gradient-nozero2}
+```{r calc-bateman-gradient-nozero2, message=FALSE}
 
 #Generating Bateman's gradient
 #Define the model
-fem_model3 <- lm(fem_bateman_nozero$rel_repo_fitness ~ 
-                  fem_bateman_nozero$MatingSuccess)
-mal_model3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
-                  mal_bateman_nozero$MatingSuccess)
-
-#define weights to use
-wt_fem3 <- 1 / lm(abs(fem_model3$residuals) ~
-                    fem_model3$fitted.values)$fitted.values^2
-wt_mal3 <- 1 / lm(abs(mal_model3$residuals) ~
-                    mal_model3$fitted.values)$fitted.values^2
-
-#perform weighted least squares regression
-wls_model_fem3 <- lm(fem_bateman_nozero$rel_repo_fitness ~
-                      fem_bateman_nozero$MatingSuccess,
-                    weights=wt_fem3)
-wls_model_mal3 <- lm(mal_bateman_nozero$rel_repo_fitness ~ 
-                      mal_bateman_nozero$MatingSuccess,
-                     weights = wt_mal3)
-
+fem_mod3 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = fem_bateman_nozero,
+                 REML = TRUE)
+mal_mod3 <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), 
+                 data = mal_bateman_nozero,
+                 REML = TRUE)
 
 #Investigate the results
-summary(wls_model_fem3) #significant
-summary(wls_model_mal3) #not significant
+summary(fem_mod3) #significant
+summary(mal_mod3) #not significant
 
 ```
 
-```{r plot-bateman-nozero2, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for female (green) and male (purple) _Syngnathus floridae_ who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman's gradient is shown as the weighted least-squares regression line (dashed)._", fig.height=5}
+```{r plot-bateman-nozero2, echo=FALSE, fig.cap="_Relationship between reproductive success and mating success for female (green) and male (purple) _Syngnathus floridae_ who achieved at least one mate. Reproductive success is shown as relative fitness (i.e. number of offspring produced divided by the mean number of offspring produced). Relative fitness is calculated without the individuals who did not mate. Bateman's gradient is shown as the slope of a linear mixed effects model (dashed)._", fig.height=8, fig.width=8}
 
 #Plotting the relationship between the mating and reproductive success
 plot(fem_bateman_nozero$MatingSuccess,
@@ -1637,16 +1775,35 @@ plot(fem_bateman_nozero$MatingSuccess,
      xlab = "Number of Mates (mating success)",
      ylab = "Relative Fitness (reproductive success)",
      pch = 19,
+     cex = 1.5,
      col = "#7fc97f75")
 points(mal_bateman_nozero$MatingSuccess,
        mal_bateman_nozero$rel_repo_fitness,
        xlab = "Number of Mates (mating success)",
        ylab = "Relative Fitness (reproductive success)",
        pch = 19,
+       cex = 1.5,
        col = "#beaed475")
 
-abline(wls_model_fem3, col = "#7fc97f", lwd = 3, lty = 2)
-abline(wls_model_mal3, col = "#beaed4", lwd = 3, lty = 2)
+fem_seq <- seq(0, 2, length.out = 50)
+new_dat_fem <- data.frame(MatingSuccess = fem_seq,
+                          trial = NA) 
+preds_fem <- predict(fem_mod3, newdata = new_dat_fem, re.form = NA)
+lines(fem_seq, preds_fem,
+      col = "#7fc97f",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
+
+mal_seq <- seq(0, 2, length.out = 50)
+new_dat_mal <- data.frame(MatingSuccess = mal_seq,
+                          trial = NA) 
+preds_mal <- predict(mal_mod3, newdata = new_dat_mal, re.form = NA)
+lines(mal_seq, preds_mal,
+      col = "#beaed4",
+      lwd = 3,
+      lty = 2,
+      xpd = FALSE)
 
 legend("bottomright",
        legend = c("Male", "Female"),
@@ -1657,7 +1814,26 @@ legend("bottomright",
 
 ```
 
-With this way of excluding the individuals who did not mate, there is still a significant increase in relative fitness with each additional mating for females, however, not for males anymore.
+With this way of excluding the individuals who did not mate, there is still a significant increase in relative fitness with each additional mating for females, however, not for males anymore. 
+
+We can do the same combination of datasets that we did earlier to see if there is a difference in the gradient between males and females.
+
+```{r calc-bateman-all-nozero, message=FALSE}
+
+#Combine the two datasets
+fem_bateman_nozero$Sex <- "F"
+mal_bateman_nozero$Sex <- "M"
+
+all_bateman_nozero <- rbind(fem_bateman_nozero, mal_bateman_nozero)
+
+#Running a weighted least squares regression between MS and Sex
+all_mod2 <- lmer(rel_repo_fitness ~ MatingSuccess*Sex + (1 | trial), 
+                data = all_bateman_nozero,
+                REML = TRUE)
+
+summary(all_mod2)
+
+```
 
 # Investing selection differentials on snout-vent-length ($s$ and $s'$)
 A selection differential is the covariance between a trait and relative fitness and is often thought of as the difference in a trait mean before and after selection. We can calculate the absolute selection differential as:
@@ -1680,8 +1856,8 @@ Just as I did for the decomposition of the opportunity for selection, I am going
 I am going to use snout-vent length as the trait that I am interested in as I found significant differences between males and females, whereas there were no significant differences in standard length. For the various relative fitness components I will be using:
 
   1. Mating success (pre-mating selection)
-  2. Number of eggs transferred (post-mating)
-  3. Proportion of transferred eggs developed (post-mating)
+  2. Number of eggs stored (post-mating)
+  3. Proportion of stored eggs developed (post-mating)
   
 ```{r selection-diff-females}
 #Create a dataframe to store all of the intermediate values of fitness in
@@ -1748,7 +1924,7 @@ for (trial in unique(fem_succFL$trial_num)) {
 }
 
 #Exporting the data
-write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
+#write.csv(fem_succ_select_diff, "data/floridae_int_diff_fem.csv", row.names = FALSE)
 ```
 
 ```{r selection-diff-males}
@@ -1814,7 +1990,7 @@ for (trial in unique(mal_succFL$trial_num)) {
 }
 
 #Exporting the data
-write.csv(mal_succ_select_diff, "data/floridae_int_diff_mal.csv", row.names = FALSE)
+#write.csv(mal_succ_select_diff, "data/floridae_int_diff_mal.csv", row.names = FALSE)
 ```
 
 ```{r selection-diff-CI}
@@ -1824,16 +2000,16 @@ select_diff_mal$Sex <- "M"
 
 select_diff_all <- rbind(select_diff_fem, select_diff_mal)
 
-write.csv(select_diff_all, "data/floridae_select_diff.csv", row.names = FALSE)
+#write.csv(select_diff_all, "data/floridae_select_diff.csv", row.names = FALSE)
 
 #List the columns of interest
 columns <- c("s1", "s2", "s3", "s123",
              "s1_prime", "s2_prime", "s3_prime", "s123_prime")
 
 #Create a dataframe to store the final values in
-sd_average <- data.frame(matrix(ncol = 4,
+sd_average <- data.frame(matrix(ncol = 5,
                                 nrow = 0))
-colnames(sd_average) <- c("Average", "Interval", "Select_diff", "Sex")
+colnames(sd_average) <- c("Average", "Interval", "Variance", "Select_diff", "Sex")
 
 #Calculate the critical value
 crit <- qt(p = 0.975, df = (nrow(select_diff_fem) - 1))
@@ -1848,6 +2024,11 @@ for (j in 1:length(columns)) {
     mean <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
                        select_diff_all$Sex, mean)))
     
+    #Calculate the variance
+    var <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
+                       select_diff_all$Sex, 
+                       var)))
+    
     #Calculate standard error
     se <- t(t(tapply(select_diff_all[, colnames(select_diff_all) == col_name], 
                      select_diff_all$Sex, 
@@ -1861,8 +2042,8 @@ for (j in 1:length(columns)) {
     int <- se*crit
     
     #Combine the data together
-    episode <- as.data.frame(cbind(mean, int))
-    colnames(episode) <- c("Average", "Interval")
+    episode <- as.data.frame(cbind(mean, var, int))
+    colnames(episode) <- c("Average", "Variance", "Interval")
     
     episode$Select_diff <- col_name
     episode$Sex <- rownames(episode)
@@ -1947,7 +2128,7 @@ select_diff2_average <- ggplot(sd_average[sd_average$Select_diff %in%
                 linewidth = 1) +
   geom_point(position = pd,
              size = 4) +
-  xlab("Absolute Selection Differential") +
+  xlab("Standardized Selection Differential") +
   ylab("Average value across trials") +
   scale_color_manual(values = sex_cols) +
   theme(panel.grid.major = element_blank(), 
@@ -1974,7 +2155,7 @@ plot_grid(select_diff_average, select_diff2_average,
 We can see from these results that males and females are experiencing largely different selection on snout-vent length. When the male selection differential is negative the female is positive and vice avers. Overall, it appears larger size in female svl is more beneficial in the pre-mating episode and in terms of the proportion of eggs developed, but not for the number of eggs transferred. However, none of that is significant (i.e., the 95% CI values all cross 0). In males there is a significant selection differential favoring smaller svl in pre-mating selection and in the overall selection differential.
 
 ## Looking into the Maximum Sexual Selection Differential
-Because $s'$ is the covariance between a standardized trait, which has a s.d. of 1, and relative fitness, meaning $s'$ cannot be larger than the standard deviation in the relative fitness. If we are talking about mating success as our relative fitness metric, the standard deviation of relative mating success is the square root of $I_S$ so to calculate $s'_{max}$:
+Because $s'$ is the covariance between a standardized trait, which has a s.d. of 1, and relative fitness,  $s'$ cannot be larger than the standard deviation in the relative fitness. If we are talking about mating success as our relative fitness metric, the standard deviation of relative mating success is the square root of $I_S$ so to calculate $s'_{max}$:
 
 $$
 s'_{max}\ =\ \beta_{SS}\sqrt{I_S}
@@ -1985,8 +2166,8 @@ Let's now generate $s'_{max}$ for male and female _S. floridae_.
 
 ```{r select-diff-max}
 #Pull out the Bateman gradient (slopes of the models)
-bateman_fem <- coefficients(wls_model_fem)[2]
-bateman_mal <- coefficients(wls_model_mal)[2]
+bateman_fem <- fixef(fem_mod)["MatingSuccess"]
+bateman_mal <- fixef(mal_mod)["MatingSuccess"]
 
 #Pull out the Average opp sexual selection for males and females
 opp_ss_fem <- opp_average$Average[opp_average$Sex == "F" & 
@@ -1995,8 +2176,10 @@ opp_ss_mal <- opp_average$Average[opp_average$Sex == "M" &
                                     opp_average$Episode_sel == "I_s"]
 
 #Calculate select diff max
-select_diff_max_fem <- bateman_fem * sqrt(opp_ss_fem)
-select_diff_max_mal <- bateman_mal * sqrt(opp_ss_mal)
+#####AVERAGES FOR I_S OR I_1 USED HERE WERE GENERATED IN THE BOOTSTRAPPING_SELECTION_
+#####ANALYSIS.RMD DOCUMENT RATHER THAN THE AVERAGE FROM THE RAW DATA IN THIS .RMD
+select_diff_max_fem <- bateman_fem * sqrt(2.76)
+select_diff_max_mal <- bateman_mal * sqrt(2.46)
 
 ```
 
@@ -2054,16 +2237,18 @@ abline(lm(mal_succFL$prop_surviving ~
        col = "#beaed4", lwd = 3, lty = 2)
 ```
 
-We can see that when the non-mated individuals are included there is a steep slope (due to the zeros). Because I am interested in the pose-mating processes, I am going to move forward without including the non-mated individuals (as they are accounted for in the Bateman gradient).
+We can see that when the non-mated individuals are included there is a steep slope (due to the zeros). Because I am interested in the post-mating processes, I am going to move forward without including the non-mated individuals (as they are accounted for in the Bateman gradient).
+
+I will use a Spearman Rank correlation here as the data is not normally distributed (proportion and count data).
 
 ```{r surv-mate-cor}
 
 cor.test(fem_bateman$MatingSuccess[fem_bateman$MatingSuccess != 0],
-         fem_succFL$prop_surviving[fem_succFL$totalEggs != 0])
+         fem_succFL$prop_surviving[fem_succFL$totalEggs != 0], method = "spearman")
 
 cor.test(mal_bateman$MatingSuccess[mal_bateman$MatingSuccess != 0],
-         mal_succFL$prop_surviving[mal_succFL$totalEggs != 0])
+         mal_succFL$prop_surviving[mal_succFL$totalEggs != 0], method = "spearman")
 
 ```
 
-For both males and females there is no significant correlation between the number of mates and the proportion of the offspring which survive. However, both of the non-significant correlations are negative, meaning potenitally if our sample size was higher we would be able to detect an effect.
+For both males and females there is no significant correlation between the number of mates and the proportion of the offspring which survive. However, both of the non-significant correlations are negative, meaning potentially if our sample size was higher we would be able to detect an effect.
