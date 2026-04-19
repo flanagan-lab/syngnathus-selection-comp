@@ -33,8 +33,8 @@ All Rmarkdown documents used for the various analyses are located in the directo
       - _*_ There will be one .Rmd file for each of three species (`_floridae`, `_fuscus`, `_scovelli`).
         
       - The document `selection_analysis_floridae.Rmd` contains the most detail with the code adapted from this .Rmd for the other two species. In any areas where there are major changes, sufficient detail is provided in the species's .Rmd file.
-   
-    - `cross_species_comp.Rmd`: Reads in datasets generated in the `selection_analysis_*.Rmd` documents and creates several figures which compares selection metrics across the three species. In this document, figures 2, 3, and 4 from the manuscript are generated.
+
+  - `cross_species_comp.Rmd`: Reads in datasets generated in the `selection_analysis_*.Rmd` documents and creates several figures which compares selection metrics across the three species. In this document, figures 2, 3, and 4 from the manuscript are generated.
 
 ### R files
 The directory R/ contains several supporting scripts used in the RMarkdown documents outlined above. They do the following:
