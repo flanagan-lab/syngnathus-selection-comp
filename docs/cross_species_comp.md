@@ -13,12 +13,12 @@ Coley Tosto
 
 ``` r
 #This is a cohesive list of all the libraries used in this document
-library(lme4)
-library(spfTools)
-library(magick)
-library(patchwork)
-library(ggplot2)
-library(nnet)
+library(lme4) #v1.1.35.5
+library(spfTools) #v0.1.0
+
+library(magick) #v2.8.5
+library(patchwork) #v1.3.0
+library(ggplot2) #v4.0.2
 ```
 
 ``` r
@@ -44,6 +44,9 @@ FU_fem_fitness$species <- rep("fuscus", times = nrow(FU_fem_fitness))
 
 SS_fem_fitness <- read.csv("data/fem_fitnessSS.csv", header = TRUE)
 SS_fem_fitness$species <- rep("scovelli", times = nrow(SS_fem_fitness))
+
+##Data for the Selection Differentials
+select_diff <- read.csv("data/select_diff_boot_aves.csv", header = TRUE)
 ```
 
 ## The Opportunity for Selection across Species
@@ -51,8 +54,9 @@ SS_fem_fitness$species <- rep("scovelli", times = nrow(SS_fem_fitness))
 We can start by comparing the episodes of selection calculated for males
 and females across the species. The data I will be using for this
 includes the average selection across the trials for each episode along
-side the upper and lower percentile-based confidence intervals we
-generated from bootstrapping.
+side the upper and lower percentile-based confidence intervals. Both the
+averages and the confidence intervals were generated in the document
+`bootstrapping_selection_analysis.Rmd`.
 
 I am first going to plot the average fitness value with the confidence
 intervals as error bars.
@@ -261,6 +265,19 @@ ggsave("figs/Fig_bateman_prop.png", fig, height=5, width=10) # also save as a pn
 ```
 
 ## Selection differentials and gradients across the species
+
+To begin we can compare the selection differentials calculated for males
+and females across the species in a similar manner to the opportunity
+for selection above. The data I will be using for this includes the
+average selection differentials across the trials for each episode along
+side the upper and lower percentile-based confidence intervals. Both the
+averages and the confidence intervals were generated in the document
+`bootstrapping_selection_analysis.Rmd`.
+
+I am first going to plot the average selection differential value with
+the confidence intervals as error bars.
+
+![](cross_species_comp_files/figure-gfm/select-diff-ave-CI-1.png)<!-- -->
 
 I am going to try running a multinomial logistic regression where I will
 use a trait of interest to predict mating success females in the three
