@@ -524,14 +524,12 @@ We can test to see if there are any significant differences as well.
 
 ```{r}
 data$eggs_per_mate <- data$totalEggs/data$MatingSuccess
-t.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
-       var.equal = FALSE)
 
-t.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"],
-       var.equal = FALSE)
+wilcox.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"])
 
-t.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
-       var.equal = FALSE)
+wilcox.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"])
+
+wilcox.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"])
 
 t.test(data$eggs_per_mate[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
        var.equal = FALSE)
@@ -541,6 +539,12 @@ t.test(data$eggs_per_mate[data$species == "fuscus"] ~ data$mating_status[data$sp
 
 t.test(data$eggs_per_mate[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
        var.equal = FALSE)
+
+kruskal.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"])
+
+kruskal.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"])
+
+kruskal.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"])
 
 ```
 
