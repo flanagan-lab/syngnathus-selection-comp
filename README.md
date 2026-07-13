@@ -36,12 +36,22 @@ All Rmarkdown documents used for the various analyses are located in the directo
 
   - `cross_species_comp.Rmd`: Reads in datasets generated in the `selection_analysis_*.Rmd` documents and creates several figures which compares selection metrics across the three species. In this document, figures 2, 3, and 4 from the manuscript are generated.
 
+  - `bootstrapping_selection_analysis.Rmd`: Performs the jackknifing approach to estimate and decompose I and s. 
+
 ### R files
 The directory R/ contains several supporting scripts used in the RMarkdown documents outlined above. They do the following:
 
   - `calc_fitness.R`: Used to convert the results from the genetic parentage analysis into overall mating and reproductive success for _S. floridae_ and _S. fuscus_.
 
   - `opp_select_nozeros.R`: Outlines how we partitioned the opportunity for selection when unmated indivudals were only included in the first episode.
+
+  - `bootstrap_partition_I.R`: Performs the jackknifing procedure to decompose I.
+
+  - `bootstrap_s.R`: Performs the jackknifing procedure to estimate s and its confidence intervals.
+
+  - `calc_selection_diffs.R`: Contains the code needed to calculate the selection differentials.
+
+  - `partition_I.R`: Partitions I into its various components. 
 
 ## Contributors
 The contributors to this repository are Coley Tosto and Sarah Flanagan. Please contact Coley with any questions at coley.tosto@canterbury.ac.nz.
