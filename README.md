@@ -6,7 +6,7 @@ This is a repository for the analysis of sexual selection pressues in three spec
   2. Generate Bateman's gradient for male and females within each species.
   3. Attempt to identify traits that may be targets of pre- and post-copulatory selection using selection differentials.
 
-These analyses support the findings in the manuscript "" ().
+These analyses support the findings in the manuscript "Comparing mating systems and sexual selection pressures across three congeneric species of pipefish that span the continuum of sexual dimorphism", currently submitted to a journal for consideration.
 
 ## Data
 The code refers to data that is found in the data/ directory at the top of the repo. The datasets in this directory were made from the original raw data (see "Data Availability" for how to access the raw data).
