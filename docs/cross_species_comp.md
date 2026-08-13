@@ -147,112 +147,40 @@ females across the species.
 We can test to see if there are any significant differences as well.
 
 ``` r
-data$eggs_per_mate <- data$totalEggs/data$MatingSuccess
-t.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
-       var.equal = FALSE)
+wilcox.test(data$prop_developed[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"])
 ```
 
     ## 
-    ##  Welch Two Sample t-test
+    ##  Wilcoxon rank sum test with continuity correction
     ## 
     ## data:  data$prop_developed[data$species == "floridae"] by data$mating_status[data$species == "floridae"]
-    ## t = 0.38986, df = 13.753, p-value = 0.7026
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.1798398  0.2595793
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##       0.8462871       0.8064174
+    ## W = 53, p-value = 0.7937
+    ## alternative hypothesis: true location shift is not equal to 0
 
 ``` r
-t.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"],
-       var.equal = FALSE)
+wilcox.test(data$prop_developed[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"])
 ```
 
     ## 
-    ##  Welch Two Sample t-test
+    ##  Wilcoxon rank sum test with continuity correction
     ## 
     ## data:  data$prop_developed[data$species == "fuscus"] by data$mating_status[data$species == "fuscus"]
-    ## t = -2.7043, df = 1.101, p-value = 0.2066
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.7798817  0.4544469
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##       0.7920699       0.9547873
+    ## W = 1, p-value = 0.0394
+    ## alternative hypothesis: true location shift is not equal to 0
 
 ``` r
-t.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
-       var.equal = FALSE)
+wilcox.test(data$prop_developed[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"])
 ```
 
     ## 
-    ##  Welch Two Sample t-test
+    ##  Wilcoxon rank sum test with continuity correction
     ## 
     ## data:  data$prop_developed[data$species == "scovelli"] by data$mating_status[data$species == "scovelli"]
-    ## t = -3.1351, df = 14.438, p-value = 0.007079
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -0.18618277 -0.03517485
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##       0.8710678       0.9817466
+    ## W = 41.5, p-value = 0.004347
+    ## alternative hypothesis: true location shift is not equal to 0
 
-``` r
-t.test(data$eggs_per_mate[data$species == "floridae"] ~ data$mating_status[data$species == "floridae"],
-       var.equal = FALSE)
-```
-
-    ## 
-    ##  Welch Two Sample t-test
-    ## 
-    ## data:  data$eggs_per_mate[data$species == "floridae"] by data$mating_status[data$species == "floridae"]
-    ## t = -0.65565, df = 14.071, p-value = 0.5226
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -136.73108   72.68346
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##        180.9762        213.0000
-
-``` r
-t.test(data$eggs_per_mate[data$species == "fuscus"] ~ data$mating_status[data$species == "fuscus"],
-       var.equal = FALSE)
-```
-
-    ## 
-    ##  Welch Two Sample t-test
-    ## 
-    ## data:  data$eggs_per_mate[data$species == "fuscus"] by data$mating_status[data$species == "fuscus"]
-    ## t = -0.49385, df = 1.5556, p-value = 0.6821
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -559.5977  470.7153
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##        204.5000        248.9412
-
-``` r
-t.test(data$eggs_per_mate[data$species == "scovelli"] ~ data$mating_status[data$species == "scovelli"],
-       var.equal = FALSE)
-```
-
-    ## 
-    ##  Welch Two Sample t-test
-    ## 
-    ## data:  data$eggs_per_mate[data$species == "scovelli"] by data$mating_status[data$species == "scovelli"]
-    ## t = -2.542, df = 23.872, p-value = 0.01793
-    ## alternative hypothesis: true difference in means between group M and group S is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -14.833671  -1.537758
-    ## sample estimates:
-    ## mean in group M mean in group S 
-    ##        25.88095        34.06667
-
-The only significant difference present is in *S. scovelli*. For the
-other two species, even if there were a significant difference, it is
-likely that the sample size of the multiply mated females is too small
-to detect one.
+We can see a significant difference present in both *S. fuscus* and *S.
+scovelli*.
 
 ``` r
 figB <- image_ggplot(image_read_pdf('figs/SM_boxplot.pdf'),interpolate = TRUE)
@@ -262,6 +190,20 @@ fig <- figA + figB + plot_annotation(tag_levels = "A")
 
 ggsave("figs/Fig_bateman_prop.pdf", fig, height=5, width=10)
 ggsave("figs/Fig_bateman_prop.png", fig, height=5, width=10) # also save as a png
+```
+
+
+``` r
+```
+
+
+``` r
+
+
+
+``` r
+
+
 ```
 
 ## Selection differentials and gradients across the species
@@ -284,6 +226,7 @@ use a trait of interest to predict mating success females in the three
 species. I will start with snout-vent-length as the trait of interest.
 
 ``` r
+library(nnet)
 ##Convert mating success and run the model
 FL_fem_fitness$MatingSuccess <- factor(FL_fem_fitness$MatingSuccess)
 model_FL <- multinom(MatingSuccess ~ svl, data = FL_fem_fitness)
