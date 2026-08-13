@@ -7,8 +7,6 @@ Bootstrapping selection estimates
 - [Opportunity for selection](#opportunity-for-selection)
   - [Partitioning *I* for all
     individuals](#partitioning-i-for-all-individuals)
-  - [Partitioning *I* for only mated
-    individuals](#partitioning-i-for-only-mated-individuals)
 - [Selection differentials](#selection-differentials)
 
 ``` r
@@ -24,6 +22,8 @@ set.seed(2025)
 num_bootstraps<-1000 #change this as needed
 source("R/partition_I.R")
 source("R/bootstrap_partition_I.R")
+source("R/calc_selection_diffs.R")
+source("R/bootstrap_s.R")
 ```
 
 ## Read in the datasets
@@ -187,21 +187,21 @@ kable(male_CIs)
 
 |                      |      mean | lower.2.5% | upper.97.5% | species  |
 |:---------------------|----------:|-----------:|------------:|:---------|
-| I_1_mal              |  2.786641 |   1.379741 |    4.550087 | floridae |
-| I_2_mal              |  0.138900 |   0.019109 |    0.274878 | floridae |
-| coi1_2_mal           |  0.649312 |   0.456925 |    0.810739 | floridae |
-| coi1_2given1_mal     | -0.039080 |  -0.167801 |    0.064899 | floridae |
-| coi12_2_mal          |  0.788212 |   0.564657 |    0.994310 | floridae |
-| coi12_2given1_mal    |  0.215568 |   0.026597 |    0.556546 | floridae |
-| diff_12_mal          | -0.572643 |  -0.761159 |   -0.330327 | floridae |
-| I_12_mal             |  2.963129 |   1.508897 |    4.769433 | floridae |
-| I_3_mal              |  0.039895 |   0.001106 |    0.132617 | floridae |
-| coi12_3_mal          |  0.665947 |   0.469292 |    0.821304 | floridae |
-| coi12_3given2_mal    |  0.061680 |  -0.054640 |    0.194069 | floridae |
-| coi123_3_mal         |  0.705841 |   0.498385 |    0.869893 | floridae |
-| coi123_3given2_mal   |  0.161062 |  -0.015020 |    0.525905 | floridae |
-| diff_123_mal         | -0.544780 |  -0.799817 |   -0.215633 | floridae |
-| I_mal                |  3.185871 |   1.652233 |    4.981343 | floridae |
+| I_1_mal              |  2.462045 |   1.088524 |    4.241778 | floridae |
+| I_2_mal              |  0.242932 |   0.042676 |    0.651593 | floridae |
+| coi1_2_mal           |  0.574490 |   0.364829 |    0.734715 | floridae |
+| coi1_2given1_mal     | -0.050284 |  -0.194790 |    0.088024 | floridae |
+| coi12_2_mal          |  0.817423 |   0.549350 |    1.208123 | floridae |
+| coi12_2given1_mal    |  0.411365 |   0.061422 |    1.038618 | floridae |
+| diff_12_mal          | -0.406057 |  -0.670212 |   -0.017864 | floridae |
+| I_12_mal             |  2.823127 |   1.354994 |    4.469692 | floridae |
+| I_3_mal              |  0.036958 |   0.001456 |    0.120580 | floridae |
+| coi12_3_mal          |  0.593693 |   0.391886 |    0.753157 | floridae |
+| coi12_3given2_mal    |  0.040715 |  -0.052650 |    0.170490 | floridae |
+| coi123_3_mal         |  0.630651 |   0.407503 |    0.803625 | floridae |
+| coi123_3given2_mal   |  0.132065 |  -0.036535 |    0.486133 | floridae |
+| diff_123_mal         | -0.498586 |  -0.735983 |   -0.187208 | floridae |
+| I_mal                |  2.995907 |   1.425598 |    4.681028 | floridae |
 | I_1_mal.1            |  2.758164 |   1.465155 |    4.135873 | fuscus   |
 | I_2_mal.1            |  0.052594 |   0.000862 |    0.142914 | fuscus   |
 | coi1_2_mal.1         |  0.640403 |   0.433333 |    0.833333 | fuscus   |
@@ -232,121 +232,6 @@ kable(male_CIs)
 | coi123_3given2_mal.2 |  0.080808 |   0.016995 |    0.205900 | scovelli |
 | diff_123_mal.2       | -0.105631 |  -0.181201 |   -0.038511 | scovelli |
 | I_mal.2              |  0.369157 |   0.181453 |    0.713790 | scovelli |
-
-### Partitioning *I* for only mated individuals
-
-``` r
-boot_floridae <- bootstrap_partition_I(num_bootstraps,
-                                       fem_succFL[fem_succFL$mated==1,],
-                                       mal_succFL[mal_succFL$mated==1,])
-write.csv(boot_floridae, "data/floridae_bootstrapped_I_partitions_mated.csv",
-          quote=FALSE, row.names = FALSE)
-```
-
-``` r
-boot_floridae<-read.csv("data/floridae_bootstrapped_I_partitions_mated.csv")
-```
-
-Because some of the S. fuscus trials only had one male and/or one female
-mate (which cannot have a variance calculated on it for partitioning I,
-if all non-mated individuals are removed), I first need to sub-set the
-data to only include trials with 2 or more mated individuals.
-
-``` r
-fem_fu_mated<-fem_succFU[fem_succFU$mated==1,]
-mal_fu_mated <- mal_succFU[mal_succFU$MatingSuccess>0,]
-fem_tab<-table(fem_fu_mated$trial_num)
-mal_tab<-table(mal_fu_mated$trial_num)
-
-trials_to_use<-intersect(names(fem_tab[which(fem_tab>1)]),
-                         names(mal_tab[which(mal_tab>1)]))
-
-boot_fuscus <- bootstrap_partition_I(num_bootstraps,
-                                       fem_fu_mated[which(fem_fu_mated$trial_num %in% trials_to_use),],
-                                       mal_fu_mated[which(mal_fu_mated$trial_num %in% trials_to_use),])
-write.csv(boot_fuscus, "data/fuscus_bootstrapped_I_partitions_mated.csv",
-          quote=FALSE, row.names = FALSE)
-```
-
-``` r
-boot_fuscus<-read.csv("data/fuscus_bootstrapped_I_partitions_mated.csv")
-```
-
-``` r
-boot_scovelli <- bootstrap_partition_I(num_bootstraps,
-                                       fem_succSC[fem_succSC$mated==1,],
-                                       mal_succSC[mal_succSC$MatingSuccess>0,])
-write.csv(boot_scovelli, "data/scovelli_bootstrapped_I_partitions_mated.csv",
-          quote=FALSE, row.names = FALSE)
-```
-
-``` r
-boot_scovelli<-read.csv("data/scovelli_bootstrapped_I_partitions_mated.csv")
-```
-
-#### Generating summary statistics from bootstraps (only mated)
-
-``` r
-floridae_CIs<-apply(boot_floridae,2,cim)
-fuscus_CIs<-apply(boot_fuscus,2,cim)
-scovelli_CIs<-apply(boot_scovelli,2,cim)
-```
-
-``` r
-female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
-colnames(female_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(female_CIs,2))
-```
-
-|  | floridae_low | floridae_upp | fuscus_low | fuscus_upp | scovelli_low | scovelli_upp |
-|:---|---:|---:|---:|---:|---:|---:|
-| I_1_fem | 0.08 | 0.08 | 0.02 | 0.02 | 0.15 | 0.15 |
-| I_2_fem | 0.19 | 0.20 | 0.13 | 0.14 | 0.06 | 0.06 |
-| coi1_2_fem | -0.03 | -0.03 | 0.01 | 0.02 | -0.03 | -0.03 |
-| coi1_2given1_fem | -0.03 | -0.02 | 0.01 | 0.01 | -0.03 | -0.03 |
-| coi12_2_fem | 0.17 | 0.18 | 0.14 | 0.16 | 0.02 | 0.03 |
-| coi12_2given1_fem | 0.14 | 0.15 | 0.14 | 0.15 | 0.02 | 0.03 |
-| diff_12_fem | -0.03 | -0.02 | 0.00 | 0.00 | 0.00 | 0.00 |
-| I_12_fem | 0.19 | 0.20 | 0.17 | 0.18 | 0.14 | 0.14 |
-| I_3_fem | 0.06 | 0.07 | 0.00 | 0.00 | 0.01 | 0.01 |
-| coi12_3_fem | 0.04 | 0.04 | 0.01 | 0.01 | 0.00 | 0.00 |
-| coi12_3given2_fem | 0.04 | 0.04 | 0.00 | 0.00 | 0.00 | 0.00 |
-| coi123_3_fem | 0.10 | 0.11 | 0.01 | 0.01 | 0.01 | 0.01 |
-| coi123_3given2_fem | 0.09 | 0.10 | 0.00 | 0.01 | 0.01 | 0.01 |
-| diff_123_fem | -0.01 | -0.01 | 0.00 | 0.00 | 0.00 | 0.00 |
-| I_fem | 0.33 | 0.35 | 0.18 | 0.19 | 0.15 | 0.16 |
-
-``` r
-male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
-colnames(male_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(male_CIs,2))
-```
-
-|  | floridae_low | floridae_upp | fuscus_low | fuscus_upp | scovelli_low | scovelli_upp |
-|:---|---:|---:|---:|---:|---:|---:|
-| I_1_mal | 0.08 | 0.08 | 0.02 | 0.02 | 0.00 | 0.00 |
-| I_2_mal | 0.18 | 0.20 | 0.16 | 0.17 | 0.09 | 0.09 |
-| coi1_2_mal | -0.03 | -0.02 | -0.03 | -0.03 | 0.00 | 0.00 |
-| coi1_2given1_mal | -0.03 | -0.02 | -0.03 | -0.02 | 0.00 | 0.00 |
-| coi12_2_mal | 0.16 | 0.17 | 0.13 | 0.14 | 0.09 | 0.09 |
-| coi12_2given1_mal | 0.14 | 0.14 | 0.13 | 0.14 | 0.09 | 0.09 |
-| diff_12_mal | -0.03 | -0.02 | 0.00 | 0.00 | 0.00 | 0.00 |
-| I_12_mal | 0.19 | 0.20 | 0.12 | 0.13 | 0.09 | 0.09 |
-| I_3_mal | 0.06 | 0.06 | 0.00 | 0.00 | 0.06 | 0.07 |
-| coi12_3_mal | 0.04 | 0.04 | 0.00 | 0.00 | 0.02 | 0.02 |
-| coi12_3given2_mal | 0.04 | 0.04 | 0.00 | 0.00 | 0.01 | 0.01 |
-| coi123_3_mal | 0.09 | 0.10 | 0.00 | 0.00 | 0.08 | 0.09 |
-| coi123_3given2_mal | 0.09 | 0.10 | 0.00 | 0.00 | 0.07 | 0.08 |
-| diff_123_mal | -0.01 | 0.00 | 0.00 | 0.00 | -0.01 | -0.01 |
-| I_mal | 0.32 | 0.34 | 0.12 | 0.14 | 0.17 | 0.18 |
 
 ## Selection differentials
 
@@ -389,53 +274,98 @@ boot_scovelli<-read.csv("data/scovelli_bootstrapped_s.csv")
 #### Generating summary statistics for selection differentials
 
 ``` r
-floridae_CIs<-apply(boot_floridae,2,cim)
-fuscus_CIs<-apply(boot_fuscus,2,cim)
-scovelli_CIs<-apply(boot_scovelli,2,cim)
+floridae_CIs <- calculate_CIs(boot_floridae)
+fuscus_CIs <- calculate_CIs(boot_fuscus)
+scovelli_CIs <- calculate_CIs(boot_scovelli)
 ```
 
 ``` r
-female_CIs<-cbind(t(floridae_CIs[,grep("fem",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("fem",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("fem",colnames(scovelli_CIs))]))
-colnames(female_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(female_CIs,2))
+female_CIs <- as.data.frame(rbind(floridae_CIs[grep("fem", rownames(floridae_CIs)), ],
+                    fuscus_CIs[grep("fem", rownames(fuscus_CIs)), ],
+                    scovelli_CIs[grep("fem", rownames(scovelli_CIs)), ]))
+
+female_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("fem", rownames(floridae_CIs)),])),
+                        rep("fuscus", times = nrow(fuscus_CIs[grep("fem", rownames(fuscus_CIs)),])),
+                        rep("scovelli", times = nrow(scovelli_CIs[grep("fem", rownames(scovelli_CIs)),])))
+
+kable(round(female_CIs[,colnames(female_CIs) != "species"],6))
 ```
 
-|  | floridae_low | floridae_upp | fuscus_low | fuscus_upp | scovelli_low | scovelli_upp |
-|:---|---:|---:|---:|---:|---:|---:|
-| s1_fem | 1.79 | 2.05 | 2.10 | 2.20 | 0.83 | 0.89 |
-| s2_fem | -2.06 | -1.84 | -1.63 | -1.55 | -0.66 | -0.61 |
-| s3_fem | 0.65 | 0.72 | -0.01 | -0.01 | 0.01 | 0.02 |
-| s12_fem | -0.09 | 0.03 | 0.54 | 0.57 | 0.22 | 0.24 |
-| s123_fem | 0.61 | 0.70 | 0.53 | 0.56 | 0.23 | 0.25 |
-| s1_prime_fem | 0.18 | 0.20 | 0.43 | 0.45 | 0.29 | 0.31 |
-| s2_prime_fem | -0.20 | -0.18 | -0.35 | -0.33 | -0.22 | -0.20 |
-| s3_prime_fem | 0.06 | 0.06 | 0.00 | 0.00 | 0.00 | 0.00 |
-| s12_prime_fem | 0.00 | 0.01 | 0.10 | 0.10 | 0.09 | 0.10 |
-| s123_prime_fem | 0.06 | 0.07 | 0.10 | 0.11 | 0.08 | 0.09 |
+|                  |      mean | lower.2.5% | upper.97.5% |
+|:-----------------|----------:|-----------:|------------:|
+| s1_fem           |  2.133775 |  -1.734951 |    6.334340 |
+| s2_fem           | -2.143347 |  -5.303734 |    1.457109 |
+| s3_fem           |  0.696840 |  -0.345598 |    1.813785 |
+| s12_fem          | -0.009572 |  -1.585071 |    1.780581 |
+| s123_fem         |  0.687267 |  -0.667753 |    2.067652 |
+| s1_prime_fem     |  0.208629 |  -0.183208 |    0.599939 |
+| s2_prime_fem     | -0.202862 |  -0.544145 |    0.135325 |
+| s3_prime_fem     |  0.060289 |  -0.030323 |    0.150839 |
+| s12_prime_fem    |  0.005767 |  -0.144067 |    0.186521 |
+| s123_prime_fem   |  0.066056 |  -0.067314 |    0.196199 |
+| s1_fem.1         |  2.139245 |   0.606776 |    3.683890 |
+| s2_fem.1         | -1.580744 |  -2.877200 |   -0.344749 |
+| s3_fem.1         | -0.012519 |  -0.144848 |    0.100207 |
+| s12_fem.1        |  0.558501 |   0.042164 |    1.026939 |
+| s123_fem.1       |  0.545982 |   0.084078 |    1.009678 |
+| s1_prime_fem.1   |  0.434126 |   0.124474 |    0.736945 |
+| s2_prime_fem.1   | -0.332289 |  -0.593602 |   -0.075584 |
+| s3_prime_fem.1   |  0.002786 |  -0.019469 |    0.033067 |
+| s12_prime_fem.1  |  0.101837 |   0.007846 |    0.187133 |
+| s123_prime_fem.1 |  0.104623 |   0.021758 |    0.192363 |
+| s1_fem.2         |  0.865463 |  -0.060077 |    1.870364 |
+| s2_fem.2         | -0.634835 |  -1.443419 |    0.132140 |
+| s3_fem.2         |  0.010415 |  -0.095005 |    0.116273 |
+| s12_fem.2        |  0.230628 |  -0.104840 |    0.554641 |
+| s123_fem.2       |  0.241043 |  -0.055714 |    0.552540 |
+| s1_prime_fem.2   |  0.303439 |  -0.058973 |    0.676800 |
+| s2_prime_fem.2   | -0.208775 |  -0.496868 |    0.069227 |
+| s3_prime_fem.2   | -0.003703 |  -0.046062 |    0.036280 |
+| s12_prime_fem.2  |  0.094664 |  -0.037590 |    0.225230 |
+| s123_prime_fem.2 |  0.090960 |  -0.037613 |    0.214720 |
 
 ``` r
-male_CIs<-cbind(t(floridae_CIs[,grep("mal",colnames(floridae_CIs))]),
-      t(fuscus_CIs[,grep("mal",colnames(fuscus_CIs))]),
-      t(scovelli_CIs[,grep("mal",colnames(scovelli_CIs))]))
-colnames(male_CIs)<-c("floridae_low","floridae_upp",
-                        "fuscus_low","fuscus_upp",
-                        "scovelli_low","scovelli_upp")
-kable(round(male_CIs,2))
+male_CIs <- as.data.frame(rbind(floridae_CIs[grep("mal", rownames(floridae_CIs)), ],
+                  fuscus_CIs[grep("mal", rownames(fuscus_CIs)), ],
+                  scovelli_CIs[grep("mal", rownames(scovelli_CIs)), ]))
+
+male_CIs$species <- c(rep("floridae", times = nrow(floridae_CIs[grep("mal", rownames(floridae_CIs)),])),
+                      rep("fuscus", times = nrow(fuscus_CIs[grep("mal", rownames(fuscus_CIs)),])),
+                      rep("scovelli", times = nrow(scovelli_CIs[grep("mal", rownames(scovelli_CIs)),])))
+
+male_CIs[,1:3]<-round(male_CIs[,1:3],6)
+kable(male_CIs)
 ```
 
-|  | floridae_low | floridae_upp | fuscus_low | fuscus_upp | scovelli_low | scovelli_upp |
-|:---|---:|---:|---:|---:|---:|---:|
-| s1_mal | 2.05 | 2.31 | -0.66 | -0.56 | 0.00 | 0.03 |
-| s2_mal | -2.23 | -2.02 | 0.39 | 0.47 | 0.11 | 0.13 |
-| s3_mal | 0.62 | 0.69 | 0.01 | 0.01 | 0.05 | 0.07 |
-| s12_mal | 0.00 | 0.11 | -0.19 | -0.16 | 0.13 | 0.15 |
-| s123_mal | 0.67 | 0.76 | -0.18 | -0.16 | 0.19 | 0.21 |
-| s1_prime_mal | 0.20 | 0.23 | -0.19 | -0.17 | 0.05 | 0.06 |
-| s2_prime_mal | -0.21 | -0.19 | 0.13 | 0.14 | 0.02 | 0.02 |
-| s3_prime_mal | 0.05 | 0.06 | 0.00 | 0.00 | 0.03 | 0.04 |
-| s12_prime_mal | 0.01 | 0.02 | -0.05 | -0.05 | 0.07 | 0.07 |
-| s123_prime_mal | 0.06 | 0.07 | -0.05 | -0.05 | 0.10 | 0.11 |
+|                  |      mean | lower.2.5% | upper.97.5% | species  |
+|:-----------------|----------:|-----------:|------------:|:---------|
+| s1_mal           | -2.698896 |  -5.092572 |   -0.132139 | floridae |
+| s2_mal           |  1.930512 |  -0.277298 |    4.071687 | floridae |
+| s3_mal           | -0.418376 |  -1.072458 |    0.098118 | floridae |
+| s12_mal          | -0.768384 |  -1.572385 |    0.134175 | floridae |
+| s123_mal         | -1.186759 |  -1.894044 |   -0.468235 | floridae |
+| s1_prime_mal     | -0.457204 |  -0.824185 |   -0.104706 | floridae |
+| s2_prime_mal     |  0.329559 |   0.021811 |    0.671548 | floridae |
+| s3_prime_mal     | -0.057883 |  -0.140687 |    0.010949 | floridae |
+| s12_prime_mal    | -0.127645 |  -0.238950 |   -0.013372 | floridae |
+| s123_prime_mal   | -0.185528 |  -0.287653 |   -0.086717 | floridae |
+| s1_mal.1         | -0.614036 |  -2.209032 |    0.931892 | fuscus   |
+| s2_mal.1         |  0.424356 |  -0.819361 |    1.648002 | fuscus   |
+| s3_mal.1         |  0.010789 |  -0.052580 |    0.087109 | fuscus   |
+| s12_mal.1        | -0.189680 |  -0.650162 |    0.287145 | fuscus   |
+| s123_mal.1       | -0.178892 |  -0.631378 |    0.293832 | fuscus   |
+| s1_prime_mal.1   | -0.189803 |  -0.529607 |    0.137317 | fuscus   |
+| s2_prime_mal.1   |  0.138035 |  -0.099576 |    0.400359 | fuscus   |
+| s3_prime_mal.1   |  0.000562 |  -0.023717 |    0.022673 | fuscus   |
+| s12_prime_mal.1  | -0.051768 |  -0.153696 |    0.050421 | fuscus   |
+| s123_prime_mal.1 | -0.051207 |  -0.152552 |    0.048431 | fuscus   |
+| s1_mal.2         |  0.006749 |  -0.375404 |    0.321242 | scovelli |
+| s2_mal.2         |  0.126983 |  -0.172755 |    0.450682 | scovelli |
+| s3_mal.2         |  0.051408 |  -0.250024 |    0.374103 | scovelli |
+| s12_mal.2        |  0.133733 |  -0.216121 |    0.485705 | scovelli |
+| s123_mal.2       |  0.185140 |  -0.140124 |    0.533752 | scovelli |
+| s1_prime_mal.2   |  0.047733 |  -0.083234 |    0.185796 | scovelli |
+| s2_prime_mal.2   |  0.020855 |  -0.101119 |    0.132343 | scovelli |
+| s3_prime_mal.2   |  0.033726 |  -0.063417 |    0.138662 | scovelli |
+| s12_prime_mal.2  |  0.068587 |  -0.040649 |    0.183528 | scovelli |
+| s123_prime_mal.2 |  0.102313 |  -0.003274 |    0.214213 | scovelli |
