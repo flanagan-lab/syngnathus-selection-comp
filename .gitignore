@@ -1,1 +1,5 @@
 *.csv
+
+figs/*
+
+*.Rhistory
