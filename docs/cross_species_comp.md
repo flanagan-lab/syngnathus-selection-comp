@@ -8,6 +8,8 @@ Coley Tosto
   Species](#the-opportunity-for-selection-across-species)
 - [The Bateman Gradient - Comparing reproductive and mating
   success](#the-bateman-gradient---comparing-reproductive-and-mating-success)
+  - [Using Number of eggs Developed as the metric for reproductive
+    fitness](#using-number-of-eggs-developed-as-the-metric-for-reproductive-fitness)
 - [Selection differentials and gradients across the
   species](#selection-differentials-and-gradients-across-the-species)
 
@@ -192,9 +194,55 @@ ggsave("figs/Fig_bateman_prop.pdf", fig, height=5, width=10)
 ggsave("figs/Fig_bateman_prop.png", fig, height=5, width=10) # also save as a png
 ```
 
+### Using Number of eggs Developed as the metric for reproductive fitness
+
+For consistency with the opportunity for selection metrics, we will
+instead use the number of developed eggs (rather than the total number
+of eggs stored) as our metric for reproductive success in the Bateman
+Gradient.
 
 ``` r
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(fem_bateman) <- c("trial", "MatingSuccess","rel_repo_fitness", "species")
+
+#Loop through each trial to calculate relative fitness
+for (species in unique(fem_fitness_all$species)) {
+  
+  tmp_species <- fem_fitness_all[fem_fitness_all$species == species, ]
+  
+  for (trial in unique(tmp_species$trial_num)) {
+
+    #Subset the overall dataframe to work with an individual trial
+    tmp <- tmp_species[tmp_species$trial_num == trial, ]
+  
+    #Calculate relative fitness
+    rel_repo_fitness <- tmp$NumDeveloped/mean(tmp$NumDeveloped)
+  
+    #Calculte mating fitness
+    rel_mate_succuess <- tmp$MatingSuccess/mean(tmp$MatingSuccess)
+  
+    #Column-bind the trial #, Mating success, and calculated rel. fitness
+    fitness <- cbind("trial" = rep(trial, nrow(tmp)), 
+                      "MatingSuccess" = rel_mate_succuess, 
+                      rel_repo_fitness,
+                      species)
+  
+    #Add this chunk of data to the dataframe we created
+    fem_bateman <- rbind(fem_bateman, fitness) 
+  
+  }}
 ```
+
+    ## floridae slope = 0.9626992
+
+    ## fuscus slope = 1.00598
+
+    ## scovelli slope = 0.9544241
+
+![](cross_species_comp_files/figure-gfm/fem-bateman-egg-dev-1.png)<!-- -->
 
 
 ``` r
