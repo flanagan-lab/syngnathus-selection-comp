@@ -10,6 +10,8 @@ Coley Tosto
   success](#the-bateman-gradient---comparing-reproductive-and-mating-success)
   - [Using Number of eggs Developed as the metric for reproductive
     fitness](#using-number-of-eggs-developed-as-the-metric-for-reproductive-fitness)
+  - [Comparing males versus females, excluding non-mated
+    individuals](#comparing-males-versus-females-excluding-non-mated-individuals)
 - [Selection differentials and gradients across the
   species](#selection-differentials-and-gradients-across-the-species)
 
@@ -46,6 +48,13 @@ FU_fem_fitness$species <- rep("fuscus", times = nrow(FU_fem_fitness))
 
 SS_fem_fitness <- read.csv("data/fem_fitnessSS.csv", header = TRUE)
 SS_fem_fitness$species <- rep("scovelli", times = nrow(SS_fem_fitness))
+
+##Data for generating the male bateman gradients
+FL_mal_fitness <- read.csv("data/mal_fitnessFL.csv", header = TRUE)
+FL_mal_fitness$species <- rep("floridae", times = nrow(FL_mal_fitness))
+
+FU_mal_fitness <- read.csv("data/mal_fitnessFU.csv", header = TRUE)
+FU_mal_fitness$species <- rep("fuscus", times = nrow(FU_mal_fitness))
 
 ##Data for the Selection Differentials
 select_diff <- read.csv("data/select_diff_boot_aves.csv", header = TRUE)
@@ -244,15 +253,101 @@ for (species in unique(fem_fitness_all$species)) {
 
 ![](cross_species_comp_files/figure-gfm/fem-bateman-egg-dev-1.png)<!-- -->
 
+### Comparing males versus females, excluding non-mated individuals
+
+Lastly, we can really look into the impact of additional mates by
+running the Bateman Gradient WITHOUT the individuals who didn’t mate.
+For *S. floridae* and *S. fuscus* we will include both males and females
+as they mate multiply. For *S. scovelli* only the females mate multiply.
+
+We can start by re-calculating relative fitness metrics WITHOUT
+including individuals who did not mate for males and females:
 
 ``` r
+##Merge male fitness datasets into one
+mal_fitness_all <- rbind(FL_mal_fitness[,c(2:3,13:20)], FU_mal_fitness[,c(2:3,13:20)])
 
+#Create a dataframe to store all of the calculations of relative fitness in
+mal_bateman_nozero <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(mal_bateman_nozero) <- c("trial","MatingSuccess","rel_repo_fitness", "species")
 
-
-``` r
-
-
+#Loop through the different species
+for (pipefish in unique(mal_fitness_all$species)) {
+  
+  #Subset dataset to work with an individual species
+  tmp_species <- mal_fitness_all[mal_fitness_all$species == pipefish, ]
+  
+  #Loop through the different trials WITHIN that species
+  for (trial in unique(tmp_species$trial_num)) {
+    
+    #Subset the overall dataframe to work with an individual trial
+    tmp_trial <- tmp_species[tmp_species$trial_num == trial, ]
+  
+    #Calculate relative fitness
+    rel_repo_fitness <- tmp_trial$NumDeveloped_Calc[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$NumDeveloped_Calc[tmp_trial$MatingSuccess != 0])
+  
+    #Calculate mating fitness
+    rel_mate_succuess <- tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0])
+  
+    #Column-bind the trial num, Mating success, calculated rel. fitness and species
+    fitness <- cbind("MatingSuccess" = rel_mate_succuess, 
+                      rel_repo_fitness,
+                      "species" = pipefish,
+                     "trial" = trial)
+  
+    #Add this chunk of data to the dataframe we created
+    mal_bateman_nozero <- rbind(mal_bateman_nozero, fitness)
+    
+    }
+  }
 ```
+
+``` r
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman_nozero <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(fem_bateman_nozero) <- c("MatingSuccess", "trial",
+                                  "rel_repo_fitness", "species")
+
+#Loop through each trial to calculate relative fitness
+for (pipefish in unique(fem_fitness_all$species)) {
+
+  tmp_species <- fem_fitness_all[fem_fitness_all$species == pipefish, ]
+  
+  for (trial in unique(tmp_species$trial_num)) {
+    
+    #Subset the overall dataframe to work with an individual trial
+    tmp_trial <- tmp_species[tmp_species$trial_num == trial, ]
+  
+    #Calculate relative fitness
+    rel_repo_fitness <- tmp_trial$NumDeveloped[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$NumDeveloped[tmp_trial$MatingSuccess != 0])
+  
+    #Calculate mating fitness
+    rel_mate_succuess <- tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0])
+  
+    #Column-bind the trial #, Mating success, and calculated rel. fitness
+    fitness <- cbind("MatingSuccess" = rel_mate_succuess, 
+                      rel_repo_fitness,
+                      "species" = pipefish,
+                     "trial" = trial)
+  
+    #Add this chunk of data to the dataframe we created
+    fem_bateman_nozero <- rbind(fem_bateman_nozero, fitness) 
+    
+    }
+  }
+```
+
+With those new fitness values calculated we can visualize the data and
+re-run the model.
+
+![](cross_species_comp_files/figure-gfm/bateman-nozeros-1.png)<!-- -->
 
 ## Selection differentials and gradients across the species
 

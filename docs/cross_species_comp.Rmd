@@ -53,6 +53,13 @@ FU_fem_fitness$species <- rep("fuscus", times = nrow(FU_fem_fitness))
 SS_fem_fitness <- read.csv("data/fem_fitnessSS.csv", header = TRUE)
 SS_fem_fitness$species <- rep("scovelli", times = nrow(SS_fem_fitness))
 
+##Data for generating the male bateman gradients
+FL_mal_fitness <- read.csv("data/mal_fitnessFL.csv", header = TRUE)
+FL_mal_fitness$species <- rep("floridae", times = nrow(FL_mal_fitness))
+
+FU_mal_fitness <- read.csv("data/mal_fitnessFU.csv", header = TRUE)
+FU_mal_fitness$species <- rep("fuscus", times = nrow(FU_mal_fitness))
+
 ##Data for the Selection Differentials
 select_diff <- read.csv("data/select_diff_boot_aves.csv", header = TRUE)
 
@@ -673,6 +680,198 @@ outer_legend("top",
              text.font = 3)
 
 #dev.off()
+
+```
+
+### Comparing males versus females, excluding non-mated individuals
+
+Lastly, we can really look into the impact of additional mates by running the Bateman Gradient WITHOUT the individuals who didn't mate. For _S. floridae_ and _S. fuscus_ we will include both males and females as they mate multiply. For _S. scovelli_ only the females mate multiply.
+
+We can start by re-calculating relative fitness metrics WITHOUT including individuals who did not mate for males and females:
+
+```{r calc-male-noZero}
+##Merge male fitness datasets into one
+mal_fitness_all <- rbind(FL_mal_fitness[,c(2:3,13:20)], FU_mal_fitness[,c(2:3,13:20)])
+
+#Create a dataframe to store all of the calculations of relative fitness in
+mal_bateman_nozero <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(mal_bateman_nozero) <- c("trial","MatingSuccess","rel_repo_fitness", "species")
+
+#Loop through the different species
+for (pipefish in unique(mal_fitness_all$species)) {
+  
+  #Subset dataset to work with an individual species
+  tmp_species <- mal_fitness_all[mal_fitness_all$species == pipefish, ]
+  
+  #Loop through the different trials WITHIN that species
+  for (trial in unique(tmp_species$trial_num)) {
+    
+    #Subset the overall dataframe to work with an individual trial
+    tmp_trial <- tmp_species[tmp_species$trial_num == trial, ]
+  
+    #Calculate relative fitness
+    rel_repo_fitness <- tmp_trial$NumDeveloped_Calc[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$NumDeveloped_Calc[tmp_trial$MatingSuccess != 0])
+  
+    #Calculate mating fitness
+    rel_mate_succuess <- tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0])
+  
+    #Column-bind the trial num, Mating success, calculated rel. fitness and species
+    fitness <- cbind("MatingSuccess" = rel_mate_succuess, 
+                      rel_repo_fitness,
+                      "species" = pipefish,
+                     "trial" = trial)
+  
+    #Add this chunk of data to the dataframe we created
+    mal_bateman_nozero <- rbind(mal_bateman_nozero, fitness)
+    
+    }
+  }
+
+```
+
+```{r cal-female-nozero}
+#Calculating relative fitness as a metric for reproductive success
+#Create a dataframe to store all of the calculations of relative fitness in
+fem_bateman_nozero <- data.frame(matrix(ncol = 4,
+                                 nrow = 0))
+colnames(fem_bateman_nozero) <- c("MatingSuccess", "trial",
+                                  "rel_repo_fitness", "species")
+
+#Loop through each trial to calculate relative fitness
+for (pipefish in unique(fem_fitness_all$species)) {
+
+  tmp_species <- fem_fitness_all[fem_fitness_all$species == pipefish, ]
+  
+  for (trial in unique(tmp_species$trial_num)) {
+    
+    #Subset the overall dataframe to work with an individual trial
+    tmp_trial <- tmp_species[tmp_species$trial_num == trial, ]
+  
+    #Calculate relative fitness
+    rel_repo_fitness <- tmp_trial$NumDeveloped[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$NumDeveloped[tmp_trial$MatingSuccess != 0])
+  
+    #Calculate mating fitness
+    rel_mate_succuess <- tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0]/
+      mean(tmp_trial$MatingSuccess[tmp_trial$MatingSuccess != 0])
+  
+    #Column-bind the trial #, Mating success, and calculated rel. fitness
+    fitness <- cbind("MatingSuccess" = rel_mate_succuess, 
+                      rel_repo_fitness,
+                      "species" = pipefish,
+                     "trial" = trial)
+  
+    #Add this chunk of data to the dataframe we created
+    fem_bateman_nozero <- rbind(fem_bateman_nozero, fitness) 
+    
+    }
+  }
+```
+
+With those new fitness values calculated we can visualize the data and re-run the model.
+
+```{r bateman-nozeros, echo=FALSE, fig.height=4, fig.width=10, message = FALSE}
+#Merge male and female datasets
+fem_bateman_nozero$sex <- rep("F", times = nrow(fem_bateman_nozero))
+mal_bateman_nozero$sex <- rep("M", times = nrow(mal_bateman_nozero))
+
+bateman_nozero <- rbind(fem_bateman_nozero, mal_bateman_nozero)
+
+#Convert variables
+bateman_nozero$species <- as.factor(bateman_nozero$species)
+bateman_nozero$sex <- as.factor(bateman_nozero$sex)
+
+bateman_nozero$MatingSuccess <- as.numeric(bateman_nozero$MatingSuccess)
+bateman_nozero$rel_repo_fitness <- as.numeric(bateman_nozero$rel_repo_fitness)
+
+#Set colors and shapes for points
+sex_cols <- c("F" = "#7fc97f", "M" = "#beaed4" )
+species_shapes <- c("floridae" = 15,
+                  "fuscus" = 16,
+                  "scovelli" = 17)
+#pdf("figs/fem_bateman.pdf", width = 8, height=8)
+
+#Set the graphical parameters
+par(mfrow = c(1,3),
+    oma = c(4,4,1,1),
+    mar = c(1,2,2,1),
+    xpd = FALSE)
+
+#Create one plot per species
+for (pipefish in unique(bateman_nozero$species)) {
+  
+  ##Pull out data for the species
+  tmp_species <- bateman_nozero[bateman_nozero$species == pipefish, ]
+  
+  #Set the base plot
+  plot(tmp_species$rel_repo_fitness ~ tmp_species$MatingSuccess,
+       ylab = "", xlab = "", ylim = c(0, 2.5), xlim = c(0.4, 2.4),
+       bty = "n", type = "n", axes = FALSE)
+  
+  #Add an x- and y-axis to the plot
+  axis(1, at = seq(-1, 2.5, 0.2),
+       lwd = 2, cex = 2, cex.axis = 1.5, las=1)
+  axis(2, at = seq(-1, 3.5, 0.5),
+       lwd = 2, cex = 2, cex.axis = 1.5, las = 1)
+  
+  #Loop through the sexes and add points and lines to the plot
+  for(sex in unique(tmp_species$sex)){
+    
+    #Subset data for sex
+    tmp_sex <- tmp_species[tmp_species$sex == sex,]
+    
+    #Add the points
+    points(tmp_sex$rel_repo_fitness ~ tmp_sex$MatingSuccess,
+           col = paste0(sex_cols[sex], "85"),
+           pch = species_shapes[pipefish],
+           cex = 1.5)
+    
+    #Create vector of x-values
+    x_seq <- seq(min(tmp_sex$MatingSuccess), 
+                 max(tmp_sex$MatingSuccess),
+                 length.out = 100)
+    
+    #Run the model
+    mod <- lmer(rel_repo_fitness ~ MatingSuccess + (1 | trial), data = tmp_sex,
+                REML = TRUE)
+    
+    #Predict values based on the model
+    new_dat <- data.frame(MatingSuccess = x_seq,
+                          trial = NA) 
+    preds <- predict(mod, newdata = new_dat, re.form = NA)
+    
+    #Add the predicted values as a line to the plot
+    lines(x_seq, preds,
+        col = sex_cols[sex],
+        lwd = 3,
+        lty = which(levels(bateman_nozero$sex) %in% sex),
+        xpd = FALSE)
+    
+    }
+  
+  mtext(paste0("S.", pipefish), 3, cex = 1.25, line = -1.5)
+  
+}
+
+mtext("Relative Mating Success", 1 , cex = 1.5, line = 2, outer = TRUE)
+mtext("Relative Reproductive Success", 2, cex = 1.5, line = 1.2, outer = TRUE)
+
+outer_legend("top",
+             c("Male", "Female"),
+             col = c("#beaed4", "#7fc97f"),
+             lwd = 3,
+             bty = 'n',
+             cex = 1.5,
+             pch = 21,
+             pt.bg = c("#beaed475", "#7fc97f75"),
+             lty = c(2,1),
+             ncol = 2)
+
+#dev.off()
+
 
 ```
 
