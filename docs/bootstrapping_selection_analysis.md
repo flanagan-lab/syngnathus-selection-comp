@@ -29,18 +29,18 @@ source("R/bootstrap_s.R")
 ## Read in the datasets
 
 ``` r
-fem_succFL <- read.csv("data/floridae_fem_succ.csv")
-mal_succFL <- read.csv("data/floridae_mal_succ.csv")
+fem_succFL <- read.csv("data/fem_fitnessFL.csv")
+mal_succFL <- read.csv("data/mal_fitnessFL.csv")
 ```
 
 ``` r
-fem_succFU <- read.csv("data/fuscus_fem_succ.csv")
-mal_succFU <- read.csv("data/fuscus_mal_succ.csv")
+fem_succFU <- read.csv("data/fem_fitnessFU.csv")
+mal_succFU <- read.csv("data/mal_fitnessFU.csv")
 ```
 
 ``` r
-fem_succSC <- read.csv("data/scovelli_fem_succ.csv")
-mal_succSC <- read.csv("data/scovelli_mal_succ.csv")
+fem_succSC <- read.csv("data/fem_fitnessSS.csv")
+mal_succSC <- read.csv("data/mal_fitnessSS.csv")
 ```
 
 ## Opportunity for selection
