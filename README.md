@@ -58,7 +58,6 @@ The .csv files outlined here are ones which were generated in the `selection_ana
        | momID/femID & maleID| Full ID for each pipefish including information about species (FU = _S. fuscus_, FL = _S. floridae_), trial number, sex (M or F) and fishID | All three |
        | depth_adj | Torso depth adjusted for by the snout-vent length | All three |
        | mated | Indicates a pipefish who has mated at least once (1) or not at all (0) | All three |
-       | Sex | Denotes whether a pipefish is male (M) or female (F) | All three |
 
   - `select_diff_boot_aves.csv`: This dataset includes the selection differentials for snout-vent length averaged across the trials (`average_cal`) for each episode of selection (`episode_sel`) for both sexes (`sex`) and all three species (`species`). Lower and upper 95% confidence intervals are also included (`lower` and `upper`). The means and CIs presented here are generated from the bootstrapping analysis.
 
